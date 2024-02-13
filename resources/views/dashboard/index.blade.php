@@ -12,7 +12,7 @@
                     <div class="page-title-right">
                         <ol class="breadcrumb m-0">
                             <li class="breadcrumb-item"><a href="javascript: void(0);">Dashboard</a></li>
-                            <li class="breadcrumb-item active">Dashboard</li>
+                            <!--li class="breadcrumb-item active">Dashboard</li-->
                         </ol>
                     </div>
 
@@ -32,8 +32,8 @@
                         <div class="row justify-content-center mt-3">
                             <div class="col-12">
                                 <div class="text-center">
-                                    <h5>Welcome to the "Dashboard Accounting"</h5>
-                                    <p class="text-muted">Here you can Manage Accounting on the system PT Olefina Tifaplas Polikemindo</p>
+                                    <h5>Welcome to the "Dashboard Production"</h5>
+                                    <p class="text-muted">Here you can Manage Production on the system PT Olefina Tifaplas Polikemindo</p>
                                 </div>
                             </div>
                         </div>
