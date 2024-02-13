@@ -8,6 +8,9 @@ use App\Http\Controllers\MstAccountTypesController;
 use App\Http\Controllers\TransDataBankController;
 use App\Http\Controllers\TransDataKasController;
 
+//PRODUCTION
+use App\Http\Controllers\ProductionController;
+
 //Route Login
 Route::get('/', [AuthController::class, 'login'])->name('login');
 Route::post('auth/login', [AuthController::class, 'postlogin'])->name('postlogin')->middleware("throttle:5,2");
@@ -16,6 +19,11 @@ Route::post('auth/login', [AuthController::class, 'postlogin'])->name('postlogin
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth'])->group(function () {
+	//Production
+	Route::get('/production-req-sparepart-auxiliaries', [ProductionController::class, 'production_req_sparepart_auxiliaries'])->name('production_req_sparepart_auxiliaries');
+	Route::get('/production-ent-material-use', [ProductionController::class, 'production_entry_material_use'])->name('production_entry_material_use');
+	Route::get('/production-ent-report-blow', [ProductionController::class, 'production_entry_report_blow'])->name('production_entry_report_blow');
+	
     //Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 

@@ -12,7 +12,7 @@ trait AuditLogsTrait {
             'ip_address' => $ipAddress,
             'location' => $location,
             'access_from' => $access_from,
-            'activity' => $activity,
+            'activity' => $activity
         ]);
     }
 }
