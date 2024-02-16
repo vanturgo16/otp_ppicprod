@@ -1,3 +1,69 @@
+
+function detail_sparepart_auxiliaries_edit(id) {
+  // $('.editPenjualan').click(function () {
+  //   let id = $(this).attr('data-id')
+  // alert('test');
+  // Kirim data melalui Ajax
+  $.ajax({
+    url: '/production-req-sparepart-auxiliaries-detail-edit-get/' + id,
+    method: 'GET',
+    data: {
+      id: id
+    },
+    success: function (response) {
+      // Tangkap pesan dari server dan tampilkan ke user
+      // console.log(response.data.find.cc_co);
+
+      $('#form_detail_sparepart_auxiliaries_edit').attr('action', '/production-req-sparepart-auxiliaries-detail-edit-save/' + response.data.find.id)
+      $('#qty_pr').val(response.data.find.qty)
+	  $('#remarks_pr').val(response.data.find.remarks)
+      //$('#request_number_pr').val(response.data.request_number)
+      $('#request_number_pr').val(document.getElementById('request_number_original').value)
+	  /*
+	  $('#id_pr').val(response.data.find.id)
+      $('#type_product_pr').val(response.data.find.type_product)
+      $('#master_products_id_pr').val(response.data.find.master_products_id)
+      
+      $('#master_units_id_pr').val(response.data.find.master_units_id)
+      $('#required_date_pr').val(response.data.find.required_date)
+      $('#cc_co_pr').val(response.data.find.cc_co)
+      
+	  */
+      let produkSelect = response.data.find.id_master_tool_auxiliaries
+      //let unitSelect = response.data.find.master_units_id
+      //let unitrequester = response.data.find.cc_co
+
+      $('#id_master_tool_auxiliaries_pr').empty()
+      $('#id_master_tool_auxiliaries_pr').append(` <option>Pilih Produk</option>`)
+      $.each(response.data.ms_tool_auxiliaries, function (i, value) {
+        let isSelected = produkSelect == value.id ? 'selected' : ''
+
+        $('#id_master_tool_auxiliaries_pr').append(
+          `<option value="` + value.id + `"` + isSelected + `>` + value.description + `</option>`
+        )
+      });
+
+      // Contoh: Lakukan tindakan selanjutnya setelah data berhasil dikirim
+      // window.location.href = '/success-page';
+    },
+    error: function (xhr, status, error) {
+      // Tangkap pesan error jika ada
+      alert('Terjadi kesalahan saat mengirim data.');
+    }
+  });
+  // })
+}
+
+
+
+
+
+
+
+
+
+
+
 function supplier() {
     // alert('test')
     $('.form-reset').trigger('reset')

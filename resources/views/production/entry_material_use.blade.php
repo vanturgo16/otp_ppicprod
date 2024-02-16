@@ -48,7 +48,7 @@
                                             <th width='10%'>Shift</th>
                                             <th width='20%'>Work Centers</th>
                                             <th width='10%'>Status</th>
-                                            <th width='20%'>Action</th>
+                                            <th width='20%'>Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody>

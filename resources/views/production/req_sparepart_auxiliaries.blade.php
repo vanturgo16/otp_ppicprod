@@ -29,7 +29,7 @@
                         <div class="card-header">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <a href="/hapus_request_number" class="btn btn-success waves-effect waves-light">
+                                    <a href="/production-req-sparepart-auxiliaries-add" class="btn btn-success waves-effect waves-light">
 										<i class="bx bx-plus" title="Add Data" ></i>
 										ADD
 									</a>                                   
@@ -46,11 +46,11 @@
                                             <th width="20%">Date</th>
                                             <th width="20%">Departement</th>
                                             <th width="20%">Status</th>
-                                            <th width="20%">Action</th>
+                                            <th width="20%">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-										@foreach ($datas as $data)
+										@foreach ($data as $data)
 										<tr>
 											<td>{{ $data->request_number }}</td>
 											<td>{{ $data->date }}</td>
@@ -58,29 +58,28 @@
 											<td>{{ $data->status }}</td>
 											
 											
-											<td>											
-												<a href="/production-req-sparepart-auxiliaries-hold/{{ $data->request_number }}" class="btn btn-warning waves-effect waves-light">
-													<i class="bx bx-block" title="Hold"></i> HOLD
-												</a>
-												<a href="/production-req-sparepart-auxiliaries-view/{{ $data->request_number }}" class="btn btn-primary waves-effect waves-light">
-													<i class="bx bx-search-alt" title="Print"></i> VIEW
-												</a>		
-												<!--a href="/production-req-sparepart-auxiliaries--print/{{ $data->request_number }}" class="btn btn-dark waves-effect waves-light">
-													<i class="bx bx-printer" title="Print"></i> PRINT
-												</a>	
-												<a href="/production-req-sparepart-auxiliaries-edit/{{ $data->request_number }}" class="btn btn-info waves-effect waves-light">
-													<i class="bx bx-edit-alt" title="Edit"></i> EDIT
-												</a>
-												<form action="/production-req-sparepart-auxiliaries-delete/{{ $data->request_number }}" method="post"
-													class="d-inline">
-													@method('delete')
-													@csrf
-												   
-													<button type="submit" class="btn btn-danger"
-													onclick="return confirm('Anda yakin mau menghapus item ini ?')">
-														<i class="bx bx-trash-alt" title="Delete" ></i> DELETE
-													</button>
-												</form-->												
+											<td>
+												<center>
+													<a href="/production-req-sparepart-auxiliaries-hold/{{ $data->request_number }}" class="btn btn-secondary waves-effect waves-light">
+														<i class="bx bx-block" title="Hold"></i> HOLD
+													</a>
+													<!--a href="/production-req-sparepart-auxiliaries-view/{{ $data->request_number }}" class="btn btn-primary waves-effect waves-light">
+														<i class="bx bx-search-alt" title="Print"></i> VIEW
+													</a-->	
+													<form action="/production-req-sparepart-auxiliaries-delete/{{ $data->request_number }}" method="post"
+														class="d-inline">
+														@method('delete')
+														@csrf
+													   
+														<button type="submit" class="btn btn-danger"
+														onclick="return confirm('Anda yakin mau menghapus item ini ?')">
+															<i class="bx bx-trash-alt" title="Delete" ></i> DELETE
+														</button>
+													</form>												
+													<a href="/production-req-sparepart-auxiliaries-detail/{{ sha1($data->request_number) }}" class="btn btn-info waves-effect waves-light">
+														<i class="bx bx-edit-alt" title="Edit"></i> EDIT
+													</a>
+												</center>
 											</td>
 										 
 										</tr>
