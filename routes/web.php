@@ -23,11 +23,14 @@ Route::middleware(['auth'])->group(function () {
 	Route::get('/production-req-sparepart-auxiliaries', [ProductionController::class, 'production_req_sparepart_auxiliaries'])->name('production_req_sparepart_auxiliaries');
 	Route::get('/production-req-sparepart-auxiliaries-add', [ProductionController::class, 'production_req_sparepart_auxiliaries_add'])->name('production_req_sparepart_auxiliaries_add');
 	Route::post('/production-req-sparepart-auxiliaries-save', [ProductionController::class, 'production_req_sparepart_auxiliaries_save'])->name('production_req_sparepart_auxiliaries_save');	
+	Route::post('/production-req-sparepart-auxiliaries-hold', [ProductionController::class, 'production_req_sparepart_auxiliaries_hold'])->name('production_req_sparepart_auxiliaries_hold');	
+	Route::post('/production-req-sparepart-auxiliaries-delete', [ProductionController::class, 'production_req_sparepart_auxiliaries_delete'])->name('production_req_sparepart_auxiliaries_delete');	
     Route::get('/production-req-sparepart-auxiliaries-detail/{id}', [ProductionController::class, 'production_req_sparepart_auxiliaries_detail'])->name('production_req_sparepart_auxiliaries_detail');
     Route::post('/production-req-sparepart-auxiliaries-detail-update', [ProductionController::class, 'production_req_sparepart_auxiliaries_detail_update'])->name('production_req_sparepart_auxiliaries_detail_update');	
     Route::post('/production-req-sparepart-auxiliaries-detail-add', [ProductionController::class, 'production_req_sparepart_auxiliaries_detail_add'])->name('production_req_sparepart_auxiliaries_detail_add');	
 	Route::get('/production-req-sparepart-auxiliaries-detail-edit-get/{id}', [ProductionController::class, 'production_req_sparepart_auxiliaries_detail_edit_get'])->name('production_req_sparepart_auxiliaries_detail_edit_get');
 	Route::put('/production-req-sparepart-auxiliaries-detail-edit-save/{id}', [ProductionController::class, 'production_req_sparepart_auxiliaries_detail_edit_save'])->name('production_req_sparepart_auxiliaries_detail_edit_save');
+	Route::post('/production-req-sparepart-auxiliaries-detail-delete', [ProductionController::class, 'production_req_sparepart_auxiliaries_detail_delete'])->name('production_req_sparepart_auxiliaries_detail_delete');
 	
 	Route::get('/production-ent-material-use', [ProductionController::class, 'production_entry_material_use'])->name('production_entry_material_use');
 	Route::get('/production-ent-report-blow', [ProductionController::class, 'production_entry_report_blow'])->name('production_entry_report_blow');
