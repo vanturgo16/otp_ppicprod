@@ -118,6 +118,14 @@ class ProductionController extends Controller
 		ProductionReqSparepartAuxiliaries::whereRaw( "sha1(id) = '$id_hold'" )
 			->update($validatedData);
 		
+		//Audit Log		
+		$username= auth()->user()->email; 
+		$ipAddress=$_SERVER['REMOTE_ADDR'];
+		$location='0';
+		$access_from=Browser::browserName();
+		$activity='Hold Request Sparepart Auxiliaries '.$request->input('request_number');
+		$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+		
 		return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'Hold Successfuly.');
 	}
 	public function production_req_sparepart_auxiliaries_delete(Request $request){
@@ -125,6 +133,14 @@ class ProductionController extends Controller
 		
 		ProductionReqSparepartAuxiliaries::whereRaw( "sha1(id) = '$id_delete'" )->delete();
 		ProductionReqSparepartAuxiliariesDetail::whereRaw( "sha1(id_request_tool_auxiliaries) = '$id_delete'" )->delete();
+		
+		//Audit Log		
+		$username= auth()->user()->email; 
+		$ipAddress=$_SERVER['REMOTE_ADDR'];
+		$location='0';
+		$access_from=Browser::browserName();
+		$activity='Delete Request Sparepart Auxiliaries '.$request->input('request_number');
+		$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 		
 		return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'Delete Successfuly.');
 	}
@@ -286,6 +302,14 @@ class ProductionController extends Controller
 		$request_number = $request->input('request_number');
 		
 		ProductionReqSparepartAuxiliariesDetail::whereRaw( "sha1(id) = '$id_delete'" )->delete();
+		
+		//Audit Log		
+		$username= auth()->user()->email; 
+		$ipAddress=$_SERVER['REMOTE_ADDR'];
+		$location='0';
+		$access_from=Browser::browserName();
+		$activity='Delete Request Sparepart Auxiliaries Detail';
+		$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 		
 		return Redirect::to('/production-req-sparepart-auxiliaries-detail/'.$request_number)->with('pesan', 'Delete Successfuly.');
 	}

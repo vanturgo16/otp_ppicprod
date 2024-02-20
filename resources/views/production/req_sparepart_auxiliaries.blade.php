@@ -62,12 +62,14 @@
 												<center>
 													<form action="/production-req-sparepart-auxiliaries-hold" method="post" class="d-inline" enctype="multipart/form-data">
 													@csrf		
+														<input type="hidden" class="form-control" name="request_number" value="{{ $data->request_number }}">
 														<button type="submit" class="btn btn-secondary" onclick="return confirm('Are you sure to hold this item ?')" name="hold" value="{{ sha1($data->id) }}">
 															<i class="bx bx-block" title="Hold"></i> HOLD
 														</button>
 													</form>
 													<form action="/production-req-sparepart-auxiliaries-delete" method="post" class="d-inline" enctype="multipart/form-data">
-													@csrf		
+													@csrf	
+														<input type="hidden" class="form-control" name="request_number" value="{{ $data->request_number }}">
 														<button type="submit" class="btn btn-danger" onclick="return confirm('This items may have detail, Are you sure to delete this item ?')" name="hapus" value="{{ sha1($data->id) }}">
 															<i class="bx bx-trash-alt" title="Delete" ></i> DELETE
 														</button>
