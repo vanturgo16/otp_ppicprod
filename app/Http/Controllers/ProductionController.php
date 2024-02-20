@@ -128,6 +128,23 @@ class ProductionController extends Controller
 		
 		return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'Hold Successfuly.');
 	}
+	public function production_req_sparepart_auxiliaries_approve(Request $request){
+		$id_approve = $request->input('approve');
+		$validatedData['status'] = 'Approve';			
+			
+		ProductionReqSparepartAuxiliaries::whereRaw( "sha1(id) = '$id_approve'" )
+			->update($validatedData);
+		
+		//Audit Log		
+		$username= auth()->user()->email; 
+		$ipAddress=$_SERVER['REMOTE_ADDR'];
+		$location='0';
+		$access_from=Browser::browserName();
+		$activity='Approve Request Sparepart Auxiliaries '.$request->input('request_number');
+		$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+		
+		return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'Hold Successfuly.');
+	}
 	public function production_req_sparepart_auxiliaries_delete(Request $request){
 		$id_delete = $request->input('hapus');
 		
