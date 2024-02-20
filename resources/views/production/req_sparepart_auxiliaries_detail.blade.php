@@ -222,13 +222,10 @@
 										
 										<td>	
 											<center>
-												<form action="" method="post"
-													class="d-inline">
-													@method('delete')
-													@csrf
-												   
-													<button type="submit" class="btn btn-danger"
-													onclick="return confirm('Anda yakin mau menghapus item ini ?')">
+												<form action="/production-req-sparepart-auxiliaries-detail-delete" method="post" class="d-inline" enctype="multipart/form-data">
+													@csrf		
+													<input type="hidden" class="form-control" name="request_number" value="{{ Request::segment(2) }}">
+													<button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure to delete this item ?')" value="{{ sha1($data->id) }}" name="hapus_detail">
 														<i class="bx bx-trash-alt" title="Delete" ></i> DELETE
 													</button>
 												</form>	

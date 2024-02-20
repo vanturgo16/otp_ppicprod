@@ -60,19 +60,27 @@
 											
 											<td>
 												<center>
-													<a href="/production-req-sparepart-auxiliaries-hold/{{ $data->request_number }}" class="btn btn-secondary waves-effect waves-light">
-														<i class="bx bx-block" title="Hold"></i> HOLD
-													</a>
-													<!--a href="/production-req-sparepart-auxiliaries-view/{{ $data->request_number }}" class="btn btn-primary waves-effect waves-light">
-														<i class="bx bx-search-alt" title="Print"></i> VIEW
-													</a-->	
-													<form action="/production-req-sparepart-auxiliaries-delete/{{ $data->request_number }}" method="post"
-														class="d-inline">
-														@method('delete')
-														@csrf
-													   
-														<button type="submit" class="btn btn-danger"
-														onclick="return confirm('Anda yakin mau menghapus item ini ?')">
+													@if($data->status=='Hold') 
+													<form action="/production-req-sparepart-auxiliaries-hold" method="post" class="d-inline" enctype="multipart/form-data">
+													@csrf		
+														<input type="hidden" class="form-control" name="request_number" value="{{ $data->request_number }}">
+														<button type="submit" class="btn btn-primary" onclick="return confirm('Are you sure to hold this item ?')" name="approve" value="{{ sha1($data->id) }}">
+															<i class="bx bx-check" title="Approve"></i> APPROVE
+														</button>
+													</form>
+													@elseif($data->status=='Approve')
+													<form action="/production-req-sparepart-auxiliaries-hold" method="post" class="d-inline" enctype="multipart/form-data">
+													@csrf		
+														<input type="hidden" class="form-control" name="request_number" value="{{ $data->request_number }}">
+														<button type="submit" class="btn btn-secondary" onclick="return confirm('Are you sure to hold this item ?')" name="hold" value="{{ sha1($data->id) }}">
+															<i class="bx bx-block" title="Hold"></i> HOLD
+														</button>
+													</form>
+													@endif
+													<form action="/production-req-sparepart-auxiliaries-delete" method="post" class="d-inline" enctype="multipart/form-data">
+													@csrf	
+														<input type="hidden" class="form-control" name="request_number" value="{{ $data->request_number }}">
+														<button type="submit" class="btn btn-danger" onclick="return confirm('This items may have detail, Are you sure to delete this item ?')" name="hapus" value="{{ sha1($data->id) }}">
 															<i class="bx bx-trash-alt" title="Delete" ></i> DELETE
 														</button>
 													</form>												

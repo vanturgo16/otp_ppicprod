@@ -111,36 +111,89 @@ class ProductionController extends Controller
             return Redirect::to('/production-req-sparepart-auxiliaries-detail/'.sha1($request_number))->with('pesan', 'Add Successfuly.');      
         }        
     }
-	public function production_req_sparepart_auxiliaries_detail($request_number){
-        $ms_departements = DB::table('master_departements')
-                        ->select('name','id')
-                        ->get();
-        $ms_tool_auxiliaries = DB::table('master_tool_auxiliaries')
-                        ->select('description','id')
-                        ->get();
+	public function production_req_sparepart_auxiliaries_hold(Request $request){
+		$id_hold = $request->input('hold');
+		$validatedData['status'] = 'Hold';			
+			
+		ProductionReqSparepartAuxiliaries::whereRaw( "sha1(id) = '$id_hold'" )
+			->update($validatedData);
 		
+		//Audit Log		
+		$username= auth()->user()->email; 
+		$ipAddress=$_SERVER['REMOTE_ADDR'];
+		$location='0';
+		$access_from=Browser::browserName();
+		$activity='Hold Request Sparepart Auxiliaries '.$request->input('request_number');
+		$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+		
+		return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'Hold Successfuly.');
+	}
+	public function production_req_sparepart_auxiliaries_approve(Request $request){
+		$id_approve = $request->input('approve');
+		$validatedData['status'] = 'Approve';			
+			
+		ProductionReqSparepartAuxiliaries::whereRaw( "sha1(id) = '$id_approve'" )
+			->update($validatedData);
+		
+		//Audit Log		
+		$username= auth()->user()->email; 
+		$ipAddress=$_SERVER['REMOTE_ADDR'];
+		$location='0';
+		$access_from=Browser::browserName();
+		$activity='Approve Request Sparepart Auxiliaries '.$request->input('request_number');
+		$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+		
+		return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'Hold Successfuly.');
+	}
+	public function production_req_sparepart_auxiliaries_delete(Request $request){
+		$id_delete = $request->input('hapus');
+		
+		ProductionReqSparepartAuxiliaries::whereRaw( "sha1(id) = '$id_delete'" )->delete();
+		ProductionReqSparepartAuxiliariesDetail::whereRaw( "sha1(id_request_tool_auxiliaries) = '$id_delete'" )->delete();
+		
+		//Audit Log		
+		$username= auth()->user()->email; 
+		$ipAddress=$_SERVER['REMOTE_ADDR'];
+		$location='0';
+		$access_from=Browser::browserName();
+		$activity='Delete Request Sparepart Auxiliaries '.$request->input('request_number');
+		$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+		
+		return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'Delete Successfuly.');
+	}
+	public function production_req_sparepart_auxiliaries_detail($request_number){
 		$data = ProductionReqSparepartAuxiliaries::leftJoin('master_departements AS b', 'request_tool_auxiliaries.id_master_departements', '=', 'b.id')
                 ->select('request_tool_auxiliaries.*', 'b.name')
 				->whereRaw( "sha1(request_tool_auxiliaries.request_number) = '$request_number'")
                 ->orderBy('request_tool_auxiliaries.created_at', 'desc')
                 ->get();
+		if(!empty($data[0])){
+			$ms_departements = DB::table('master_departements')
+							->select('name','id')
+							->get();
+			$ms_tool_auxiliaries = DB::table('master_tool_auxiliaries')
+							->select('description','id')
+							->get();			
+					
+			$data_detail = DB::table('request_tool_auxiliaries_details as a')
+					->leftJoin('request_tool_auxiliaries as b', 'a.id_request_tool_auxiliaries', '=', 'b.id')
+					->leftJoin('master_tool_auxiliaries as c', 'a.id_master_tool_auxiliaries', '=', 'c.id')
+					->select('a.*', 'c.description')
+					->whereRaw( "sha1(b.request_number) = '$request_number'")
+					->get();            
 				
-        $data_detail = DB::table('request_tool_auxiliaries_details as a')
-				->leftJoin('request_tool_auxiliaries as b', 'a.id_request_tool_auxiliaries', '=', 'b.id')
-				->leftJoin('master_tool_auxiliaries as c', 'a.id_master_tool_auxiliaries', '=', 'c.id')
-				->select('a.*', 'c.description')
-				->whereRaw( "sha1(b.request_number) = '$request_number'")
-				->get();            
-			
-        //Audit Log
-        $username= auth()->user()->email; 
-        $ipAddress=$_SERVER['REMOTE_ADDR'];
-        $location='0';
-        $access_from=Browser::browserName();
-        $activity='Detail Request Sparepart Auxiliaries '.$data[0]->request_number;
-        $this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+			//Audit Log
+			$username= auth()->user()->email; 
+			$ipAddress=$_SERVER['REMOTE_ADDR'];
+			$location='0';
+			$access_from=Browser::browserName();
+			$activity='Detail Request Sparepart Auxiliaries '.$data[0]->request_number;
+			$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 
-        return view('production.req_sparepart_auxiliaries_detail',compact('ms_departements','ms_tool_auxiliaries','data','data_detail'));
+			return view('production.req_sparepart_auxiliaries_detail',compact('ms_departements','ms_tool_auxiliaries','data','data_detail'));
+		}else{
+			return Redirect::to('/production-req-sparepart-auxiliaries');
+		}
     }   
 	public function production_req_sparepart_auxiliaries_detail_update(Request $request){
 		if ($request->has('savemore')) {
@@ -261,6 +314,22 @@ class ProductionController extends Controller
 		
 		return Redirect::to('/production-req-sparepart-auxiliaries-detail/'.$request_number)->with('pesan', 'Edit Successfuly.');  
     }
+	public function production_req_sparepart_auxiliaries_detail_delete(Request $request){
+		$id_delete = $request->input('hapus_detail');
+		$request_number = $request->input('request_number');
+		
+		ProductionReqSparepartAuxiliariesDetail::whereRaw( "sha1(id) = '$id_delete'" )->delete();
+		
+		//Audit Log		
+		$username= auth()->user()->email; 
+		$ipAddress=$_SERVER['REMOTE_ADDR'];
+		$location='0';
+		$access_from=Browser::browserName();
+		$activity='Delete Request Sparepart Auxiliaries Detail';
+		$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+		
+		return Redirect::to('/production-req-sparepart-auxiliaries-detail/'.$request_number)->with('pesan', 'Delete Successfuly.');
+	}
 	
 	public function production_entry_material_use()
     {
