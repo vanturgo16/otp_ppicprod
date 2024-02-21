@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class ProductionEntryMaterialUse extends Model
 {
     use HasFactory;
-	protected $table = 'work_orders';
+	protected $table = 'report_material_uses';
     protected $guarded=[
         'id'
     ];

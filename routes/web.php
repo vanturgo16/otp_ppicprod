@@ -20,6 +20,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth'])->group(function () {
 	//Production
+	//START REQUEST SPAREPART AND AUXILIARIES
 	Route::get('/production-req-sparepart-auxiliaries', [ProductionController::class, 'production_req_sparepart_auxiliaries'])->name('production_req_sparepart_auxiliaries');
 	Route::get('/production-req-sparepart-auxiliaries-add', [ProductionController::class, 'production_req_sparepart_auxiliaries_add'])->name('production_req_sparepart_auxiliaries_add');
 	Route::post('/production-req-sparepart-auxiliaries-save', [ProductionController::class, 'production_req_sparepart_auxiliaries_save'])->name('production_req_sparepart_auxiliaries_save');	
@@ -32,9 +33,18 @@ Route::middleware(['auth'])->group(function () {
 	Route::get('/production-req-sparepart-auxiliaries-detail-edit-get/{id}', [ProductionController::class, 'production_req_sparepart_auxiliaries_detail_edit_get'])->name('production_req_sparepart_auxiliaries_detail_edit_get');
 	Route::put('/production-req-sparepart-auxiliaries-detail-edit-save/{id}', [ProductionController::class, 'production_req_sparepart_auxiliaries_detail_edit_save'])->name('production_req_sparepart_auxiliaries_detail_edit_save');
 	Route::post('/production-req-sparepart-auxiliaries-detail-delete', [ProductionController::class, 'production_req_sparepart_auxiliaries_detail_delete'])->name('production_req_sparepart_auxiliaries_detail_delete');
-	
+	//END REQUEST SPAREPART AND AUXILIARIES
+	//START ENTRY MATERIAL USE
 	Route::get('/production-ent-material-use', [ProductionController::class, 'production_entry_material_use'])->name('production_entry_material_use');
-	Route::get('/production-ent-report-blow', [ProductionController::class, 'production_entry_report_blow'])->name('production_entry_report_blow');
+	Route::get('/production-ent-material-use-json', [ProductionController::class, 'production_entry_material_use_json'])->name('production_entry_material_use_json');
+	Route::get('/production-ent-material-use-add', [ProductionController::class, 'production_entry_material_use_add'])->name('production_entry_material_use_add');
+	Route::get('/json_get_work_center', [ProductionController::class, 'jsonGetWorkCenter'])->name('jsonGetWorkCenter');
+	Route::get('/json_get_regu', [ProductionController::class, 'jsonGetRegu'])->name('jsonGetRegu');
+	Route::post('/production-ent-material-use-save', [ProductionController::class, 'production_entry_material_use_save'])->name('production_entry_material_use_save');
+	//END ENTRY MATERIAL USE
+	//START REPORT BLOW
+	//Route::get('/production-ent-report-blow', [ProductionController::class, 'production_entry_report_blow'])->name('production_entry_report_blow');
+	//END REPORT BLOW
 	
     //Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
