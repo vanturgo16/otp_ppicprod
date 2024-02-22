@@ -29,7 +29,7 @@
                         <div class="card-header">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <a href="/hapus_request_number" class="btn btn-success waves-effect waves-light">
+                                    <a href="/production-ent-material-use-add" class="btn btn-success waves-effect waves-light">
 										<i class="bx bx-plus" title="Add Data" ></i>
 										ADD
 									</a>                                   
@@ -38,9 +38,8 @@
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table id="datatable" class="table table-bordered dt-responsive  nowrap w-100">
+								<table class="table table-bordered dt-responsive nowrap w-100 datatable-emu-json">
                                     <thead>
-                                        <tr>
                                         <tr>
                                             <th width='10%'>Work Order</th>
                                             <th width='10%'>Date</th>
@@ -51,50 +50,29 @@
                                             <th width='20%'>Aksi</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-										@foreach ($datas as $data)
-										<tr>
-											<td>{{ $data->wo_number }}</td>
-											<td>{{ substr($data->updated_at, 0, 10) }}</td>
-											<td>Regu</td>
-											<td>Shift</td>
-											<td>{{ $data->work_center }}</td>
-											<td>{{ $data->status }}</td>
-											
-											
-											<td>				
-												<a href="/production-req-sparepart-auxiliaries-hold/{{ $data->wo_number }}" class="btn btn-primary waves-effect waves-light">
-													<i class="bx bx-check" title="Hold"></i> APPROVE
-												</a>
-												<a href="/production-req-sparepart-auxiliaries-edit/{{ $data->wo_number }}" class="btn btn-info waves-effect waves-light">
-													<i class="bx bx-edit-alt" title="Edit"></i> EDIT
-												</a>
-												<form action="/production-req-sparepart-auxiliaries-delete/{{ $data->wo_number }}" method="post"
-													class="d-inline">
-													@method('delete')
-													@csrf
-												   
-													<button type="submit" class="btn btn-danger"
-													onclick="return confirm('Anda yakin mau menghapus item ini ?')">
-														<i class="bx bx-trash-alt" title="Delete" ></i> DELETE
-													</button>
-												</form>		
-												<a href="/production-req-sparepart-auxiliaries-hold/{{ $data->wo_number }}" class="btn btn-warning waves-effect waves-light">
-													<i class="bx bx-block" title="Hold"></i> HOLD
-												</a>	
-												<a href="/production-req-sparepart-auxiliaries--print/{{ $data->wo_number }}" class="btn btn-dark waves-effect waves-light">
-													<i class="bx bx-printer" title="Print"></i> PRINT
-												</a>	
-												<!--a href="/production-req-sparepart-auxiliaries-view/{{ $data->wo_number }}" class="btn btn-primary waves-effect waves-light">
-													<i class="bx bx-search-alt" title="Print"></i> VIEW
-												</a-->											
-											</td>
-										 
-										</tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
+								</table>
+								<script type="text/javascript">
+								  $(function () {
+									var table = $('.datatable-emu-json').DataTable({
+										processing: true,
+										serverSide: true,
+										ajax: '/production-ent-material-use-json',
+										columns: [
+											{data: 'wo_number', name: 'wo_number', orderable: true, searchable: true},
+											{data: 'date', name: 'date', orderable: true, searchable: true},
+											{data: 'regu', name: 'regu', orderable: true, searchable: true},
+											{data: 'shift', name: 'shift', orderable: true, searchable: true},
+											{data: 'work_center', name: 'work_center', orderable: true, searchable: true},
+											{data: 'status', name: 'status', orderable: true, searchable: true},
+											{data: 'action', name: 'action', orderable: false, searchable: false},
+										],
+										aaSorting: [
+											[1, 'desc']
+										],
+									});
+								  });
+								</script>
+							</div>							
                         </div>
                     </div>
                 </div>

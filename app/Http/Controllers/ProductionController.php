@@ -9,27 +9,30 @@ use Illuminate\Support\Facades\Redirect;
 use RealRashid\SweetAlert\Facades\Alert;
 use Browser;
 use Illuminate\Support\Facades\Crypt;
+use Yajra\DataTables\Facades\Datatables;
 
 // Model
+//START REQUEST SPAREPART AND AUXILIARIES
 use App\Models\ProductionReqSparepartAuxiliaries;
 use App\Models\ProductionReqSparepartAuxiliariesDetail;
 use App\Models\ProductionEntryMaterialUse;
 use App\Models\ProductionEntryReportBlow;
+//END REQUEST SPAREPART AND AUXILIARIES
 
-use App\Models\MstRequester;//dummy
+
 
 
 class ProductionController extends Controller
 {
     use AuditLogsTrait;
 	
+	//START REQUEST SPAREPART AND AUXILIARIES
     public function production_req_sparepart_auxiliaries()
     {
         $data = ProductionReqSparepartAuxiliaries::leftJoin('master_departements AS b', 'request_tool_auxiliaries.id_master_departements', '=', 'b.id')
                 ->select('request_tool_auxiliaries.*', 'b.name')
                 ->orderBy('request_tool_auxiliaries.created_at', 'desc')
                 ->get();
-        //$data_requester = MstRequester::get();
 
         //Audit Log		
         $username= auth()->user()->email; 
@@ -243,16 +246,15 @@ class ProductionController extends Controller
 			
             $pesan = [
                 'id_master_tool_auxiliaries.required' => 'Cannot Be Empty',
-                'qty.required' => 'Cannot Be Empty',
-                'remarks.required' => 'Cannot Be Empty',           
+                'qty.required' => 'Cannot Be Empty',         
             ];
 
             $validatedData = $request->validate([
                 'id_master_tool_auxiliaries' => 'required',
                 'qty' => 'required',
-                'remarks' => 'required',
 
             ], $pesan);
+			$validatedData['remarks'] = !empty($request->input('remarks'))?$request->input('remarks'):'';			
 			$validatedData['id_request_tool_auxiliaries'] = $data[0]->id;			
 			
             ProductionReqSparepartAuxiliariesDetail::create($validatedData);
@@ -330,36 +332,167 @@ class ProductionController extends Controller
 		
 		return Redirect::to('/production-req-sparepart-auxiliaries-detail/'.$request_number)->with('pesan', 'Delete Successfuly.');
 	}
+	//END REQUEST SPAREPART AND AUXILIARIES
 	
+	//START ENTRY MATERIAL USE
 	public function production_entry_material_use()
-    {
-         $datas = ProductionEntryMaterialUse::leftJoin('master_work_centers AS b', 'work_orders.id_master_work_centers', '=', 'b.id')
-				//->leftJoin('master_departements AS c', 'request_tool_auxiliaries.id_master_departements', '=', 'b.id')
-                //->where('work_orders.status', '<>', 'Request')
-                ->select('work_orders.*', 'b.work_center')
-                ->orderBy('work_orders.created_at', 'desc')
-                ->get();
-        $data_requester = MstRequester::get();
-
+    {        
         //Audit Log		
         $username= auth()->user()->email; 
         $ipAddress=$_SERVER['REMOTE_ADDR'];
         $location='0';
         $access_from=Browser::browserName();
-        $activity='View List Entry Material Use';
+        $activity='View List Entry Report Material Use';
         $this->auditLogs($username,$ipAddress,$location,$access_from,$activity);		
 
-        return view('production.entry_material_use',compact('datas','data_requester'));
+        return view('production.entry_material_use');
     }
+	public function production_entry_material_use_json()
+    {
+        $datas = ProductionEntryMaterialUse::leftJoin('work_orders AS b', 'report_material_uses.id_work_orders', '=', 'b.id')
+				->leftJoin('master_regus AS c', 'report_material_uses.id_master_regus', '=', 'c.id')
+				->leftJoin('master_work_centers AS d', 'report_material_uses.id_master_work_centers', '=', 'd.id')
+                ->select('report_material_uses.*', 'b.wo_number', 'c.regu', 'd.work_center')
+                ->orderBy('report_material_uses.created_at', 'desc')
+                ->get();
+
+		return DataTables::of($datas)
+			->addColumn('action', function ($data) {
+				if($data->status=='Hold'){
+					$tombol = '
+						<center>
+							<a href="#" class="btn btn-primary waves-effect waves-light">
+								<i class="bx bx-check" title="Hold"></i> APPROVE
+							</a>
+							<a href="#" class="btn btn-info waves-effect waves-light">
+								<i class="bx bx-edit-alt" title="Edit"></i> EDIT
+							</a>
+							<a href="#" class="btn btn-danger waves-effect waves-light" onclick="return confirm('."'Anda yakin mau menghapus item inix ?'".')">
+								<i class="bx bx-trash-alt" title="Delete" ></i> DELETE
+							</a>
+							<a href="#" class="btn btn-dark waves-effect waves-light">
+								<i class="bx bx-printer" title="Print"></i> PRINT
+							</a>
+						</center>
+					';
+				}elseif($data->status=='Approve'){
+					$tombol = '
+						<center>
+							<a href="#" class="btn btn-warning waves-effect waves-light">
+								<i class="bx bx-block" title="Hold"></i> HOLD
+							</a>
+							<a href="#" class="btn btn-dark waves-effect waves-light">
+								<i class="bx bx-printer" title="Print"></i> PRINT
+							</a>
+						</center>						
+					';
+				}
+				return $tombol;
+			})
+		->make(true);
+    }	
+	public function production_entry_material_use_add(){
+        $ms_work_orders = DB::table('work_orders')
+                        ->select('id_master_process_productions','wo_number','id')
+                        ->get();
+		/*
+        $ms_work_centers = DB::table('master_work_centers')
+                        ->select('work_center_code','work_center','id')
+                        ->get();
+        $ms_regus = DB::table('master_regus')
+                        ->select('regu','id')
+                        ->get();
+        */
+		
+        //Audit Log
+        $username= auth()->user()->email; 
+        $ipAddress=$_SERVER['REMOTE_ADDR'];
+        $location='0';
+        $access_from=Browser::browserName();
+        $activity='Add Entry Report Material Use';
+        $this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+
+        return view('production.entry_material_use_add',compact('ms_work_orders'));
+    }
+	public function jsonGetWorkCenter()
+    {
+        $id_master_process_productions = request()->get('id_master_process_productions');
+        
+		$datas = DB::table('master_work_centers')
+			->where('id_master_process_productions', $id_master_process_productions)
+			->select('work_center_code','work_center','id')
+			->get();
+			
+		$lists = "<option value='' disabled='' selected=''>** Please Select A Work Centers</option>";		
+		foreach($datas as $data){
+			$lists .= "<option value='".$data->id."'>".$data->work_center_code.' - '.$data->work_center."</option>";
+		}
+		
+		$callback = array('list_work_center'=>$lists);
+		echo json_encode($callback);			
+    }
+	public function jsonGetRegu()
+    {
+        $id_master_work_centers = request()->get('id_master_work_centers');
+        
+		$datas = DB::table('master_regus')
+			->where('id_master_work_centers', $id_master_work_centers)
+			->select('id', 'regu')
+			->get();
+			
+		$lists = "<option value='' disabled='' selected=''>** Please Select A Regu</option>";		
+		foreach($datas as $data){
+			$lists .= "<option value='".$data->id."'>".$data->regu."</option>";
+		}
+		
+		$callback = array('list_regu'=>$lists);
+		echo json_encode($callback);			
+    }
+	public function production_entry_material_use_save(Request $request){
+        if ($request->has('savemore')) {
+            return "Tombol Save & Add More diklik.";
+        } elseif ($request->has('save')) {
+            $pesan = [
+                'id_work_orders.required' => 'Cannot Be Empty',
+                'date.required' => 'Cannot Be Empty',
+                'id_master_work_centers.required' => 'Cannot Be Empty',
+                'id_master_regus.required' => 'Cannot Be Empty',                
+                'shift.required' => 'Cannot Be Empty',                
+            ];
+
+            $validatedData = $request->validate([
+                'id_work_orders' => 'required',
+                'date' => 'required',
+                'id_master_work_centers' => 'required',
+                'id_master_regus' => 'required',
+                'shift' => 'required',
+
+            ], $pesan);			
+            $validatedData['status'] = 'Hold';
+			
+            $response = ProductionEntryMaterialUse::create($validatedData);
+			
+			//Audit Log		
+			$username= auth()->user()->email; 
+			$ipAddress=$_SERVER['REMOTE_ADDR'];
+			$location='0';
+			$access_from=Browser::browserName();
+			$activity='Save Entry Report Material Use ID="'.$response->id.'"';
+			$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+			
+            return Redirect::to('/production-ent-material-use')->with('pesan', 'Add Successfuly.');
+            //return Redirect::to('/production-ent-material-use-detail/'.sha1($response->id))->with('pesan', 'Add Successfuly.');
+        }        
+    }
+	//END ENTRY MATERIAL USE
+	
+	/*
 	public function production_entry_report_blow()
     {
-         $datas = ProductionEntryReportBlow::leftJoin('work_orders AS b', 'report_blows.id_work_orders', '=', 'b.id')
-				//->leftJoin('master_departements AS c', 'request_tool_auxiliaries.id_master_departements', '=', 'b.id')
-                //->where('work_orders.status', '<>', 'Request')
+        $datas = ProductionEntryReportBlow::leftJoin('work_orders AS b', 'report_blows.id_work_orders', '=', 'b.id')
                 ->select('report_blows.*', 'b.wo_number')
                 ->orderBy('report_blows.created_at', 'desc')
                 ->get();
-        $data_requester = MstRequester::get();
 
         //Audit Log		
         $username= auth()->user()->email; 
@@ -369,7 +502,7 @@ class ProductionController extends Controller
         $activity='View List Entry Report Blow';
         $this->auditLogs($username,$ipAddress,$location,$access_from,$activity);		
 
-        return view('production.entry_report_blow',compact('datas','data_requester'));
+        return view('production.entry_report_blow', compact('datas'));
     }
-
+	*/
 }
