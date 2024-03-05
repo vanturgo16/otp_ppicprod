@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GrnController;
 use App\Http\Controllers\MstAccountCodesController;
 use App\Http\Controllers\MstAccountTypesController;
 use App\Http\Controllers\TransDataBankController;
@@ -79,4 +80,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('transdatabank/update/{id}', [TransDataBankController::class, 'update'])->name('transdatabank.update');
     Route::post('transdatabank/delete/{id}', [TransDataBankController::class, 'delete'])->name('transdatabank.delete');
 
+
+    Route::get('/good-receipt-note', [GrnController::class, 'index'])->name('index');
+    Route::get('/grn-pr-add', [GrnController::class, 'grn_pr_add'])->name('grn_pr_add');
+    Route::get('/grn-po-add', [GrnController::class, 'grn_po_add'])->name('grn_po_add');
+    Route::get('/get-data', [GrnController::class, 'get_data'])->name('get_data');           
 });
