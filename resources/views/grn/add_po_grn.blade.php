@@ -4,7 +4,7 @@
 
 <div class="page-content">
     <div class="container-fluid">
-    <form method="post" action="/simpan_pr_rm" class="form-material m-t-40" enctype="multipart/form-data">
+    <form method="post" action="/simpan_po_grn" class="form-material m-t-40" enctype="multipart/form-data">
     @csrf
         <div class="row">
             <div class="col-12">
@@ -39,6 +39,7 @@
                                         <label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Receipt Number</label>
                                         <div class="col-sm-9">
                                             <input type="text" name="receipt_number" class="form-control" value="{{ $formattedCode }}" readonly>
+                                            <input type="hidden" name="non_invoiceable" class="form-control" value="N" readonly>
                                         </div>
                                     </div>
                                     <div class="row mb-4 field-wrapper">
@@ -96,7 +97,7 @@
                                     <div class="row mb-4 field-wrapper">
                                         <label for="horizontal-firstname-input" class="col-sm-3 col-form-label">QC Check </label>
                                         <div class="col-sm-9">
-                                            <input type="text" class="form-control" name="qc_check" value="Y" readonly>
+                                            <input type="text" class="form-control" name="qc_status" value="Y" readonly>
                                         </div>
                                     </div>
                                     <div class="row mb-4 field-wrapper">
@@ -114,7 +115,7 @@
                                     <div class="row left-content-end">
                                     <div class="col-sm-9">
                                         <div>
-                                            <a href="/purchase" class="btn btn-info waves-effect waves-light">Back</a>
+                                            <a href="/good-receipt-note" class="btn btn-info waves-effect waves-light">Back</a>
                                             <button type="submit" class="btn btn-primary w-md" name="save">Save</button>
                                         </div>
                                     </div>

@@ -84,5 +84,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/good-receipt-note', [GrnController::class, 'index'])->name('index');
     Route::get('/grn-pr-add', [GrnController::class, 'grn_pr_add'])->name('grn_pr_add');
     Route::get('/grn-po-add', [GrnController::class, 'grn_po_add'])->name('grn_po_add');
-    Route::get('/get-data', [GrnController::class, 'get_data'])->name('get_data');           
+    Route::get('/get-data', [GrnController::class, 'get_data'])->name('get_data');  
+    Route::post('/simpan_pr_grn', [GrnController::class, 'simpan_pr_grn'])->name('simpan_pr_grn');
+    Route::post('/simpan_po_grn', [GrnController::class, 'simpan_po_grn'])->name('simpan_po_grn');
+    Route::get('/detail-grn-po/{id}', [GrnController::class, 'detail_grn_po'])->name('detail_grn_po');
+    Route::get('/detail-grn-pr/{id}', [GrnController::class, 'detail_grn_pr'])->name('detail_grn_pr');          
 });
