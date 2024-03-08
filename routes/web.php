@@ -41,6 +41,12 @@ Route::middleware(['auth'])->group(function () {
 	Route::get('/json_get_work_center', [ProductionController::class, 'jsonGetWorkCenter'])->name('jsonGetWorkCenter');
 	Route::get('/json_get_regu', [ProductionController::class, 'jsonGetRegu'])->name('jsonGetRegu');
 	Route::post('/production-ent-material-use-save', [ProductionController::class, 'production_entry_material_use_save'])->name('production_entry_material_use_save');
+	Route::post('/production-ent-material-use-update', [ProductionController::class, 'production_entry_material_use_update'])->name('production_entry_material_use_update');
+	Route::get('/production-ent-material-use-approve/{id}', [ProductionController::class, 'production_entry_material_use_approve'])->name('production_entry_material_use_approve');
+	Route::get('/production-ent-material-use-hold/{id}', [ProductionController::class, 'production_entry_material_use_hold'])->name('production_entry_material_use_hold');
+	Route::get('/production-ent-material-use-delete/{id}', [ProductionController::class, 'production_entry_material_use_delete'])->name('production_entry_material_use_delete');
+	Route::get('/production-ent-material-use-print/{id}', [ProductionController::class, 'production_entry_material_use_print'])->name('production_entry_material_use_print');
+	Route::get('/production-ent-material-use-detail/{id}', [ProductionController::class, 'production_entry_material_use_detail'])->name('production_entry_material_use_detail');
 	//END ENTRY MATERIAL USE
 	//START REPORT BLOW
 	//Route::get('/production-ent-report-blow', [ProductionController::class, 'production_entry_report_blow'])->name('production_entry_report_blow');

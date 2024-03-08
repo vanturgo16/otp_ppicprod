@@ -8,7 +8,7 @@
         <div class="row">
             <div class="col-12">
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-					<a href="/production-req-sparepart-auxiliaries" class="btn btn-dark waves-effect waves-light mb-3"> 
+					<a href="/production-ent-material-use" class="btn btn-dark waves-effect waves-light mb-3"> 
 					<i class="bx bx-list-ul" title="Back"></i> REPORT MATERIAL USE</a>
                     <div class="page-title-right">
                         <ol class="breadcrumb m-0">
