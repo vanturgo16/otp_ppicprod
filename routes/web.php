@@ -79,4 +79,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('transdatabank/update/{id}', [TransDataBankController::class, 'update'])->name('transdatabank.update');
     Route::post('transdatabank/delete/{id}', [TransDataBankController::class, 'delete'])->name('transdatabank.delete');
 
+     // PPIC dev_hafidz
+    include __DIR__.'/ppic/workOrder.php';
 });
