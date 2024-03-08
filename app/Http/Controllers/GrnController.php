@@ -11,6 +11,8 @@ use Browser;
 use Illuminate\Support\Facades\Crypt;
 
 use App\Models\GoodReceiptNote;
+use App\Models\GoodReceiptNoteDetail;
+use App\Models\GoodReceiptNoteDetailSmt;
 use App\Models\MstSupplier;
 use App\Models\PurchaseOrders;
 use App\Models\PurchaseRequisitions;
