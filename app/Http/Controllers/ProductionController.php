@@ -16,6 +16,7 @@ use Yajra\DataTables\Facades\Datatables;
 use App\Models\ProductionReqSparepartAuxiliaries;
 use App\Models\ProductionReqSparepartAuxiliariesDetail;
 use App\Models\ProductionEntryMaterialUse;
+use App\Models\ProductionEntryMaterialUseDetail;
 use App\Models\ProductionEntryReportBlow;
 //END REQUEST SPAREPART AND AUXILIARIES
 
@@ -146,7 +147,7 @@ class ProductionController extends Controller
 		$activity='Approve Request Sparepart Auxiliaries '.$request->input('request_number');
 		$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 		
-		return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'Hold Successfuly.');
+		return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'Approve Successfuly.');
 	}
 	public function production_req_sparepart_auxiliaries_delete(Request $request){
 		$id_delete = $request->input('hapus');
@@ -355,22 +356,25 @@ class ProductionController extends Controller
                 ->select('report_material_uses.*', 'b.wo_number', 'c.regu', 'd.work_center')
                 ->orderBy('report_material_uses.created_at', 'desc')
                 ->get();
-
+				
 		return DataTables::of($datas)
 			->addColumn('action', function ($data) {
+				$return_approve = "return confirm('Are you sure to approve this item ?')";
+				$return_hold = "return confirm('Are you sure to hold this item ?')";
+				$return_delete = "return confirm('Are you sure to delete this item ?')";
 				if($data->status=='Hold'){
 					$tombol = '
 						<center>
-							<a href="#" class="btn btn-primary waves-effect waves-light">
-								<i class="bx bx-check" title="Hold"></i> APPROVE
+							<a onclick="'.$return_approve.'" href="/production-ent-material-use-approve/'.sha1($data->id).'" class="btn btn-primary waves-effect waves-light">
+								<i class="bx bx-check" title="Approve"></i> APPROVE
 							</a>
-							<a href="#" class="btn btn-info waves-effect waves-light">
+							<a href="/production-ent-material-use-detail/'.sha1($data->id).'" class="btn btn-info waves-effect waves-light">
 								<i class="bx bx-edit-alt" title="Edit"></i> EDIT
 							</a>
-							<a href="#" class="btn btn-danger waves-effect waves-light" onclick="return confirm('."'Anda yakin mau menghapus item inix ?'".')">
+							<a onclick="'.$return_delete.'" href="/production-ent-material-use-delete/'.sha1($data->id).'" class="btn btn-danger waves-effect waves-light" onclick="return confirm('."'Anda yakin mau menghapus item inix ?'".')">
 								<i class="bx bx-trash-alt" title="Delete" ></i> DELETE
 							</a>
-							<a href="#" class="btn btn-dark waves-effect waves-light">
+							<a target="_blank" href="/production-ent-material-use-print/'.sha1($data->id).'" class="btn btn-dark waves-effect waves-light">
 								<i class="bx bx-printer" title="Print"></i> PRINT
 							</a>
 						</center>
@@ -378,10 +382,10 @@ class ProductionController extends Controller
 				}elseif($data->status=='Approve'){
 					$tombol = '
 						<center>
-							<a href="#" class="btn btn-warning waves-effect waves-light">
+							<a onclick="'.$return_hold.'" href="/production-ent-material-use-hold/'.sha1($data->id).'" class="btn btn-warning waves-effect waves-light">
 								<i class="bx bx-block" title="Hold"></i> HOLD
 							</a>
-							<a href="#" class="btn btn-dark waves-effect waves-light">
+							<a target="_blank" href="/production-ent-material-use-print/'.sha1($data->id).'" class="btn btn-dark waves-effect waves-light">
 								<i class="bx bx-printer" title="Print"></i> PRINT
 							</a>
 						</center>						
@@ -480,9 +484,194 @@ class ProductionController extends Controller
 			$activity='Save Entry Report Material Use ID="'.$response->id.'"';
 			$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 			
-            return Redirect::to('/production-ent-material-use')->with('pesan', 'Add Successfuly.');
-            //return Redirect::to('/production-ent-material-use-detail/'.sha1($response->id))->with('pesan', 'Add Successfuly.');
+            return Redirect::to('/production-ent-material-use-detail/'.sha1($response->id))->with('pesan', 'Add Successfuly.');
         }        
+    }
+	public function production_entry_material_use_detail($response_id){
+		$data = ProductionEntryMaterialUse::leftJoin('work_orders AS b', 'report_material_uses.id_work_orders', '=', 'b.id')
+				->select("report_material_uses.*","b.id_master_process_productions")
+				->whereRaw( "sha1(report_material_uses.id) = '$response_id'")
+                ->get();
+				
+		if(!empty($data[0])){
+			$ms_work_orders = DB::table('work_orders')
+							->select('id_master_process_productions','wo_number','id')
+							->get();
+			$ms_work_centers = DB::table('master_work_centers')
+							->where( "id_master_process_productions" , "=", $data[0]->id_master_process_productions)
+							->select('work_center_code','work_center','id')
+							->get();	
+			$ms_regus = DB::table('master_regus')
+							->where( "id" , "=", $data[0]->id_master_regus)
+							->select('id', 'regu')
+							->get();	
+							
+			$ms_barcodes = DB::table('good_receipt_note_details')
+							->where( "lot_number" , "!=", "0")
+							->where( "qc_passed" , "=", "Y")
+							->orderBy("created_at", "desc")
+							->select('id', 'lot_number')
+							->get();//sumber data masih belum ter-definisi dengan jelas sumber nya.
+					
+			$data_detail = DB::table('report_material_use_details as a')
+					->leftJoin('report_material_uses as b', 'a.id_report_material_uses', '=', 'b.id')
+					->leftJoin('good_receipt_note_details as c', 'a.id_good_receipt_note_details', '=', 'c.id')
+					->leftJoin('master_raw_materials as d', 'c.id_master_products', '=', 'd.id')
+					->select('a.*', 'c.lot_number', 'd.description')
+					->whereRaw( "sha1(b.id) = '$response_id'")
+					->get();            
+				
+			//Audit Log
+			$username= auth()->user()->email; 
+			$ipAddress=$_SERVER['REMOTE_ADDR'];
+			$location='0';
+			$access_from=Browser::browserName();
+			$activity='Detail Entry Report Material Use ID="'.$data[0]->id.'"';
+			$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+
+			return view('production.entry_material_use_detail',compact('ms_work_orders','ms_work_centers','ms_regus','ms_barcodes','data','data_detail'));
+		}else{
+			return Redirect::to('/production-ent-material-use');
+		}
+		
+    }   
+	public function production_entry_material_use_update(Request $request){
+		if ($request->has('savemore')) {
+            return "Tombol Save & Add More diklik.";
+        } elseif ($request->has('update')) {
+			$request_id = $_POST['request_id'];		
+			$data = ProductionEntryMaterialUse::whereRaw( "sha1(report_material_uses.id) = '$request_id'")
+				->select('id')
+				->get();
+			
+            $pesan = [
+                'id_work_orders.required' => 'Cannot Be Empty',
+                'date.required' => 'Cannot Be Empty',
+                'id_master_work_centers.required' => 'Cannot Be Empty',
+                'id_master_regus.required' => 'Cannot Be Empty',                
+                'shift.required' => 'Cannot Be Empty',                
+            ];
+
+            $validatedData = $request->validate([
+                'id_work_orders' => 'required',
+                'date' => 'required',
+                'id_master_work_centers' => 'required',
+                'id_master_regus' => 'required',
+                'shift' => 'required',
+
+            ], $pesan);	
+			$validatedData['status'] = 'Hold';			
+			
+            ProductionEntryMaterialUse::where('id', $data[0]->id)
+				->update($validatedData);
+			
+			//Audit Log		
+			$username= auth()->user()->email; 
+			$ipAddress=$_SERVER['REMOTE_ADDR'];
+			$location='0';
+			$access_from=Browser::browserName();
+			$activity='Update Entry Report Material Use ID="'.$data[0]->id.'"';
+			$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+				
+			return Redirect::to('/production-ent-material-use-detail/'.$request_id)->with('pesan', 'Update Successfuly.');
+        } 
+			
+    }
+	public function production_entry_material_use_approve($response_id){		
+		$data = ProductionEntryMaterialUse::leftJoin('work_orders AS b', 'report_material_uses.id_work_orders', '=', 'b.id')
+				->select("report_material_uses.*","b.id_master_process_productions")
+				->whereRaw( "sha1(report_material_uses.id) = '$response_id'")
+                ->get();
+		
+		if(!empty($data[0])){
+			$validatedData['status'] = 'Approve';			
+			
+			ProductionEntryMaterialUse::whereRaw( "sha1(id) = '$response_id'" )
+				->update($validatedData);
+			
+			//Audit Log		
+			$username= auth()->user()->email; 
+			$ipAddress=$_SERVER['REMOTE_ADDR'];
+			$location='0';
+			$access_from=Browser::browserName();
+			$activity='Approve Entry Report Material Use ID="'.$data[0]->id.'"';
+			$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+			
+			return Redirect::to('/production-ent-material-use')->with('pesan', 'Approve Successfuly.');
+		}else{
+			return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
+		}
+	}
+	public function production_entry_material_use_hold($response_id){		
+		$data = ProductionEntryMaterialUse::leftJoin('work_orders AS b', 'report_material_uses.id_work_orders', '=', 'b.id')
+				->select("report_material_uses.*","b.id_master_process_productions")
+				->whereRaw( "sha1(report_material_uses.id) = '$response_id'")
+                ->get();
+		
+		if(!empty($data[0])){
+			$validatedData['status'] = 'Hold';			
+			
+			ProductionEntryMaterialUse::whereRaw( "sha1(id) = '$response_id'" )
+				->update($validatedData);
+			
+			//Audit Log		
+			$username= auth()->user()->email; 
+			$ipAddress=$_SERVER['REMOTE_ADDR'];
+			$location='0';
+			$access_from=Browser::browserName();
+			$activity='Hold Entry Report Material Use ID="'.$data[0]->id.'"';
+			$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+			
+			return Redirect::to('/production-ent-material-use')->with('pesan', 'Hold Successfuly.');
+		}else{
+			return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
+		}
+	}
+	
+	public function production_entry_material_use_delete($response_id){
+		$data = ProductionEntryMaterialUse::leftJoin('work_orders AS b', 'report_material_uses.id_work_orders', '=', 'b.id')
+				->select("report_material_uses.*","b.id_master_process_productions")
+				->whereRaw( "sha1(report_material_uses.id) = '$response_id'")
+                ->get();
+		
+		if(!empty($data[0])){
+			
+			ProductionEntryMaterialUse::whereRaw( "sha1(id) = '$response_id'" )->delete();
+			ProductionEntryMaterialUseDetail::whereRaw( "sha1(id_report_material_uses) = '$response_id'" )->delete();
+		
+			//Audit Log		
+			$username= auth()->user()->email; 
+			$ipAddress=$_SERVER['REMOTE_ADDR'];
+			$location='0';
+			$access_from=Browser::browserName();
+			$activity='Delete Entry Report Material Use ID="'.$data[0]->id.'"';
+			$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+			
+			return Redirect::to('/production-ent-material-use')->with('pesan', 'Delete Successfuly.');
+		}else{
+			return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
+		}
+	}
+	public function production_entry_material_use_print($response_id)
+    {
+        $data = ProductionEntryMaterialUse::leftJoin('work_orders AS b', 'report_material_uses.id_work_orders', '=', 'b.id')
+				->leftJoin('master_work_centers AS c', 'report_material_uses.id_master_work_centers', '=', 'c.id')
+				->select("report_material_uses.*","b.wo_number","c.work_center")
+				->whereRaw( "sha1(report_material_uses.id) = '$response_id'")
+                ->get();
+				
+		if(!empty($data[0])){
+			$data_detail = ProductionEntryMaterialUse::rightJoin('report_material_use_details AS b', 'report_material_uses.id', '=', 'b.id_report_material_uses')
+				->leftJoin('good_receipt_note_details AS c', 'b.id_good_receipt_note_details', '=', 'c.id')
+				->select("b.*","c.lot_number")
+				->whereRaw( "sha1(report_material_uses.id) = '$response_id'")
+                ->get();
+			//print_r($data_detail[0]);exit;
+			return view('production.entry_material_use_print',compact('data','data_detail'));
+		}else{
+			return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
+		}
+		
     }
 	//END ENTRY MATERIAL USE
 	
