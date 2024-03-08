@@ -247,7 +247,7 @@
                                             <td></td>
                                             <td>
                                     
-                                                    <form action="/hapus_po_detail/{{ $data->id }}/{{ $id }}" method="post"
+                                                    <form action="/hapus_po_detail/" method="post"
                                                         class="d-inline">
                                                         @method('delete')
                                                         @csrf
@@ -262,7 +262,6 @@
                                                         data-bs-target="#edit-pr-smt" data-id="">
                                                         <i class="bx bx-edit-alt" title="edit data"></i>
                                                     </button></center></td>
-                                                    @include('purchase.modal')
                                             
                                         </tr>
                                     <!-- Add more rows as needed -->

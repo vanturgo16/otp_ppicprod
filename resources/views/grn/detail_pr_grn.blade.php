@@ -273,7 +273,7 @@
                                             <td></td>
                                             <td>
                                     
-                                                    <form action="/hapus_po_detail/{{ $data->id }}/{{ $id }}" method="post"
+                                                    <form action="/hapus_po_detail/" method="post"
                                                         class="d-inline">
                                                         @method('delete')
                                                         @csrf
@@ -304,7 +304,7 @@
                                             <td></td>
                                             <td>
                                     
-                                                    <form action="/hapus_po_detail/{{ $data->id }}/{{ $id }}" method="post"
+                                                    <form action="/hapus_po_detail/" method="post"
                                                         class="d-inline">
                                                         @method('delete')
                                                         @csrf
@@ -335,7 +335,7 @@
                                             <td></td>
                                             <td>
                                     
-                                                    <form action="/hapus_po_detail/{{ $data->id }}/{{ $id }}" method="post"
+                                                    <form action="/hapus_po_detail/" method="post"
                                                         class="d-inline">
                                                         @method('delete')
                                                         @csrf
