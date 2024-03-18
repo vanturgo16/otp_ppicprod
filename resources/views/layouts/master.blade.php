@@ -153,6 +153,7 @@
                             </a>
                             <ul class="sub-menu" aria-expanded="false">
                                 <li><a href="/good-receipt-note" data-key="t-blog-grid">Good Receipt Note</a></li>
+                                <li><a href="/good-lote-number" data-key="t-blog-grid">Good Lote Number</a></li>
   
                             </ul>
                         </li>

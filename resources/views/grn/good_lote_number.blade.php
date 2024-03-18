@@ -45,41 +45,39 @@
                                         <tr>
                                         <tr>
                                             <th>No</th>
-                                            <th>Receipt Number</th>
-                                            <th>Reference Number</th>
-                                            <th>Purchase Order</th>
-                                            <th>Date</th>
-                                            <th>External Doc Number</th>
-                                            <th>Suppliers</th>
-                                            <th>QC Check</th>
-                                            <th>Type</th>
-                                            <th>Status</th>
-                                            <th>Un Posted</th>
+                                            <th>Good Receipt Note</th>
+                                            <th>Products</th>
+                                            <th>Receipt Qty</th>
+                                            <th>Units</th>
+                                            <th>Qc Passed</th>
+                                            <th>Lot Number</th>
+                                            <th>Note</th>
+                                            <th>Generate Lot </th>
+                                            <th>Print </th>
                                             <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                    @foreach ($goodReceiptNotes as $data)
+                                    @foreach ($receiptDetails as $data)
                                             <tr><td></td>
                                                 <td>{{ $data->receipt_number }}</td>
-                                                <td>{{ $data->request_number }}</td>
-                                                <td>{{ $data->po_number }}</td>
-                                                <td>{{ $data->date }}</td>
-                                                <td>{{ $data->external_doc_number }}</td>
-                                                <td>{{ $data->name }}</td>
-                                                <td>{{ $data->qc_status }}</td>
-                                                <td>{{ $data->type }}</td>
+                                                <td>{{ $data->description }}</td>
+                                                <td>{{ $data->receipt_qty }}</td>
+                                                <td>{{ $data->unit_code }}</td>
+                                                <td>{{ $data->lot_number }}</td>
+                                                <td>{{ $data->note }}</td>
+                                                <td></td>
                                                 <td><button type="submit" class="btn btn-sm btn-success">
                                                         
                                                         </button></td>
                                                 <td></td>
-                                                <td><form action="/hapus_grn/{{ $data->id }}" method="post"
+                                                <td><form action="/hapus_grn/" method="post"
                                                         class="d-inline">
                                                         @method('delete')
                                                         @csrf
                                                        
                                                         <button type="submit" class="btn btn-sm btn-danger"
-                                                        onclick="return confirm('Anda yakin mau menghapus item ini ?! {{ $data->id }}')">
+                                                        onclick="return confirm('Anda yakin mau menghapus item ini ?')">
                                                             <i class="bx bx-trash-alt" title="Hapus data" ></i>
                                                         </button>
                                                     </form>
@@ -118,7 +116,7 @@
                                                     </td>
                                              
                                             </tr>
-                                    @endforeach
+                                   @endforeach
                                         <!-- Add more rows as needed -->
                                     </tbody>
                                 </table>
@@ -129,4 +127,5 @@
             </div>
         </div>
     </div>
+
 @endsection
