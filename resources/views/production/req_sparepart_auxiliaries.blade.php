@@ -36,80 +36,39 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="card-body">
+						<div class="card-body">
                             <div class="table-responsive">
-                                <table id="datatable" class="table table-bordered dt-responsive  nowrap w-100">
+								<table class="table table-bordered dt-responsive nowrap w-100 datatable-emu-json">
                                     <thead>
                                         <tr>
-                                        <tr>
-                                            <th width="20%">Request Number</th>
-                                            <th width="20%">Date</th>
-                                            <th width="20%">Departement</th>
-                                            <th width="20%">Status</th>
-                                            <th width="20%">Aksi</th>
+                                            <th width='10%'>Request Number</th>
+                                            <th width='10%'>Date</th>
+                                            <th width='20%'>Name</th>
+                                            <th width='10%'>Status</th>
+                                            <th width='20%'>Aksi</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-										@foreach ($data as $data)
-										<tr>
-											<td>{{ $data->request_number }}</td>
-											<td>{{ $data->date }}</td>
-											<td>{{ $data->name }}</td>
-											<td>{{ $data->status }}</td>
-											
-											
-											<td>
-												<center>
-													@if($data->status=='Hold') 
-													<form action="/production-req-sparepart-auxiliaries-hold" method="post" class="d-inline" enctype="multipart/form-data">
-													@csrf		
-														<input type="hidden" class="form-control" name="request_number" value="{{ $data->request_number }}">
-														<button type="submit" class="btn btn-primary" onclick="return confirm('Are you sure to hold this item ?')" name="approve" value="{{ sha1($data->id) }}">
-															<i class="bx bx-check" title="Approve"></i> APPROVE
-														</button>
-													</form>
-													@elseif($data->status=='Approve')
-													<form action="/production-req-sparepart-auxiliaries-hold" method="post" class="d-inline" enctype="multipart/form-data">
-													@csrf		
-														<input type="hidden" class="form-control" name="request_number" value="{{ $data->request_number }}">
-														<button type="submit" class="btn btn-secondary" onclick="return confirm('Are you sure to hold this item ?')" name="hold" value="{{ sha1($data->id) }}">
-															<i class="bx bx-block" title="Hold"></i> HOLD
-														</button>
-													</form>
-													@elseif($data->status=='Request')
-													<form action="/production-req-sparepart-auxiliaries-hold" method="post" class="d-inline" enctype="multipart/form-data">
-													@csrf		
-														<input type="hidden" class="form-control" name="request_number" value="{{ $data->request_number }}">
-														<button type="submit" class="btn btn-primary" onclick="return confirm('Are you sure to approve this item ?')" name="approve" value="{{ sha1($data->id) }}">
-															<i class="bx bx-check" title="Approve"></i> APPROVE
-														</button>
-													</form>
-													<form action="/production-req-sparepart-auxiliaries-hold" method="post" class="d-inline" enctype="multipart/form-data">
-													@csrf		
-														<input type="hidden" class="form-control" name="request_number" value="{{ $data->request_number }}">
-														<button type="submit" class="btn btn-secondary" onclick="return confirm('Are you sure to hold this item ?')" name="hold" value="{{ sha1($data->id) }}">
-															<i class="bx bx-block" title="Hold"></i> HOLD
-														</button>
-													</form>
-													@endif
-													<form action="/production-req-sparepart-auxiliaries-delete" method="post" class="d-inline" enctype="multipart/form-data">
-													@csrf	
-														<input type="hidden" class="form-control" name="request_number" value="{{ $data->request_number }}">
-														<button type="submit" class="btn btn-danger" onclick="return confirm('This items may have detail, Are you sure to delete this item ?')" name="hapus" value="{{ sha1($data->id) }}">
-															<i class="bx bx-trash-alt" title="Delete" ></i> DELETE
-														</button>
-													</form>												
-													<a href="/production-req-sparepart-auxiliaries-detail/{{ sha1($data->request_number) }}" class="btn btn-info waves-effect waves-light">
-														<i class="bx bx-edit-alt" title="Edit"></i> EDIT
-													</a>
-												</center>
-											</td>
-										 
-										</tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
+								</table>
+								<script type="text/javascript">
+								  $(function () {
+									var table = $('.datatable-emu-json').DataTable({
+										processing: true,
+										serverSide: true,
+										ajax: '/production-req-sparepart-auxiliaries-json',
+										columns: [
+											{data: 'request_number', name: 'wo_number', orderable: true, searchable: true},
+											{data: 'date', name: 'date', orderable: true, searchable: true},
+											{data: 'name', name: 'regu', orderable: true, searchable: true},
+											{data: 'status', name: 'shift', orderable: true, searchable: true},
+											{data: 'action', name: 'action', orderable: false, searchable: false},
+										],
+										aaSorting: [
+											[1, 'desc']
+										],
+									});
+								  });
+								</script>
+							</div>							
                         </div>
                     </div>
                 </div>
