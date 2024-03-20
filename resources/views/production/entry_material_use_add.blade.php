@@ -90,7 +90,7 @@
 										@endif
 									</div>
 								</div>	
-								<script>
+								<script>									
 									$(document).ready(function(){
 										$('#id_work_orders').prop('selectedIndex', 0);
 										$('#id_master_work_centers').prop('selectedIndex', 0);

@@ -45,6 +45,56 @@ class ProductionController extends Controller
 
         return view('production.req_sparepart_auxiliaries',compact('data'));
     }
+	public function production_req_sparepart_auxiliaries_json()
+    {
+        $datas = ProductionReqSparepartAuxiliaries::leftJoin('master_departements AS b', 'request_tool_auxiliaries.id_master_departements', '=', 'b.id')
+                ->select('request_tool_auxiliaries.*', 'b.name')
+                ->orderBy('request_tool_auxiliaries.created_at', 'desc')
+                ->get();
+				
+		return DataTables::of($datas)
+			->addColumn('action', function ($data) {
+				$return_approve = "return confirm('Are you sure to approve this item ?')";
+				$return_hold = "return confirm('Are you sure to hold this item ?')";
+				$return_delete = "return confirm('Are you sure to delete this item ?')";
+				if($data->status=='Hold'){
+					$tombol = '
+						<center>
+							<a onclick="'.$return_approve.'" href="/production-req-sparepart-auxiliaries-approve/'.sha1($data->id).'" class="btn btn-primary waves-effect waves-light">
+								<i class="bx bx-check" title="Approve"></i> APPROVE
+							</a>
+					';
+				}elseif($data->status=='Approve'){
+					$tombol = '
+						<center>
+							<a onclick="'.$return_hold.'" href="/production-req-sparepart-auxiliaries-hold/'.sha1($data->id).'" class="btn btn-secondary waves-effect waves-light">
+								<i class="bx bx-block" title="Hold"></i> HOLD
+							</a>						
+					';				
+				}elseif($data->status=='Request'){
+					$tombol = '
+						<center>
+							<a onclick="'.$return_approve.'" href="/production-req-sparepart-auxiliaries-approve/'.sha1($data->id).'" class="btn btn-primary waves-effect waves-light">
+								<i class="bx bx-check" title="Approve"></i> APPROVE
+							</a>
+							<a onclick="'.$return_hold.'" href="/production-req-sparepart-auxiliaries-hold/'.sha1($data->id).'" class="btn btn-secondary waves-effect waves-light">
+								<i class="bx bx-block" title="Hold"></i> HOLD
+							</a>	
+					';
+				}
+				$tombol .= '
+						<a onclick="'.$return_delete.'" target="_blank" href="/production-req-sparepart-auxiliaries-delete/'.sha1($data->id).'" class="btn btn-danger waves-effect waves-light">
+							<i class="bx bx-trash-alt" title="Delete" ></i> DELETE
+						</a>
+						<a target="_blank" href="/production-req-sparepart-auxiliaries-detail/'.sha1($data->request_number).'" class="btn btn-info waves-effect waves-light">
+							<i class="bx bx-edit-alt" title="Edit"></i> EDIT
+						</a>
+					</center>
+				';
+				return $tombol;
+			})
+		->make(true);
+    }
 	public function production_req_sparepart_auxiliaries_add(){
         $ms_departements = DB::table('master_departements')
                         ->select('name','id')
@@ -115,55 +165,84 @@ class ProductionController extends Controller
             return Redirect::to('/production-req-sparepart-auxiliaries-detail/'.sha1($request_number))->with('pesan', 'Add Successfuly.');      
         }        
     }
-	public function production_req_sparepart_auxiliaries_hold(Request $request){
-		$id_hold = $request->input('hold');
-		$validatedData['status'] = 'Hold';			
+	public function production_req_sparepart_auxiliaries_hold($response_id){
+		
+		$data = ProductionReqSparepartAuxiliaries::leftJoin('master_departements AS b', 'request_tool_auxiliaries.id_master_departements', '=', 'b.id')
+                ->select('request_tool_auxiliaries.*', 'b.name')
+                ->whereRaw( "sha1(request_tool_auxiliaries.id) = '$response_id'")
+                ->get();
+		
+		if(!empty($data[0])){
 			
-		ProductionReqSparepartAuxiliaries::whereRaw( "sha1(id) = '$id_hold'" )
-			->update($validatedData);
-		
-		//Audit Log		
-		$username= auth()->user()->email; 
-		$ipAddress=$_SERVER['REMOTE_ADDR'];
-		$location='0';
-		$access_from=Browser::browserName();
-		$activity='Hold Request Sparepart Auxiliaries '.$request->input('request_number');
-		$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
-		
-		return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'Hold Successfuly.');
-	}
-	public function production_req_sparepart_auxiliaries_approve(Request $request){
-		$id_approve = $request->input('approve');
-		$validatedData['status'] = 'Approve';			
+			$validatedData['status'] = 'Hold';			
 			
-		ProductionReqSparepartAuxiliaries::whereRaw( "sha1(id) = '$id_approve'" )
-			->update($validatedData);
+			ProductionReqSparepartAuxiliaries::whereRaw( "sha1(id) = '$response_id'" )
+				->update($validatedData);
 		
-		//Audit Log		
-		$username= auth()->user()->email; 
-		$ipAddress=$_SERVER['REMOTE_ADDR'];
-		$location='0';
-		$access_from=Browser::browserName();
-		$activity='Approve Request Sparepart Auxiliaries '.$request->input('request_number');
-		$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
-		
-		return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'Approve Successfuly.');
+			//Audit Log		
+			$username= auth()->user()->email; 
+			$ipAddress=$_SERVER['REMOTE_ADDR'];
+			$location='0';
+			$access_from=Browser::browserName();
+			$activity='Hold Request Sparepart Auxiliaries "'.$data[0]->request_number.'"';
+			$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+			
+			return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'Hold Successfuly.');
+		}else{
+			return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'There Is An Error.');
+		}
 	}
-	public function production_req_sparepart_auxiliaries_delete(Request $request){
-		$id_delete = $request->input('hapus');
+	public function production_req_sparepart_auxiliaries_approve($response_id){
 		
-		ProductionReqSparepartAuxiliaries::whereRaw( "sha1(id) = '$id_delete'" )->delete();
-		ProductionReqSparepartAuxiliariesDetail::whereRaw( "sha1(id_request_tool_auxiliaries) = '$id_delete'" )->delete();
+		$data = ProductionReqSparepartAuxiliaries::leftJoin('master_departements AS b', 'request_tool_auxiliaries.id_master_departements', '=', 'b.id')
+                ->select('request_tool_auxiliaries.*', 'b.name')
+                ->whereRaw( "sha1(request_tool_auxiliaries.id) = '$response_id'")
+                ->get();
 		
-		//Audit Log		
-		$username= auth()->user()->email; 
-		$ipAddress=$_SERVER['REMOTE_ADDR'];
-		$location='0';
-		$access_from=Browser::browserName();
-		$activity='Delete Request Sparepart Auxiliaries '.$request->input('request_number');
-		$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+		if(!empty($data[0])){
+			
+			$validatedData['status'] = 'Approve';			
+			
+			ProductionReqSparepartAuxiliaries::whereRaw( "sha1(id) = '$response_id'" )
+				->update($validatedData);
 		
-		return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'Delete Successfuly.');
+			//Audit Log		
+			$username= auth()->user()->email; 
+			$ipAddress=$_SERVER['REMOTE_ADDR'];
+			$location='0';
+			$access_from=Browser::browserName();
+			$activity='Approve Request Sparepart Auxiliaries "'.$data[0]->request_number.'"';
+			$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+			
+			return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'Approve Successfuly.');
+		}else{
+			return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'There Is An Error.');
+		}
+	}
+	public function production_req_sparepart_auxiliaries_delete($response_id){
+				
+		$data = ProductionReqSparepartAuxiliaries::leftJoin('master_departements AS b', 'request_tool_auxiliaries.id_master_departements', '=', 'b.id')
+                ->select('request_tool_auxiliaries.*', 'b.name')
+                ->whereRaw( "sha1(request_tool_auxiliaries.id) = '$response_id'")
+                ->get();
+		
+		if(!empty($data[0])){
+			
+			ProductionReqSparepartAuxiliaries::whereRaw( "sha1(id) = '$response_id'" )->delete();
+			ProductionReqSparepartAuxiliariesDetail::whereRaw( "sha1(id_request_tool_auxiliaries) = '$response_id'" )->delete();
+		
+			//Audit Log		
+			$username= auth()->user()->email; 
+			$ipAddress=$_SERVER['REMOTE_ADDR'];
+			$location='0';
+			$access_from=Browser::browserName();
+			$activity='Delete Request Sparepart Auxiliaries "'.$data[0]->request_number.'"';
+			$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+			
+			return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'Delete Successfuly.');
+		}else{
+			return Redirect::to('/production-req-sparepart-auxiliaries')->with('pesan', 'There Is An Error.');
+		}
 	}
 	public function production_req_sparepart_auxiliaries_detail($request_number){
 		$data = ProductionReqSparepartAuxiliaries::leftJoin('master_departements AS b', 'request_tool_auxiliaries.id_master_departements', '=', 'b.id')
@@ -368,29 +447,27 @@ class ProductionController extends Controller
 							<a onclick="'.$return_approve.'" href="/production-ent-material-use-approve/'.sha1($data->id).'" class="btn btn-primary waves-effect waves-light">
 								<i class="bx bx-check" title="Approve"></i> APPROVE
 							</a>
-							<a href="/production-ent-material-use-detail/'.sha1($data->id).'" class="btn btn-info waves-effect waves-light">
+							<a target="_blank" href="/production-ent-material-use-detail/'.sha1($data->id).'" class="btn btn-info waves-effect waves-light">
 								<i class="bx bx-edit-alt" title="Edit"></i> EDIT
 							</a>
 							<a onclick="'.$return_delete.'" href="/production-ent-material-use-delete/'.sha1($data->id).'" class="btn btn-danger waves-effect waves-light" onclick="return confirm('."'Anda yakin mau menghapus item inix ?'".')">
 								<i class="bx bx-trash-alt" title="Delete" ></i> DELETE
 							</a>
-							<a target="_blank" href="/production-ent-material-use-print/'.sha1($data->id).'" class="btn btn-dark waves-effect waves-light">
-								<i class="bx bx-printer" title="Print"></i> PRINT
-							</a>
-						</center>
 					';
 				}elseif($data->status=='Approve'){
 					$tombol = '
 						<center>
 							<a onclick="'.$return_hold.'" href="/production-ent-material-use-hold/'.sha1($data->id).'" class="btn btn-warning waves-effect waves-light">
 								<i class="bx bx-block" title="Hold"></i> HOLD
-							</a>
-							<a target="_blank" href="/production-ent-material-use-print/'.sha1($data->id).'" class="btn btn-dark waves-effect waves-light">
-								<i class="bx bx-printer" title="Print"></i> PRINT
-							</a>
-						</center>						
+							</a>						
 					';
 				}
+				$tombol .= '
+						<a target="_blank" href="/production-ent-material-use-print/'.sha1($data->id).'" class="btn btn-dark waves-effect waves-light">
+							<i class="bx bx-printer" title="Print"></i> PRINT
+						</a>
+					</center>						
+				';
 				return $tombol;
 			})
 		->make(true);
