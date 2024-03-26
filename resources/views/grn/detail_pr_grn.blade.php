@@ -4,6 +4,12 @@
 
 <div class="page-content">
     <div class="container-fluid">
+    @if (session('pesan'))
+            <div class="alert alert-success alert-dismissible alert-label-icon label-arrow fade show" role="alert">
+                <i class="mdi mdi-check-all label-icon"></i><strong>Success</strong> - {{ session('pesan') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+    @endif
         <div class="row">
             <div class="col-12">
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
@@ -213,6 +219,7 @@
                     <div class="card-header">
                         <h4 class="card-title">Table Detail</h4>
                         <!--  <p class="card-title-desc"> layout options : from inline, horizontal & custom grid implementations</p> -->
+                        @include('grn.modal')
                     </div>
                     <div class="card-body p-4">
                     <div class="card-body">
@@ -283,8 +290,8 @@
                                                     </form>
                                                     <button type="button" class="btn btn-sm btn-info " id=""
                                                         data-bs-toggle="modal"
-                                                        onclick="edit_pr_smt('{{ $data->id }}')"
-                                                        data-bs-target="#edit-pr-smt" data-id="">
+                                                        onclick="edit_grn_detail('{{ $data->id }}')"
+                                                        data-bs-target="#edit-pr-detail" data-id="">
                                                         <i class="bx bx-edit-alt" title="edit data"></i>
                                                     </button></center></td>
                                             

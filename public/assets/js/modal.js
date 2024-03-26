@@ -117,6 +117,86 @@ function get_data_pr() {
   });
 }
 
+function lot_number(id) {
+  $.ajax({
+      type: 'GET',
+      url: '/generate-code', // Ganti dengan URL rute Laravel yang sesuai
+      data: { id: id }, // Mengirim id sebagai data dalam permintaan Ajax
+      success: function (response) {
+          $('#generatedCode').val(response.data.find);
+          $('#idOke').val(id); // Mengisi nilai dari elemen dengan ID 'idOke' dengan nilai 'id'
+      },
+      error: function (error) {
+          console.log(error);
+      }
+  });
+}
+
+
+
+  function edit_grn_detail(id) {
+    // alert('test')
+    // $('.editPenjualan').click(function () {
+    //   let id = $(this).attr('data-id')
+    // Kirim data melalui Ajax
+    $.ajax({
+      url: '/get-edit-po/' + id,
+      method: 'GET',
+      data: {
+        id: id
+      },
+      success: function (response) {
+        // Tangkap pesan dari server dan tampilkan ke user
+        console.log(response.data.finddetail.qty);
+  
+        $('#form_po_detail').attr('action', '/update_po_detail/' + response.data.finddetail.id)
+        $('#id_po_detail').val(response.data.finddetail.id)
+        $('#id_purchase_orders_po_detail').val(response.data.finddetail.id_purchase_orders)
+        $('#type_product_po_detail').val(response.data.finddetail.type_product)
+        $('#master_products_id_po_detail').val(response.data.finddetail.master_products_id)
+        $('#qty_po_detail').val(response.data.finddetail.qty)
+        $('#master_units_id_po_detail').val(response.data.finddetail.master_units_id)
+        $('#price_po_detail').val(response.data.finddetail.price)
+        $('#discount_po_detail').val(response.data.finddetail.discount)
+        $('#tax_po_detail').val(response.data.finddetail.tax)
+        $('#amount_po_detail').val(response.data.finddetail.amount)
+        $('#note_po_detail').val(response.data.finddetail.note)
+  
+        let produkSelect = response.data.finddetail.master_products_id
+        let unitSelect = response.data.finddetail.master_units_id
+        
+  
+        $('#master_products_id_po_detail').empty()
+        $('#master_products_id_po_detail').append(` <option>Pilih Produk</option>`)
+        $.each(response.data.produk, function (i, value) {
+          let isSelected = produkSelect == value.id ? 'selected' : ''
+  
+          $('#master_products_id_po_detail').append(
+            `<option value="` + value.id + `"` + isSelected + `>` + value.description + `</option>`
+          )
+        });
+  
+        $('#master_units_id_po_detail').empty()
+        $('#master_units_id_po_detail').append(` <option>Pilih Unit</option>`)
+        $.each(response.data.unit, function (i, value) {
+          let isSelected = unitSelect == value.id ? 'selected' : ''
+  
+          $('#master_units_id_po_detail').append(
+            `<option value="` + value.id + `"` + isSelected + `>` + value.unit_code + `</option>`
+          )
+        });
+  
+        // Contoh: Lakukan tindakan selanjutnya setelah data berhasil dikirim
+        // window.location.href = '/success-page';
+      },
+      error: function (xhr, status, error) {
+        // Tangkap pesan error jika ada
+        alert('Terjadi kesalahan saat mengirim data.');
+      }
+    });
+    // })
+  }
+
 
 
 

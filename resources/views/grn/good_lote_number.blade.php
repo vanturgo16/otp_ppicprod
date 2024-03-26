@@ -30,9 +30,6 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <h5 class="mb-0">Good Receipt Note</h5>
                                 <div>
-                                    <a href="/grn-pr-add" class="btn btn-primary waves-effect waves-light">Add Data From PR</a>
-                                    <a href="/grn-po-add" class="btn btn-success waves-effect waves-light">Add Data From PO</a>
-                                    
                                     <!-- Include modal content -->
                                    
                                 </div>
@@ -64,53 +61,36 @@
                                                 <td>{{ $data->description }}</td>
                                                 <td>{{ $data->receipt_qty }}</td>
                                                 <td>{{ $data->unit_code }}</td>
+                                                <td>{{ $data->qc_passed }}</td>
                                                 <td>{{ $data->lot_number }}</td>
                                                 <td>{{ $data->note }}</td>
-                                                <td></td>
-                                                <td><button type="submit" class="btn btn-sm btn-success">
-                                                        
-                                                        </button></td>
-                                                <td></td>
+                                                
+                                                <td>
+                                                        <button type="button" class="btn btn-success btn-sm waves-effect waves-light"
+                                                        data-bs-toggle="modal" onclick="lot_number('{{ $data->id }}');"
+                                                        data-bs-target="#myModal"><i class="bx bx-edit-alt" title="Input Lot"></i> Input Lot</button>
+                                                        <!-- Include modal content -->
+                                                </td>
+                                                <td>
+                                                 @if($data->lot_number!='')   
+                                                <button type="submit" class="btn btn-sm btn-info" >
+                                                    <i class="bx bx-barcode" > Print Barcode</i>
+                                                </button>
+                                                @else
+                                                <button type="submit" class="btn btn-sm btn-danger" >
+                                                    <i class="bx bx-info-circle" > Please Generate Barcode</i>
+                                                </button>
+                                                @endif
+                                                </td>
+                                                    @include('grn.modal')
                                                 <td><form action="/hapus_grn/" method="post"
                                                         class="d-inline">
                                                         @method('delete')
                                                         @csrf
                                                        
-                                                        <button type="submit" class="btn btn-sm btn-danger"
-                                                        onclick="return confirm('Anda yakin mau menghapus item ini ?')">
-                                                            <i class="bx bx-trash-alt" title="Hapus data" ></i>
+                                                        <button type="submit" class="btn btn-sm btn-primary" >
+                                                            <i class=" bx bx-show-alt" ></i>
                                                         </button>
-                                                    </form>
-                                                    <a href="/print-pr/" class="btn btn-sm btn-info waves-effect waves-light">
-                                                            <i class="bx bx-printer" title="print in English"></i>
-                                                    </a>
-                                                    <a href="/print-pr-ind/" class="btn btn-sm btn-success waves-effect waves-light">
-                                                            <i class="bx bx-printer" title="print dalam B Indo"></i>
-                                                    </a>
-                                                    <a href="/edit-pr/" class="btn btn-sm btn-info waves-effect waves-light">
-                                                            <i class="bx bx-edit-alt" title="Edit data"></i>
-                                                    </a>
-                                                   
-                                                    <form action="/posted_pr/" method="post"
-                                                        class="d-inline" data-id="">
-                                                        @method('PUT')
-                                                        @csrf
-                                                        <button type="submit" class="btn btn-sm btn-success"
-                                                        onclick="return confirm('Anda yakin mau Posted item ini ?')">
-                                                            <i class="bx bx-paper-plane" title="Posted" ></i>
-                                                            <!-- <i class="mdi mdi-arrow-left-top-bold" title="Posted" >Un Posted</i> -->
-                                                        </button></center>
-                                                    </form>
-                                                    
-                                                    <form action="/unposted_pr/" method="post"
-                                                        class="d-inline" data-id="">
-                                                        @method('PUT')
-                                                        @csrf
-                                                        <button type="submit" class="btn btn-sm btn-primary"
-                                                        onclick="return confirm('Anda yakin mau Un Posted item ini ?')">
-                                                            <!-- <i class="bx bx-paper-plane" title="Posted" ></i> -->
-                                                            <i class="mdi mdi-arrow-left-top-bold" title="Un Posted" >Un Posted</i>
-                                                        </button></center>
                                                     </form>
                                                    
                                                     </td>

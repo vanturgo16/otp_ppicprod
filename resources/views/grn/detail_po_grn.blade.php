@@ -4,6 +4,12 @@
 
 <div class="page-content">
     <div class="container-fluid">
+    @if (session('pesan'))
+            <div class="alert alert-success alert-dismissible alert-label-icon label-arrow fade show" role="alert">
+                <i class="mdi mdi-check-all label-icon"></i><strong>Success</strong> - {{ session('pesan') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+    @endif
         <div class="row">
             <div class="col-12">
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
@@ -107,7 +113,7 @@
         </div>      
                     
 
-<form method="post" action="/simpan_detail_po/" class="form-material m-t-40" enctype="multipart/form-data">
+<form method="post" action="/simpan_detail_grn_po/{{ $id }}" class="form-material m-t-40" enctype="multipart/form-data">
         @csrf
         <div class="row">
             <div class="col-lg-12">
@@ -125,8 +131,7 @@
                                     <div class="row mb-4 field-wrapper required-field">
                                         <label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Type Product</label>
                                         <div class="col-sm-9">
-                                            <input type="radio" id="html" name="type" value="RM" checked>
-                                            <input type="hidden" id="html" name="type_product" value="RM" checked>
+                                            <input type="radio" id="html" name="type_product" value="{{ $typex }}" checked>
                                               <label for="html">{{ $typex }}</label>
                                         </div>
                                     </div>
@@ -134,28 +139,28 @@
                                         <label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Pilih Produk </label>
                                         <div class="col-sm-9">
                                             @if($typex=='RM')
-                                            <select class="form-select" name="unit">
+                                            <select class="form-select" name="id_master_products">
                                                 <option>Pilih Produk</option>
                                                 @foreach ($rm as $data)
                                                 <option value="{{ $data->id }}">{{ $data->description }}</option>
                                                 @endforeach
                                             </select>
                                             @elseif($typex=='TA')
-                                            <select class="form-select" name="unit">
+                                            <select class="form-select" name="id_master_products">
                                                 <option>Pilih Produk sparepart & auxiliaries</option>
                                                 @foreach ($ta as $data)
                                                 <option value="{{ $data->id }}">{{ $data->description }}</option>
                                                 @endforeach
                                             </select>
                                             @elseif($typex=='WIP')
-                                            <select class="form-select" name="unit">
+                                            <select class="form-select" name="id_master_products">
                                                 <option>Pilih Produk</option>
                                                 @foreach ($wip as $data)
                                                 <option value="{{ $data->id }}">{{ $data->description }}</option>
                                                 @endforeach
                                             </select>
                                             @elseif($typex=='FG')
-                                            <select class="form-select" name="unit">
+                                            <select class="form-select" name="id_master_products">
                                                 <option>Pilih Produk</option>
                                                 @foreach ($fg as $data)
                                                 <option value="{{ $data->id }}">{{ $data->description }}</option>
@@ -168,23 +173,23 @@
                                     <div class="row mb-4 field-wrapper required-field">
                                         <label for="horizontal-password-input" class="col-sm-3 col-form-label">Receipt Qty</label>
                                         <div class="col-sm-9">
-                                            <input type="number" class="form-control" name="qty" id="qty">
+                                            <input type="number" class="form-control" name="receipt_qty" id="qty">
                                         </div>
                                     </div>
                                     
                                     <div class="row mb-4 field-wrapper required-field">
                                         <label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Outstanding Qty </label>
                                         <div class="col-sm-9">
-                                            <input type="number" class="form-control" name="price" id="price">
+                                            <input type="number" class="form-control" name="outstanding_qty" id="price">
                                         </div>
                                     </div>
                                     <div class="row mb-4 field-wrapper required-field">
                                         <label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Units </label>
                                         <div class="col-sm-9">
-                                            <select class="form-select" name="unit" id="unit_code">
+                                            <select class="form-select" name="master_units_id" id="unit_code">
                                                 <option>Pilih Unit</option>
                                                 @foreach ($unit as $data)
-                                                <option value="{{ $data->unit_code }}">{{ $data->unit_code }}</option>
+                                                <option value="{{ $data->id }}">{{ $data->unit_code }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
@@ -237,7 +242,8 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                @foreach ($data_detail_ta as $data)
+                                @if($typex=='RM')
+                                @foreach ($data_detail_rm as $data)
                                         <tr>
                                             <td>{{ $data->type_product }}</td>
                                             <td>{{ $data->description }}</td>
@@ -247,7 +253,7 @@
                                             <td></td>
                                             <td>
                                     
-                                                    <form action="/hapus_po_detail/" method="post"
+                                                    <form action="/hapus_grn_detail_po/{{ $data->id }}/{{ $id }}" method="post"
                                                         class="d-inline">
                                                         @method('delete')
                                                         @csrf
@@ -265,7 +271,101 @@
                                             
                                         </tr>
                                     <!-- Add more rows as needed -->
-                                    @endforeach
+                                @endforeach
+                                @elseif($typex=='TA')
+                                @foreach ($data_detail_ta as $data)
+                                        <tr>
+                                            <td>{{ $data->type_product }}</td>
+                                            <td>{{ $data->description }}</td>
+                                            <td>{{ $data->receipt_qty }}</td>
+                                            <td>{{ $data->outstanding_qty }}</td>
+                                            <td>{{ $data->unit }}</td>
+                                            <td>{{ $data->note }}</td>
+                                            <td>
+                                    
+                                                    <form action="/hapus_grn_detail/{{ $data->id }}/{{ $id }}" method="post"
+                                                        class="d-inline">
+                                                        @method('delete')
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm btn-danger"
+                                                        onclick="return confirm('Anda yakin mau menghapus item ini ?')">
+                                                            <i class="bx bx-trash-alt" title="Hapus data" ></i>
+                                                        </button>
+                                                    </form>
+                                                    <button type="button" class="btn btn-sm btn-info " id=""
+                                                        data-bs-toggle="modal"
+                                                        onclick="edit_pr_smt('{{ $data->id }}')"
+                                                        data-bs-target="#edit-pr-smt" data-id="">
+                                                        <i class="bx bx-edit-alt" title="edit data"></i>
+                                                    </button></center></td>
+                                            
+                                            
+                                        </tr>
+                                    <!-- Add more rows as needed -->
+                                @endforeach
+                                @elseif($typex=='WIP')
+                                @foreach ($data_detail_wip as $data)
+                                        <tr>
+                                            <td>{{ $data->type_product }}</td>
+                                            <td>{{ $data->description }}</td>
+                                            <td>{{ $data->receipt_qty }}</td>
+                                            <td>{{ $data->outstanding_qty }}</td>
+                                            <td>{{ $data->unit }}</td>
+                                            <td>{{ $data->note }}</td>
+                                            <td>
+                                    
+                                                    <form action="/hapus_grn_detail/{{ $data->id }}/{{ $id }}" method="post"
+                                                        class="d-inline">
+                                                        @method('delete')
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm btn-danger"
+                                                        onclick="return confirm('Anda yakin mau menghapus item ini ?')">
+                                                            <i class="bx bx-trash-alt" title="Hapus data" ></i>
+                                                        </button>
+                                                    </form>
+                                                    <button type="button" class="btn btn-sm btn-info " id=""
+                                                        data-bs-toggle="modal"
+                                                        onclick="edit_pr_smt('{{ $data->id }}')"
+                                                        data-bs-target="#edit-pr-smt" data-id="">
+                                                        <i class="bx bx-edit-alt" title="edit data"></i>
+                                                    </button></center></td>
+                                                 
+                                            
+                                        </tr>
+                                    <!-- Add more rows as needed -->
+                                @endforeach
+                                @elseif($typex=='FG')
+                                @foreach ($data_detail_fg as $data)
+                                        <tr>
+                                            <td>{{ $data->type_product }}</td>
+                                            <td>{{ $data->description }}</td>
+                                            <td>{{ $data->receipt_qty }}</td>
+                                            <td>{{ $data->outstanding_qty }}</td>
+                                            <td>{{ $data->unit }}</td>
+                                            <td>{{ $data->note }}</td>
+                                            <td>
+                                    
+                                                    <form action="/hapus_grn_detail/{{ $data->id }}/{{ $id }}" method="post"
+                                                        class="d-inline">
+                                                        @method('delete')
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm btn-danger"
+                                                        onclick="return confirm('Anda yakin mau menghapus item ini ?')">
+                                                            <i class="bx bx-trash-alt" title="Hapus data" ></i>
+                                                        </button>
+                                                    </form>
+                                                    <button type="button" class="btn btn-sm btn-info " id=""
+                                                        data-bs-toggle="modal"
+                                                        onclick="edit_pr_smt('{{ $data->id }}')"
+                                                        data-bs-target="#edit-pr-smt" data-id="">
+                                                        <i class="bx bx-edit-alt" title="edit data"></i>
+                                                    </button></center></td>
+                                                   
+                                            
+                                        </tr>
+                                    <!-- Add more rows as needed -->
+                                @endforeach
+                                @endif
                                 </tbody>
                             </table>
                         </div>

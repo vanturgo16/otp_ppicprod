@@ -5,6 +5,7 @@
     <title>PPIC | PT. OTP</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- App favicon -->
+    
     <link rel="shortcut icon" href="{{ asset('assets/images/icon-otp.png') }}">
     <!-- plugin css -->
     <link href="{{ asset('assets/libs/admin-resources/jquery.vectormap/jquery-jvectormap-1.2.2.css') }}" rel="stylesheet" type="text/css" />
@@ -26,6 +27,7 @@
     {{-- Jquery --}}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.min.js"></script>
+    
     <style> 
         div.field-wrapper label {
             text-align: right;

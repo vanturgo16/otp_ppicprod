@@ -209,10 +209,29 @@ class GrnController extends Controller
             ->select('id')
             ->where('receipt_number', $receipt_number)
             ->first();
+
+        $id = $idValue->id;
+
+        $details = PurchaseRequisitionsDetail::select( 'type_product', 'master_products_id', 'outstanding_qty', 'qty', 'master_units_id')
+            ->where('id_purchase_requisitions', $request->reference_number)
+            ->get();
+
+                // Simpan hasil query ke dalam tabel good_receipt_note_details
+        foreach ($details as $result) {
+            DB::table('good_receipt_note_details')->insert([
+                'id_good_receipt_notes' => $id,
+                'type_product' => $result->type_product,
+                'id_master_products' => $result->master_products_id,
+                'note' => '',
+                'outstanding_qty' => $result->outstanding_qty,
+                'receipt_qty' => $result->qty,
+                'master_units_id' => $result->master_units_id,
+            ]);
+        }
         
 
         if ($idValue) {
-            $id = $idValue->id;
+            
             return redirect('/detail-grn-po/'.$id);
         } else {
             // Penanganan jika $id tidak ditemukan
@@ -299,32 +318,32 @@ class GrnController extends Controller
 
         $unit = MstUnits::all();
 
-        $data_detail_ta = DB::table('purchase_requisition_details as a')
-                        ->leftJoin('master_tool_auxiliaries as b', 'a.master_products_id', '=', 'b.id')
+        $data_detail_ta = DB::table('good_receipt_note_details as a')
+                        ->leftJoin('master_tool_auxiliaries as b', 'a.id_master_products', '=', 'b.id')
                         ->leftJoin('master_units as c', 'a.master_units_id', '=', 'c.id')
-                        ->select('a.id','a.type_product','a.qty','a.outstanding_qty', 'b.description', 'c.unit')
-                        ->where('a.id_purchase_requisitions', $id_purchase_requisitions)
+                        ->select('a.id','a.type_product','a.receipt_qty','a.outstanding_qty', 'b.description', 'c.unit','a.note')
+                        ->where('a.id_good_receipt_notes', $id)
                         ->get();
 
-        $data_detail_rm = DB::table('purchase_requisition_details as a')
-                        ->leftJoin('master_raw_materials as b', 'a.master_products_id', '=', 'b.id')
+                        $data_detail_rm = DB::table('good_receipt_note_details as a')
+                        ->leftJoin('master_raw_materials as b', 'a.id_master_products', '=', 'b.id')
                         ->leftJoin('master_units as c', 'a.master_units_id', '=', 'c.id')
-                        ->select('a.id','a.type_product','a.qty','a.outstanding_qty', 'b.description', 'c.unit')
-                        ->where('a.id_purchase_requisitions', $id_purchase_requisitions)
+                        ->select('a.id','a.type_product','a.receipt_qty','a.outstanding_qty', 'b.description', 'c.unit','a.note')
+                        ->where('a.id_good_receipt_notes', $id)
                         ->get();
 
-        $data_detail_fg = DB::table('purchase_requisition_details as a')
-                        ->leftJoin('master_product_fgs as b', 'a.master_products_id', '=', 'b.id')
+        $data_detail_fg = DB::table('good_receipt_note_details as a')
+                        ->leftJoin('master_product_fgs as b', 'a.id_master_products', '=', 'b.id')
                         ->leftJoin('master_units as c', 'a.master_units_id', '=', 'c.id')
-                        ->select('a.id','a.type_product','a.qty','a.outstanding_qty', 'b.description', 'c.unit')
-                        ->where('a.id_purchase_requisitions', $id_purchase_requisitions)
+                        ->select('a.id','a.type_product','a.receipt_qty','a.outstanding_qty', 'b.description', 'c.unit','a.note')
+                        ->where('a.id_good_receipt_notes', $id)
                         ->get();
 
-        $data_detail_wip = DB::table('purchase_requisition_details as a')
-                        ->leftJoin('master_wips as b', 'a.master_products_id', '=', 'b.id')
+        $data_detail_wip = DB::table('good_receipt_note_details as a')
+                        ->leftJoin('master_wips as b', 'a.id_master_products', '=', 'b.id')
                         ->leftJoin('master_units as c', 'a.master_units_id', '=', 'c.id')
-                        ->select('a.id','a.type_product','a.qty','a.outstanding_qty', 'b.description', 'c.unit')
-                        ->where('a.id_purchase_requisitions', $id_purchase_requisitions)
+                        ->select('a.id','a.type_product','a.receipt_qty','a.outstanding_qty', 'b.description', 'c.unit','a.note')
+                        ->where('a.id_good_receipt_notes', $id)
                         ->get();
 
         $rm = DB::table('master_raw_materials')
@@ -346,7 +365,7 @@ class GrnController extends Controller
         // die;
 
         return view('grn.detail_po_grn',compact('grn_po','unit','data_detail_ta','data_detail_rm','data_detail_fg'
-        ,'data_detail_wip','rm','ta','fg','wip','typex'));
+        ,'data_detail_wip','rm','ta','fg','wip','typex','id'));
     }
     public function hapus_grn_detail(Request $request, $id, $idx)
     {
@@ -357,6 +376,21 @@ class GrnController extends Controller
         if ($id) {
             //redirect dengan pesan sukses
             return Redirect::to('/detail-grn-pr/'.$idx)->with('pesan', 'Data berhasil dihapus.');
+        } else {
+            //redirect dengan pesan error
+            return Redirect::to('/good-receipt-note')->with('pesan', 'Data gagal berhasil dihapus.');
+        }
+
+    }
+    public function hapus_grn_detail_po(Request $request, $id, $idx)
+    {
+        // dd('test');
+        // die;
+        GoodReceiptNoteDetail::destroy($id);
+
+        if ($id) {
+            //redirect dengan pesan sukses
+            return Redirect::to('/detail-grn-po/'.$idx)->with('pesan', 'Data berhasil dihapus.');
         } else {
             //redirect dengan pesan error
             return Redirect::to('/good-receipt-note')->with('pesan', 'Data gagal berhasil dihapus.');
@@ -410,7 +444,44 @@ class GrnController extends Controller
 
         GoodReceiptNoteDetail::create($validatedData);
         if ($id) {
-            return redirect('/detail-grn-pr/'.$id);
+            return redirect('/detail-grn-pr/'.$id)->with('pesan', 'Data berhasil ditambahkan');
+        } else {
+            // Penanganan jika $id tidak ditemukan
+            return redirect()->back()->with('error', 'ID tidak ditemukan');
+        }
+    }
+    public function simpan_detail_grn_po(Request $request, $id)
+    {
+        // dd('test');
+        // die;
+        $request->merge([
+            'id_good_receipt_notes' => $id,
+        ]);
+
+        $pesan = [
+            'id_good_receipt_notes.required' => 'type product masih kosong',
+            'type_product.required' => 'type product masih kosong',
+            'id_master_products.required' => 'master products masih kosong',
+            'receipt_qty.required' => 'reference number masih kosong',
+            'outstanding_qty.required' => 'date masih kosong',
+            'master_units_id.required' => 'external doc number masih kosong',
+            'note.required' => 'note masih kosong',
+        ];
+
+        $validatedData = $request->validate([
+            'id_good_receipt_notes' => 'required',
+            'type_product' => 'required',
+            'id_master_products' => 'required',
+            'receipt_qty' => 'required',
+            'outstanding_qty' => 'required',
+            'master_units_id' => 'required',
+            'note' => 'required',
+
+        ], $pesan);
+
+        GoodReceiptNoteDetail::create($validatedData);
+        if ($id) {
+            return redirect('/detail-grn-po/'.$id)->with('pesan', 'Data berhasil ditambahkan');
         } else {
             // Penanganan jika $id tidak ditemukan
             return redirect()->back()->with('error', 'ID tidak ditemukan');
@@ -419,24 +490,79 @@ class GrnController extends Controller
 
     public function good_lote_number(){
 
-        $receiptDetails = GoodReceiptNoteDetail::leftJoin('good_receipt_notes as b', 'good_receipt_note_details.id_good_receipt_notes', '=', 'b.id')
-        ->leftJoin('master_units as d', 'good_receipt_note_details.master_units_id', '=', 'd.id')
-        ->leftJoin(DB::raw('(SELECT id, description, id_master_units, "RM" AS type_product FROM master_raw_materials
-            UNION
-            SELECT id, description, id_master_units, "WIP" AS type_product FROM master_wips
-            UNION
-            SELECT id, description, id_master_units, "FG" AS type_product FROM master_product_fgs
-            UNION
-            SELECT id, description, id_master_units, "TA" AS type_product FROM master_tool_auxiliaries) as c'), function ($join) {
-                $join->on('good_receipt_note_details.id_master_products', '=', 'c.id')
-                    ->whereRaw('good_receipt_note_details.type_product = c.type_product');
-            })
-        ->select('b.receipt_number', 'c.description', 'good_receipt_note_details.receipt_qty', 'd.unit_code', 'good_receipt_note_details.lot_number', 'good_receipt_note_details.note')
-        ->orderByDesc('b.receipt_number')
-        ->limit(100)
-        ->get();
+        $receiptDetails = DB::table('good_receipt_notes as a')
+                ->leftJoin('good_receipt_note_details as c', 'a.id', '=', 'c.id_good_receipt_notes')
+                ->leftJoin('master_raw_materials as b', 'b.id', '=', 'c.id_master_products')
+                ->leftJoin('master_units as d', 'c.master_units_id', '=', 'd.id')
+                ->select(
+                    'c.id',
+                    'a.receipt_number',
+                    DB::raw("CONCAT(b.rm_code, '-', b.description) as description"),
+                    'c.receipt_qty',
+                    'd.unit_code',
+                    'c.qc_passed',
+                    'c.lot_number',
+                    'c.note'
+                )
+                ->where('a.type', 'RM')
+                ->get();
+
+            // Menggunakan DB::raw untuk menggabungkan nilai kolom b.rm_code dan b.description dengan CONCAT dalam SQL
+            // Hasilnya disimpan dalam alias product_description
+
 
         return view('grn.good_lote_number',compact('receiptDetails'));
+    }
+    public function generateCode()
+    {
+       // Ambil tahun 2 digit terakhir
+        $year = date('y');
+
+        // Ambil nomor urut terakhir dari database
+        $lastCode = GoodReceiptNoteDetail::whereNotNull('lot_number')
+            ->orderBy('created_at', 'desc')
+            ->value(DB::raw('LEFT(lot_number, 3)'));
+            
+        // Jika tidak ada nomor urut sebelumnya, atur ke 0
+        $lastCode = $lastCode ? $lastCode : 0;
+
+        // Tingkatkan nomor urut
+        $nextCode = str_pad($lastCode + 1, 5, '0', STR_PAD_LEFT);
+
+        // Ambil bulan saat ini dalam format dua digit
+        $currentMonth = date('m');
+
+        // Format kode dengan urutan tahun, bulan, nomor urut, dan karakter konstan
+        $formattedCode = sprintf('%02d%s%05dM', $year, $currentMonth, $nextCode);
+        $data['find'] = $formattedCode;
+
+        return response()->json(['data' => $data]);
+
+
+        // return response()->json(['code' => $formattedCode]);
+    }
+    public function get_edit_grn_pr($id)
+    {
+        $data['find'] = GoodReceiptNote::find($id);
+        $data['finddetail'] = GoodReceiptNoteDetail::find($id);
+        $data['produk'] = DB::select("SELECT master_raw_materials.description, master_raw_materials.id FROM master_raw_materials");
+        $data['unit'] = DB::select("SELECT master_units.unit_code, master_units.id FROM master_units");
+        return response()->json(['data' => $data]);
+    }
+    public function update_lot_number(Request $request)
+    {
+        // dd($request->lot_number);
+        // die;
+        $validatedData = DB::update("UPDATE `good_receipt_note_details` SET `lot_number` = '$request->lot_number', 
+        external_no_lot='$request->external_no_lot',qty_generate_barcode='$request->qty_generate_barcode' WHERE `id` = '$request->id';");
+
+        if ($validatedData) {
+            return redirect('/good-lote-number')->with('pesan', 'Data berhasil ditambahkan');
+        } else {
+            // Penanganan jika $id tidak ditemukan
+            return redirect()->back()->with('error', 'ID tidak ditemukan');
+        }
+        
     }
     
     
