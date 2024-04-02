@@ -99,4 +99,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/good-lote-number', [GrnController::class, 'good_lote_number'])->name('good_lote_number');
     Route::get('/generate-code', [GrnController::class, 'generateCode'])->name('generateCode');
     Route::put('/update_lot_number', [GrnController::class, 'update_lot_number'])->name('update_lot_number');
+    Route::get('/good-lote-number-detail/{id}', [GrnController::class, 'good_lote_number_detail'])->name('good_lote_number_detail');
+    Route::get('/generateBarcode/{lot_number}', [GrnController::class, 'generateBarcode'])->name('generateBarcode');
+    Route::get('/grn-qc', [GrnController::class, 'grn_qc'])->name('grn_qc');
+    Route::put('/qc_passed/{id}', [GrnController::class, 'qc_passed'])->name('qc_passed');
+    Route::put('/un_qc_passed/{id}', [GrnController::class, 'un_qc_passed'])->name('un_qc_passed');
+    Route::get('/external-no-lot', [GrnController::class, 'external_no_lot'])->name('external_no_lot');
+    Route::put('/update_ext_lot_number', [GrnController::class, 'update_ext_lot_number'])->name('update_ext_lot_number');
+    
 });

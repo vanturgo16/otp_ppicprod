@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Redirect;
 use RealRashid\SweetAlert\Facades\Alert;
 use Browser;
 use Illuminate\Support\Facades\Crypt;
+use Picqer\Barcode\BarcodeGeneratorHTML;
 
 use App\Models\GoodReceiptNote;
 use App\Models\GoodReceiptNoteDetail;
@@ -553,11 +554,130 @@ class GrnController extends Controller
     {
         // dd($request->lot_number);
         // die;
-        $validatedData = DB::update("UPDATE `good_receipt_note_details` SET `lot_number` = '$request->lot_number', 
-        external_no_lot='$request->external_no_lot',qty_generate_barcode='$request->qty_generate_barcode' WHERE `id` = '$request->id';");
+        $validatedData = DB::update("UPDATE `good_receipt_note_details` SET `lot_number` = '$request->lot_number',qty_generate_barcode='$request->qty_generate_barcode' WHERE `id` = '$request->id';");
+
+        $validatedData = DB::table('detail_good_receipt_note_details')->insert([
+            'id_grn_detail' => $request->id,
+            'lot_number' => $request->lot_number
+        ]);
+        
 
         if ($validatedData) {
             return redirect('/good-lote-number')->with('pesan', 'Data berhasil ditambahkan');
+        } else {
+            // Penanganan jika $id tidak ditemukan
+            return redirect()->back()->with('error', 'ID tidak ditemukan');
+        }
+        
+    }
+    public function good_lote_number_detail($id)
+    {
+        // dd('test');
+        // die;
+        $goodReceiptNoteDetail = GoodReceiptNoteDetail::find($id);
+
+        $goodReceiptNoteDetail = GoodReceiptNoteDetail::select('good_receipt_note_details.*', 'master_units.unit_code')
+        ->leftJoin('master_units', 'good_receipt_note_details.master_units_id', '=', 'master_units.id')
+        ->where('good_receipt_note_details.id', $id)
+        ->first();
+
+        $receipt_qty = $goodReceiptNoteDetail->receipt_qty;
+        $qc_passed = $goodReceiptNoteDetail->qc_passed;
+        $outstanding_qty = $goodReceiptNoteDetail->outstanding_qty;
+        $note = $goodReceiptNoteDetail->note;
+        $unit_code = $goodReceiptNoteDetail->unit_code;
+        $id_good_receipt_notes=$goodReceiptNoteDetail->id_good_receipt_notes;
+
+        // dd($receipt_qty);
+        // die;
+
+        return view('grn.good_lote_number_detail',compact('goodReceiptNoteDetail','receipt_qty','qc_passed',
+        'outstanding_qty','note','unit_code','id_good_receipt_notes'));
+    }
+    public function generateBarcode($lot_number)
+    {
+        $generator = new BarcodeGeneratorHTML();
+        $barcode = $generator->getBarcode($lot_number, $generator::TYPE_CODE_128);
+
+        $qtyGenerateBarcode = GoodReceiptNoteDetail::select('qty_generate_barcode')
+        ->where('lot_number', $lot_number)
+        ->first();
+
+        return view('grn.barcode_grn', compact('barcode','lot_number','qtyGenerateBarcode'));
+    }
+    public function grn_qc()
+    {
+        // dd('test');
+        // die;
+
+        $receiptDetails = DB::table('good_receipt_notes as a')
+                ->leftJoin('good_receipt_note_details as c', 'a.id', '=', 'c.id_good_receipt_notes')
+                ->leftJoin('master_raw_materials as b', 'b.id', '=', 'c.id_master_products')
+                ->leftJoin('master_units as d', 'c.master_units_id', '=', 'd.id')
+                ->leftJoin('cms_users as e', 'e.id', '=', 'c.qc_check_by')
+                ->select(
+                    'c.id',
+                    'a.receipt_number',
+                    DB::raw("CONCAT(b.rm_code, '-', b.description) as description"),
+                    'c.receipt_qty',
+                    'd.unit_code',
+                    'c.qc_passed',
+                    'c.lot_number',
+                    'c.note',
+                    'e.name'
+                )
+                ->where('a.type', 'RM')
+                ->where('a.qc_status', 'Y')
+                ->get();
+
+        return view('grn.grn_qc', compact('receiptDetails'));
+    }
+    public function qc_passed($id)
+    {
+        // dd($id);
+        // die;
+
+        $validatedData = DB::update("UPDATE `good_receipt_note_details` SET `qc_passed` = 'Y', qc_check_by = '51' WHERE `id` = '$id';");
+
+        if ($validatedData) {
+            //redirect dengan pesan sukses
+            return Redirect::to('/grn-qc')->with('pesan', 'Data berhasil di QC .');
+        } else {
+            //redirect dengan pesan error
+            return Redirect::to('/grn-qc')->with('pesan', 'Data gagal berhasil di QC.');
+        }
+    }
+    public function un_qc_passed($id)
+    {
+        // dd($id);
+        // die;
+
+        $validatedData = DB::update("UPDATE `good_receipt_note_details` SET `qc_passed` = 'N', qc_check_by = '51' WHERE `id` = '$id';");
+
+        if ($validatedData) {
+            //redirect dengan pesan sukses
+            return Redirect::to('/grn-qc')->with('pesan', 'Data berhasil di un QC .');
+        } else {
+            //redirect dengan pesan error
+            return Redirect::to('/grn-qc')->with('pesan', 'Data gagal berhasil di un QC.');
+        }
+    }
+    public function external_no_lot ()
+    {
+        // dd('tes');
+        // die;
+        $details = DB::table('detail_good_receipt_note_details')->get();
+
+        return view('grn.external_no_lot',compact('details'));
+    }
+    public function update_ext_lot_number(Request $request)
+    {
+        // dd($request->lot_number);
+        // die;
+        $validatedData = DB::update("UPDATE `detail_good_receipt_note_details` SET `ext_lot_number` = '$request->ext_lot_number',qty='$request->qty' WHERE `id` = '$request->id';");
+
+        if ($validatedData) {
+            return redirect('/external-no-lot')->with('pesan', 'Data berhasil ditambahkan');
         } else {
             // Penanganan jika $id tidak ditemukan
             return redirect()->back()->with('error', 'ID tidak ditemukan');

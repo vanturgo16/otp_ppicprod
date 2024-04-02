@@ -21,7 +21,10 @@
     <!-- Icons Css -->
     <link href="{{ asset('assets/css/icons.min.css') }}" rel="stylesheet" type="text/css" />
     <!-- App Css-->
-    <link href="{{ asset('assets/css/app.min.css') }}" id="app-style" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('assets/css/app.min.css') }}" id="app-style" rel="stylesheet" type="text/css" />\
+    <!-- choices css -->
+    <link href="{{ asset('assets/libs/choices.js/public/assets/styles/choices.min.css') }}" rel="stylesheet" type="text/css" />
+
     {{-- Custom --}}
     <link href="{{ asset('assets/css/custom.css') }}" id="app-style" rel="stylesheet" type="text/css" />
     {{-- Jquery --}}
@@ -156,6 +159,8 @@
                             <ul class="sub-menu" aria-expanded="false">
                                 <li><a href="/good-receipt-note" data-key="t-blog-grid">Good Receipt Note</a></li>
                                 <li><a href="/good-lote-number" data-key="t-blog-grid">Good Lote Number</a></li>
+                                <li><a href="/grn-qc" data-key="t-blog-grid">GRN Need QC Passed</a></li>
+                                <li><a href="/external-no-lot" data-key="t-blog-grid">External No Lot</a></li>
   
                             </ul>
                         </li>
@@ -473,6 +478,11 @@
     <script src="{{ asset('assets/js/pages/dashboard.init.js') }}"></script>
     <script src="{{ asset('assets/js/app.js') }}"></script>
     <script src="{{ asset('assets/js/modal.js') }}"></script>
+
+     <!-- choices js -->
+     <script src="{{ asset('assets/libs/choices.js/public/assets/scripts/choices.min.js') }}"></script>
+      <!-- init js -->
+      <script src="{{ asset('assets/js/pages/form-advanced.init.js') }}"></script>
 
     <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.min.js"></script>
     <script>
