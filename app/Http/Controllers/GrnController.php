@@ -19,6 +19,7 @@ use App\Models\PurchaseOrders;
 use App\Models\PurchaseRequisitions;
 use App\Models\MstUnits;
 use App\Models\PurchaseRequisitionsDetail;
+use App\Models\DetailGoodReceiptNoteDetail;
 
 class GrnController extends Controller
 {
@@ -675,6 +676,37 @@ class GrnController extends Controller
         // dd($request->lot_number);
         // die;
         $validatedData = DB::update("UPDATE `detail_good_receipt_note_details` SET `ext_lot_number` = '$request->ext_lot_number',qty='$request->qty' WHERE `id` = '$request->id';");
+
+        $id_grn_detail = DetailGoodReceiptNoteDetail::select('id_grn_detail')->where('id', $request->id)->first();
+
+        $result = GoodReceiptNoteDetail::select('id_master_products')->where('id', $id_grn_detail->id_grn_detail)->first();
+        $id_master_products=$result->id_master_products;
+
+        $stockk = DB::table('master_raw_materials')
+        ->select('stock')
+        ->where('id', $id_master_products)
+        ->first();
+
+        $stok=$stockk->stock;
+        // dd($stok);
+        // die;
+        $tmbhstok = $stok+$request->qty;
+
+        $validatedData = DB::update("UPDATE `master_raw_materials` SET `stock` = '$tmbhstok' WHERE `id` = '$id_master_products'");
+        
+        $allStocks = DB::table('good_receipt_note_details')
+        ->where('id', $id_grn_detail->id_grn_detail)
+        ->get();
+       
+
+        $validatedData = DB::table('history_stocks')->insert([
+            'id_good_receipt_notes_details' => $allStocks->id,
+            'type_product' => $allStocks->type_product,
+            'id_master_products' => $allStocks->id_master_products,
+            'qty' => $tmbhstok,
+            'type_stock' => 'IN',
+            'date' => DB::raw('CURRENT_DATE()')
+        ]);
 
         if ($validatedData) {
             return redirect('/external-no-lot')->with('pesan', 'Data berhasil ditambahkan');
