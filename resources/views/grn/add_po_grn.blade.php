@@ -51,7 +51,7 @@
                                     <div class="row mb-4 field-wrapper">
                                         <label for="horizontal-password-input" class="col-sm-3 col-form-label">Purchase Orders</label>
                                         <div class="col-sm-9">
-                                            <select class="form-select request_number" name="id_purchase_orders" id="" onchange="get_data()">
+                                            <select class="form-select request_number data-select2" name="id_purchase_orders" id="" onchange="get_data()">
                                                 <option>Pilih Purchase Orders</option>
                                                 @foreach ($po as $data)
                                                     <option value="{{ $data->id }}" data-id="{{ $data->id }}">{{ $data->po_number }}</option>
@@ -63,7 +63,7 @@
                                     <div class="row mb-4 field-wrapper">
                                         <label for="horizontal-password-input" class="col-sm-3 col-form-label">Reference Number (PR) </label>
                                         <div class="col-sm-9">
-                                            <select class="form-select" name="reference_number" id="request_number">
+                                            <select class="form-select data-select2" name="reference_number" id="request_number">
                                                 <option>Pilih Reference Number</option>
                                                 
                                                     <option value=""></option>
@@ -86,7 +86,7 @@
                                     <div class="row mb-4 field-wrapper">
                                         <label for="horizontal-password-input" class="col-sm-3 col-form-label">Suppliers </label>
                                         <div class="col-sm-9">
-                                            <select class="form-select" name="id_master_suppliers" id="id_master_suppliers">
+                                            <select class="form-select data-select2" name="id_master_suppliers" id="id_master_suppliers">
                                                 <option>Pilih Suppliers</option>
                                                 
                                                     <option value=""></option>
