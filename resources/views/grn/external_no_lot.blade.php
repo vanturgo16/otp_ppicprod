@@ -47,6 +47,7 @@
                                             <th>Ext Lot Number</th>
                                             <th>Qty</th>
                                             <th>Generate External Lot</th>
+                                            <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -63,6 +64,17 @@
                                                         data-bs-toggle="modal" onclick="ext_lot_number('{{ $data->id }}');"
                                                         data-bs-target="#external_lot"><i class="bx bx-edit-alt" title="Input Ext Lot"></i> Input External Lot</button></td>
                                                         @include('grn.modal')
+                                                <td>
+                                                @if($data->ext_lot_number!='')   
+                                               
+                                               <a href="/generateBarcode/{{ $data->lot_number }}" class="btn btn-sm btn-info"><i class=" bx bx-barcode" >Print Barcode</i></a>
+                                               <a href="/detail-external-no-lot/{{ $data->lot_number }}" class="btn btn-sm btn-primary"><i class=" bx bx-file" >Detail</i></a>
+                                               @else
+                                               <button type="submit" class="btn btn-sm btn-danger" >
+                                                   <i class="bx bx-info-circle" > Please Generate Barcode</i>
+                                               </button>
+                                               @endif
+                                               </td>
                                              
                                             </tr>
                                     @endforeach

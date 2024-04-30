@@ -16,12 +16,18 @@
 <body>
 
 <div class="barcode-container">
-    @foreach ($qtyGenerateBarcode as $data)
+@php
+    $counter = 1;
+@endphp
+ @while ($counter <= $qty)   
         <div>
             {!! $barcode !!}
-            <p>{!! $lot_number !!}</p>
+            <p>{!! $lot_number !!} - {{ $counter }}</p>
         </div>
-    @endforeach
+        @php
+        $counter++;
+    @endphp
+@endwhile
 </div>
 
 </body>

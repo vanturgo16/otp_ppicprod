@@ -595,16 +595,42 @@ class GrnController extends Controller
         return view('grn.good_lote_number_detail',compact('goodReceiptNoteDetail','receipt_qty','qc_passed',
         'outstanding_qty','note','unit_code','id_good_receipt_notes'));
     }
+    // public function generateBarcode($lot_number)
+    // {
+    //     $generator = new BarcodeGeneratorHTML();
+    //     $barcode = $generator->getBarcode($lot_number, $generator::TYPE_CODE_128);
+
+    //     $qtyGenerateBarcode = GoodReceiptNoteDetail::select('qty_generate_barcode')
+    //     ->where('lot_number', $lot_number)
+    //     ->first();
+
+    //     return view('grn.barcode_grn', compact('barcode','lot_number','qtyGenerateBarcode'));
+    // }
     public function generateBarcode($lot_number)
     {
+        // dd('test');
+        // die;
         $generator = new BarcodeGeneratorHTML();
         $barcode = $generator->getBarcode($lot_number, $generator::TYPE_CODE_128);
 
-        $qtyGenerateBarcode = GoodReceiptNoteDetail::select('qty_generate_barcode')
+        $qtyGenerateBarcode = DetailGoodReceiptNoteDetail::select('ext_lot_number')
         ->where('lot_number', $lot_number)
         ->first();
 
-        return view('grn.barcode_grn', compact('barcode','lot_number','qtyGenerateBarcode'));
+        $data = DB::select("SELECT
+        COUNT(ext_lot_number) AS total_ext_lot_number
+        FROM
+            `detail_good_receipt_note_details`
+        WHERE
+            `lot_number` = '$lot_number'");
+
+
+
+        $qty=$data[0]->total_ext_lot_number;
+        // dd($qty);
+        // die;
+
+        return view('grn.barcode_grn', compact('barcode','lot_number','qtyGenerateBarcode','qty'));
     }
     public function grn_qc()
     {
@@ -667,7 +693,10 @@ class GrnController extends Controller
     {
         // dd('tes');
         // die;
-        $details = DB::table('detail_good_receipt_note_details')->get();
+
+        $details = DB::select("SELECT * FROM `detail_good_receipt_note_details` group by lot_number");
+
+
 
         return view('grn.external_no_lot',compact('details'));
     }
@@ -715,6 +744,15 @@ class GrnController extends Controller
             return redirect()->back()->with('error', 'ID tidak ditemukan');
         }
         
+    }
+    public function detail_external_no_lot ($lot_number)
+    {
+        // dd($id);
+        // die;
+
+        $details = DB::select("SELECT * FROM `detail_good_receipt_note_details` where lot_number='$lot_number'");
+
+        return view('grn.detail_external_no_lot',compact('details'));
     }
     
     

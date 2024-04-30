@@ -106,5 +106,5 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/un_qc_passed/{id}', [GrnController::class, 'un_qc_passed'])->name('un_qc_passed');
     Route::get('/external-no-lot', [GrnController::class, 'external_no_lot'])->name('external_no_lot');
     Route::put('/update_ext_lot_number', [GrnController::class, 'update_ext_lot_number'])->name('update_ext_lot_number');
-    
+    Route::get('/detail-external-no-lot/{lot_number}', [GrnController::class, 'detail_external_no_lot'])->name('detail_external_no_lot');
 });

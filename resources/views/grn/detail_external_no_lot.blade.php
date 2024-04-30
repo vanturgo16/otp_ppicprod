@@ -28,7 +28,7 @@
                     <div class="card">
                         <div class="card-header">
                             <div class="d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">Good Receipt Note</h5>
+                                <h5 class="mb-0">Detail External Lot Number</h5>
                                 <div>
                                     <!-- Include modal content -->
                                    
@@ -42,53 +42,39 @@
                                         <tr>
                                         <tr>
                                             <th>No</th>
-                                            <th>Good Receipt Note</th>
-                                            <th>Products</th>
-                                            <th>Receipt Qty</th>
-                                            <th>Units</th>
-                                            <th>Qc Passed</th>
+                                            <th>id grn detail</th>
                                             <th>Lot Number</th>
-                                            <th>Note</th>
-                                            <th>Generate Lot </th>
-                                           
+                                            <th>Ext Lot Number</th>
+                                            <th>Qty</th>
+                                            
                                             <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                    @foreach ($receiptDetails as $data)
-                                            <tr><td></td>
-                                                <td>{{ $data->receipt_number }}</td>
-                                                <td>{{ $data->description }}</td>
-                                                <td>{{ $data->receipt_qty }}</td>
-                                                <td>{{ $data->unit_code }}</td>
-                                                <td>{{ $data->qc_passed }}</td>
+                                    @php
+                                        $no = 1; // Inisialisasi nomor urut
+                                    @endphp
+                                    @foreach ($details as $data)
+                                            <tr><td>{{ $no++ }}</td>
+                                                <td>{{ $data->id_grn_detail }}</td>
                                                 <td>{{ $data->lot_number }}</td>
-                                                <td>{{ $data->note }}</td>
+                                                <td>{{ $data->ext_lot_number }}</td>
+                                                <td>{{ $data->qty }}</td>
                                                 
                                                 <td>
-                                                        <button type="button" class="btn btn-success btn-sm waves-effect waves-light"
-                                                        data-bs-toggle="modal" onclick="lot_number('{{ $data->id }}');"
-                                                        data-bs-target="#myModal"><i class="bx bx-edit-alt" title="Input Lot"></i> Input Lot</button>
-                                                        <!-- Include modal content -->
-                                                </td>
-                                                <!-- <td> -->
-                                                 @if($data->lot_number!='')   
+                                                @if($data->ext_lot_number!='')   
                                                
-                                                <!-- <a href="/generateBarcode/{{ $data->lot_number }}" class="btn btn-sm btn-info"><i class=" bx bx-barcode" >Print Barcode</i></a> -->
-                                                @else
-                                                <!-- <button type="submit" class="btn btn-sm btn-danger" >
-                                                    <i class="bx bx-info-circle" > Please Generate Barcode</i>
-                                                </button> -->
-                                                @endif
-                                                <!-- </td> -->
-                                                    @include('grn.modal')
-                                                <td>
-                                                    <a href="/good-lote-number-detail/{{ $data->id }}" class="btn btn-sm btn-primary waves-effect waves-light"><i class=" bx bx-show-alt" ></i></a>
-                                                   
-                                                </td>
+                                               <a href="/generateBarcode/{{ $data->lot_number }}" class="btn btn-sm btn-info"><i class=" bx bx-barcode" >Print Barcode</i></a>
+                                               
+                                               @else
+                                               <button type="submit" class="btn btn-sm btn-danger" >
+                                                   <i class="bx bx-info-circle" > Please Generate Barcode</i>
+                                               </button>
+                                               @endif
+                                               </td>
                                              
                                             </tr>
-                                   @endforeach
+                                    @endforeach
                                         <!-- Add more rows as needed -->
                                     </tbody>
                                 </table>
@@ -99,5 +85,6 @@
             </div>
         </div>
     </div>
+
 
 @endsection
