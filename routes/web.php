@@ -95,7 +95,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/simpan_detail_grn/{id}', [GrnController::class, 'simpan_detail_grn'])->name('simpan_detail_grn');
     Route::post('/simpan_detail_grn_po/{id}', [GrnController::class, 'simpan_detail_grn_po'])->name('simpan_detail_grn_po');
     Route::get('/get-edit-grn-pr/{id}', [GrnController::class, 'get_edit_grn_pr'])->name('get_edit_grn_pr');
-    
+    Route::get('/print-grn/{receipt_number}', [GrnController::class, 'print_grn'])->name('print_grn');
+    Route::put('/posted_grn/{id}', [GrnController::class, 'posted_grn'])->name('posted_grn');
+    Route::put('/unposted_grn/{id}', [GrnController::class, 'unposted_grn'])->name('unposted_grn');
+    Route::get('/edit-grn/{id}', [GrnController::class, 'edit_grn'])->name('edit_grn');
+    Route::post('/simpan_detail_po_fix', [GrnController::class, 'simpan_detail_po_fix'])->name('simpan_detail_po_fix');
+
     Route::get('/good-lote-number', [GrnController::class, 'good_lote_number'])->name('good_lote_number');
     Route::get('/generate-code', [GrnController::class, 'generateCode'])->name('generateCode');
     Route::put('/update_lot_number', [GrnController::class, 'update_lot_number'])->name('update_lot_number');
