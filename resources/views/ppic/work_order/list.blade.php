@@ -6,11 +6,11 @@
             <div class="row">
                 <div class="col-12">
                     <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                        <h4 class="mb-sm-0 font-size-18">Work Order</h4>
+                        <h4 class="mb-sm-0 font-size-18">List Work Order</h4>
                         <div class="page-title-right">
                             <ol class="breadcrumb m-0">
                                 <li class="breadcrumb-item"><a href="javascript: void(0);">PPIC</a></li>
-                                <li class="breadcrumb-item active">Work Order</li>
+                                <li class="breadcrumb-item active">List Work Order</li>
                             </ol>
                         </div>
                     </div>
@@ -56,67 +56,105 @@
                 </div>
             @endif
 
+            <div class="row pb-3">
+                <div class="col-12">
+                    <a href="{{ route('ppic.workOrder.index') }}"
+                        class="btn btn-primary waves-effect btn-label waves-light">
+                        <i class="mdi mdi-arrow-left label-icon"></i> Back To List Data Work Order
+                    </a>
+                    <a href="{{ route('ppic.workOrder.createWithSO', encrypt($so_number)) }}"
+                        class="btn btn-success waves-effect btn-label waves-light">
+                        <i class="mdi mdi-plus-box label-icon"></i> Add Data
+                    </a>
+                    <a href="{{ route('ppic.workOrder.index') }}" class="btn btn-light waves-effect btn-label waves-light">
+                        <i class="mdi mdi-printer label-icon"></i> Print Work Order
+                    </a>
+                </div>
+            </div>
+
             <div class="row">
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header">
-                            <a href="#" class="btn btn-success waves-effect btn-label waves-light" data-search = ""
-                                id="" onclick="searchByStatus(this)">
-                                <i class="mdi mdi-reorder-horizontal label-icon"></i> All Data
-                            </a>
-                            <a href="{{ route('ppic.workOrder.create') }}"
-                                class="btn btn-primary waves-effect btn-label waves-light">
-                                <i class="mdi mdi-plus-box label-icon"></i> Add Data
-                            </a>
-                            <button type="button" class="btn btn-light waves-effect btn-label waves-light"
-                                id="modalPrintWO">
-                                <i class="mdi mdi-printer label-icon"></i> Print WO by SO
-                            </button>
-                            <a href="#" class="btn btn-danger waves-effect btn-label waves-light"
-                                data-search = "Finish" id="wo_finish" onclick="searchByStatus(this)">
-                                <i class="mdi mdi-file-multiple label-icon"></i> WO Finish
-                            </a>
-                            <a href="#" class="btn btn-danger waves-effect btn-label waves-light"
-                                data-search = "Closed" id="wo_closed" onclick="searchByStatus(this)">
-                                <i class="mdi mdi-file-multiple label-icon"></i> WO Closed
-                            </a>
+                            <i class="mdi mdi-file-multiple-outline label-icon"></i> List Work Order
                         </div>
-                        <div class="card-body">
-                            <input type="hidden" name="_token" id="csrf-token" value="{{ Session::token() }}" />
 
-                            <div class="table-responsive">
-                                <table id="wo_list" class="table table-hover table-bordered"
-                                    style="font-size: small; min-width: 80rem;">
-                                    <thead>
-                                        <tr>
-                                            <th class="align-middle text-center">
-                                                <input type="checkbox" id="checkAllRows">
-                                            </th>
-                                            <th class="align-middle text-center">#</th>
-                                            <th class="align-middle text-center" data-name="order_confirmation">
-                                                WO<br>Number</th>
-                                            <th class="align-middle text-center" data-name="so_number">Sales<br>Order</th>
-                                            <th class="align-middle text-center" data-name="date"
-                                                style="min-width: 150px;">
-                                                Product</th>
-                                            <th class="align-middle text-center" data-name="so_type">
-                                                Proccess<br>Production
-                                            </th>
-                                            <th class="align-middle text-center" data-name="customer">Work Center</th>
-                                            <th class="align-middle text-center" data-name="salesman">Qty Proccess</th>
-                                            <th class="align-middle text-center" data-name="reference_number">
-                                                Unit<br>Proccess</th>
-                                            <th class="align-middle text-center" style="min-width: 150px;">Product Needed
-                                            </th>
-                                            <th class="align-middle text-center" data-name="qty_needed">Qty Needed</th>
-                                            <th class="align-middle text-center" data-name="unit_needed">Unit Needed</th>
-                                            <th class="align-middle text-center">Note</th>
-                                            <th class="align-middle text-center" data-name="status">Status</th>
-                                            <th class="align-middle text-center">Action</th>
-                                        </tr>
-                                    </thead>
-                                </table>
+                        <div class="card-body">
+                            <div class="mt-4 mt-lg-0">
+                                <div class="row">
+                                    <dt class="col-sm-2 mb-2"><strong><label>SO Number</label></strong></dt>
+                                    <dd class="col-sm-10 mb-2">{{ $so_number }}</dd>
+                                    <input type="hidden" value="{{ $sales_order->id }}" id="id_sales_orders">
+                                </div>
+                                <div class="row">
+                                    <dt class="col-sm-2 mb-2"><strong><label>Date</label></strong></dt>
+                                    <dd class="col-sm-10 mb-2">{{ $sales_order->date }}</dd>
+                                </div>
                             </div>
+
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="table-responsive table-bordered">
+                                        <table class="table table-striped table-hover"
+                                            style="font-size: smaller; min-width: 80rem;" id="table-list-wo">
+                                            <thead>
+                                                <tr class="text-center">
+                                                    <th>No</th>
+                                                    <th>WO Number</th>
+                                                    <th style="width: 15%;">Product</th>
+                                                    <th style="width: 7%;">Process Production</th>
+                                                    <th style="width: 7%;">Work Center</th>
+                                                    <th style="width: 5%;">Qty Process</th>
+                                                    <th style="width: 5%;">Unit Process</th>
+                                                    <th style="width: 15%;">Product Needed</th>
+                                                    <th style="width: 5%;">Qty Needed</th>
+                                                    <th style="width: 5%;">Unit Needed</th>
+                                                    <th style="width: 15%;">Note</th>
+                                                    <th style="width: 7%;">Status</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            {{-- <tbody>
+                                                @foreach ($list_wo as $item)
+                                                    <tr>
+                                                        <td>{{ $loop->iteration }}</td>
+                                                        <td>{{ $item->wo_number }}</td>
+                                                        <td>{{ $item->product_code . ' - ' . $item->description }}</td>
+                                                        <td>{{ $item->masterProcessProduction->process }}</td>
+                                                        <td>{{ $item->masterWorkCenter == null ? '' : $item->masterWorkCenter->work_center }}
+                                                        </td>
+                                                        <td>{{ $item->qty }}</td>
+                                                        <td>{{ $item->masterUnit->unit_code }}</td>
+                                                        <td>{{ $item->pc_needed . ' - ' . $item->desc_needed }}</td>
+                                                        <td>{{ $item->qty_needed }}</td>
+                                                        <td>{{ $item->masterUnitNeeded == null ? '' : $item->masterUnitNeeded->unit_code }}
+                                                        </td>
+                                                        <td>{{ $item->note }}</td>
+                                                        <td>
+                                                            @php
+                                                                $badgeColor =
+                                                                    $item->status == 'Request'
+                                                                        ? 'info'
+                                                                        : ($item->status == 'Un Posted'
+                                                                            ? 'warning'
+                                                                            : 'success');
+                                                                echo '<span class="badge bg-' .
+                                                                    $badgeColor .
+                                                                    '" style="font-size: smaller;width: 100%">' .
+                                                                    $item->status .
+                                                                    '</span>';
+                                                            @endphp
+                                                        </td>
+                                                        <td>@include('ppic.work_order.action_list_wo')</td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody> --}}
+                                        </table>
+                                    </div>
+                                </div>
+                                <!-- end col -->
+                            </div>
+                            <!-- end row -->
                         </div>
                     </div>
                 </div>
@@ -144,78 +182,20 @@
             </div>
         </div>
     </div>
-
-    <!-- Static Backdrop Modal PDF -->
-    <div class="modal fade" id="modalPDF" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-        role="dialog" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="staticBackdropLabel">Preview or Print</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-center fs-1">
-                    <a href="#" class="btn btn-primary waves-effect waves-light w-sm preview" target="_blank"
-                        rel="noopener noreferrer">
-                        <i class="mdi mdi-search-web d-block fs-1"></i> Preview
-                    </a>
-                    <a href="#" class="btn btn-success waves-effect waves-light w-sm print" target="_blank"
-                        rel="noopener noreferrer">
-                        <i class="mdi mdi-printer d-block fs-1"></i> Print
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Static Backdrop Modal Print WO by SO -->
-    <div class="modal fade" id="printWorkOrder" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-        role="dialog" aria-labelledby="printWorkOrderLabel" aria-hidden="true">
-        <form action="{{ route('ppic.workOrder.print') }}" method="POST" id="" target="_blank">
-            @csrf
-            @method('GET')
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="printWorkOrderLabel">Print WO by SO</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col">
-                                <select class="form-control data-select2" name="id_sales_orders" id="salesOrderSelect"
-                                    style="width: 100%" required>
-                                    <option value="">** Please select a Sales Orders</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary waves-effect btn-label waves-light">
-                            <i class="mdi mdi-printer label-icon"></i> Print
-                        </button>
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                    </div>
-                </div>
-            </div>
-        </form>
-    </div>
 @endsection
 
 @push('scripts')
     <script>
         $(document).ready(function() {
             var i = 1;
-            let dataTable = $('#wo_list').DataTable({
-                dom: '<"top d-flex"<"position-absolute top-0 end-0 d-flex search-status"fl>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>><"clear:both">',
+            let id_sales_orders = $('#id_sales_orders').val()
+            let dataTable = $('#table-list-wo').DataTable({
+                dom: '<"top d-flex"<"position-absolute top-0 end-0 d-flex"fl>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>><"clear:both">',
                 initComplete: function(settings, json) {
                     // Setelah DataTable selesai diinisialisasi
                     // Tambahkan elemen kustom ke dalam DOM
                     $('.top').prepend(
-                        `<div class='pull-left col-sm-12 col-md-5'><div class="btn-group mb-4"><button type="button" class="btn btn-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="mdi mdi-checkbox-multiple-marked-outline"></i> Bulk Actions</button><ul class="dropdown-menu"><li><button class="dropdown-item" data-status="Request" onclick="showModal(this, 'Delete');"><i class="mdi mdi-trash-can"></i> Delete</button></li><li><button class="dropdown-item" data-status="Request" onclick="showModal(this);"><i class="mdi mdi-check-bold"></i> Posted</button></li></ul></div></div>`
-                    );
-                    $('.search-status').prepend(
-                        `<div id="wo_list_filter" class="dataTables_filter"><label><input type="text" class="form-control form-control-sm" id="status_search" placeholder="Search by status" aria-controls="wo_list" readonly></label></div>`
+                        `<div class='pull-left col-sm-12 col-md-5'><div class="btn-group mb-4"></div></div>`
                     );
                 },
                 processing: true,
@@ -232,22 +212,16 @@
                     [5, 10, 20, 25, 50, 100, 200]
                 ],
                 aaSorting: [
-                    [1, 'desc']
+                    [1, 'asc']
                 ], // start to sort data in second column 
                 ajax: {
                     url: baseRoute + '/ppic/workOrder/',
                     data: function(d) {
                         d.search = $('input[type="search"]').val(); // Kirim nilai pencarian
-                        d.status = $('#status_search').val();
+                        d.id_sales_orders = id_sales_orders;
                     }
                 },
                 columns: [{
-                        data: 'bulk-action',
-                        name: 'bulk-action',
-                        // className: 'align-middle text-center',
-                        orderable: false,
-                        searchable: false
-                    }, {
                         data: null,
                         render: function(data, type, row, meta) {
                             return meta.row + meta.settings._iDisplayStart + 1;
@@ -259,12 +233,6 @@
                     {
                         data: 'wo_number',
                         name: 'wo_number',
-                        // className: 'align-middle text-center',
-                        orderable: true,
-                    },
-                    {
-                        data: 'wo_list',
-                        name: 'wo_list',
                         // className: 'align-middle text-center',
                         orderable: true,
                     },
@@ -332,8 +300,8 @@
                         // searchable: false
                     },
                     {
-                        data: 'action',
-                        name: 'action',
+                        data: 'action_list_wo',
+                        name: 'action_list_wo',
                         // className: 'align-middle text-center',
                         orderable: false,
                         searchable: false

@@ -164,7 +164,7 @@
                                 <span data-key="t-dashboard">Dashboard</span>
                             </a>
                         </li>
-                        <li>
+                        <li class="{{ request()->is('ppic/*') ? 'mm-active' : '' }}">
                             <a href="javascript: void(0);" class="has-arrow">
                                 <i data-feather="briefcase"></i>
                                 <span data-key="t-blog">PPIC</span>

@@ -25,4 +25,16 @@ class salesOrder extends Model
     {
         return $this->belongsTo(\App\Models\MstUnits::class, 'id_master_units', 'id');
     }
+
+    // Definisikan relasi many-to-one ke tabel master_customers
+    public function masterCustomer()
+    {
+        return $this->belongsTo(\App\Models\MstCustomers::class, 'id_master_customers', 'id');
+    }
+
+    // Definisikan relasi many-to-one ke tabel master_salesman
+    public function masterSalesman()
+    {
+        return $this->belongsTo(\App\Models\MstSalesmans::class, 'id_master_salesmen', 'id');
+    }
 }
