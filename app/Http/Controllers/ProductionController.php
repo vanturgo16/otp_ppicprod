@@ -429,7 +429,7 @@ class ProductionController extends Controller
     }
 	public function production_entry_material_use_json()
     {
-        $datas = ProductionEntryMaterialUse::leftJoin('work_orders AS b', 'report_material_uses.id_work_orders', '=', 'b.id')
+        $datas = ProductionEntryMaterialUse::leftJoin('work_orders_copy AS b', 'report_material_uses.id_work_orders', '=', 'b.id')
 				->leftJoin('master_regus AS c', 'report_material_uses.id_master_regus', '=', 'c.id')
 				->leftJoin('master_work_centers AS d', 'report_material_uses.id_master_work_centers', '=', 'd.id')
                 ->select('report_material_uses.*', 'b.wo_number', 'c.regu', 'd.work_center')
@@ -500,7 +500,8 @@ class ProductionController extends Controller
         $id_master_process_productions = request()->get('id_master_process_productions');
         
 		$datas = DB::table('master_work_centers')
-			->where('id_master_process_productions', $id_master_process_productions)
+			//->where('id_master_process_productions', $id_master_process_productions)
+			->where('id_master_process_productions', '2')
 			->select('work_center_code','work_center','id')
 			->get();
 			
@@ -562,7 +563,7 @@ class ProductionController extends Controller
 			$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
 			
             return Redirect::to('/production-ent-material-use-detail/'.sha1($response->id))->with('pesan', 'Add Successfuly.');
-        }        
+        }
     }
 	public function production_entry_material_use_detail($response_id){
 		$data = ProductionEntryMaterialUse::leftJoin('work_orders AS b', 'report_material_uses.id_work_orders', '=', 'b.id')
@@ -575,26 +576,43 @@ class ProductionController extends Controller
 							->select('id_master_process_productions','wo_number','id')
 							->get();
 			$ms_work_centers = DB::table('master_work_centers')
-							->where( "id_master_process_productions" , "=", $data[0]->id_master_process_productions)
+							//->where( "id_master_process_productions" , "=", $data[0]->id_master_process_productions)
+							->where('id_master_process_productions', '2')
 							->select('work_center_code','work_center','id')
 							->get();	
 			$ms_regus = DB::table('master_regus')
 							->where( "id" , "=", $data[0]->id_master_regus)
 							->select('id', 'regu')
 							->get();	
-							
+			
+			/*
 			$ms_barcodes = DB::table('good_receipt_note_details')
 							->where( "lot_number" , "!=", "0")
 							->where( "qc_passed" , "=", "Y")
 							->orderBy("created_at", "desc")
 							->select('id', 'lot_number')
 							->get();//sumber data masih belum ter-definisi dengan jelas sumber nya.
-					
+			*/
+
+			$ms_barcodes = DB::table('detail_good_receipt_note_details as a')
+					->leftJoin('good_receipt_note_details as b', function ($join) {
+						$join->on('a.id_grn_detail', '=', 'b.id');
+						$join->on('a.lot_number', '=', 'b.lot_number');
+					})
+					->leftJoin('master_raw_materials as c', 'b.id_master_products', '=', 'c.id')
+					->leftJoin('good_receipt_notes as d', 'a.id_grn', '=', 'd.id')
+					->where( "a.qty" , ">", "a.qty_out")
+					->whereRaw( "ROUND(a.qty-a.qty_out, 1) > 0")
+					->select('c.description', 'a.*')
+					->selectRaw('ROUND(a.qty-a.qty_out, 1) as sisa')
+					->get();
+			
 			$data_detail = DB::table('report_material_use_details as a')
 					->leftJoin('report_material_uses as b', 'a.id_report_material_uses', '=', 'b.id')
 					->leftJoin('good_receipt_note_details as c', 'a.id_good_receipt_note_details', '=', 'c.id')
 					->leftJoin('master_raw_materials as d', 'c.id_master_products', '=', 'd.id')
-					->select('a.*', 'c.lot_number', 'd.description')
+					->leftJoin('detail_good_receipt_note_details as e', 'a.id_detail_good_receipt_note_details', '=', 'e.id')
+					->select('a.*', 'c.lot_number', 'd.description', 'e.ext_lot_number')
 					->whereRaw( "sha1(b.id) = '$response_id'")
 					->get();            
 				
@@ -612,6 +630,39 @@ class ProductionController extends Controller
 		}
 		
     }   
+	public function jsonGetMaterialInfo()
+	{			
+		$lot_number = request()->get('lot_number');
+		
+		$data = DB::table('detail_good_receipt_note_details as a')
+				->leftJoin('good_receipt_note_details as b', function ($join) {
+					$join->on('a.id_grn_detail', '=', 'b.id');
+					$join->on('a.lot_number', '=', 'b.lot_number');
+				})
+				->leftJoin('master_raw_materials as c', 'b.id_master_products', '=', 'c.id')
+				->select('c.rm_code', 'c.description')
+				->selectRaw('SUM(ROUND(a.qty-a.qty_out, 1)) as stok_ext_all')
+				->whereRaw( "a.lot_number = '$lot_number'")
+				->groupBy('a.lot_number','c.id','c.rm_code','c.description')
+                ->get();
+				
+		$sData = array();
+		
+		if($data){
+			foreach($data as $rs){
+				$sData['rm_code'] = $rs->rm_code;
+				$sData['description'] = $rs->description;
+				$sData['stok_ext_all'] = $rs->stok_ext_all;
+			}
+		}else{
+			$sData['rm_code'] = 'Tidak Ditemukan';
+			$sData['description'] = 'Tidak Ditemukan';
+			$sData['stok_ext_all'] = 'Tidak Ditemukan';
+		}
+		
+		header('Content-Type: application/json');
+		echo json_encode($sData, JSON_PRETTY_PRINT);
+	}
 	public function production_entry_material_use_update(Request $request){
 		if ($request->has('savemore')) {
             return "Tombol Save & Add More diklik.";
@@ -743,13 +794,123 @@ class ProductionController extends Controller
 				->select("b.*","c.lot_number")
 				->whereRaw( "sha1(report_material_uses.id) = '$response_id'")
                 ->get();
-			//print_r($data_detail[0]);exit;
 			return view('production.entry_material_use_print',compact('data','data_detail'));
 		}else{
 			return Redirect::to('/production-ent-material-use')->with('pesan', 'There Is An Error.');
 		}
 		
     }
+	public function production_entry_material_use_detail_add(Request $request){		
+		if ($request->has('savemore')) {
+            return "Tombol Save & Add More diklik.";
+        } elseif ($request->has('save')) {
+			
+			$id_rmu = $_POST['token_rmu'];
+			$data_rmu = ProductionEntryMaterialUse::whereRaw( "sha1(report_material_uses.id) = '$id_rmu'")
+				->select('id')
+				->get();
+			
+			$id = $_POST['token'];
+			$data = DB::table('detail_good_receipt_note_details as a')
+				->leftJoin('good_receipt_note_details as b', 'a.lot_number', '=', 'b.lot_number')
+				->leftJoin('master_raw_materials as c', 'b.id_master_products', '=', 'c.id')
+				->select('c.id', 'c.description AS rm_name', 'b.id AS id_good_receipt_note_details', 'a.id AS id_detail_good_receipt_note_details', 'a.qty_out')
+				->selectRaw('SUM(ROUND(a.qty-a.qty_out, 1)) as stok_ext_all')
+				->whereRaw( "sha1(a.id) = '$id'")
+				->groupBy('a.qty_out','a.id','c.id','c.description','b.id')
+				->groupBy('a.qty_out','a.id','c.id','c.description','b.id')
+                ->get();
+			
+			//echo $id;
+			//print_r($data[0]); exit;
+            $pesan = [
+                'taking.required' => 'Cannot Be Empty',
+                'usage.required' => 'Cannot Be Empty',                  
+            ];
+
+            $validatedData = $request->validate([
+                'taking' => 'required|lte:sisa_ext',
+                'usage' => 'required|lte:taking',
+
+            ], $pesan);
+			
+			$validatedData['remaining'] = $_POST['taking']-$_POST['usage'];			
+			$validatedData['id_report_material_uses'] = $data_rmu[0]->id;			
+			$validatedData['id_master_products'] = $data[0]->id;			
+			$validatedData['rm_name'] = $data[0]->rm_name;			
+			$validatedData['sisa_camp'] = '0';			
+			$validatedData['id_good_receipt_note_details'] = $data[0]->id_good_receipt_note_details;		
+			$validatedData['id_detail_good_receipt_note_details'] = $data[0]->id_detail_good_receipt_note_details;			
+						
+            $create = ProductionEntryMaterialUseDetail::create($validatedData);
+			if($create){
+				$update_qty['qty_out'] = $data[0]->qty_out + $_POST['taking'];			
+				
+				DB::table('detail_good_receipt_note_details')
+					->where("id", "=", $data[0]->id_detail_good_receipt_note_details)
+					->update($update_qty);
+			}
+			
+			//Audit Log		
+			$username= auth()->user()->email; 
+			$ipAddress=$_SERVER['REMOTE_ADDR'];
+			$location='0';
+			$access_from=Browser::browserName();
+			$activity='Add Entry Report Material Use '.$data_rmu[0]->id;
+			$this->auditLogs($username,$ipAddress,$location,$access_from,$activity); 
+			
+            return Redirect::to('/production-ent-material-use-detail/'.$id_rmu)->with('pesan', 'Add Successfuly.');      
+        } 
+			
+    }
+	public function production_entry_material_use_detail_delete(Request $request){	
+		//print_r($_POST);exit;
+		
+		$id_rmu = $_POST['token_rmu'];
+		$id = $_POST['hapus_detail'];
+		
+		$data = ProductionEntryMaterialUseDetail::select("*")
+				->whereRaw( "sha1(id) = '$id'")
+                ->get();
+		
+		$data_detail_grn_detail = DB::table('detail_good_receipt_note_details')
+				->select('qty_out')
+				->where( "id", "=", $data[0]->id_detail_good_receipt_note_details)
+                ->get();
+				
+		//print_r($data[0]); exit;
+		//print_r($data_detail_grn_detail[0]); exit;
+		//echo $data_detail_grn_detail[0]->qty_out; exit;	
+		
+		if(!empty($data[0] && $data_detail_grn_detail[0])){
+			
+			$delete = ProductionEntryMaterialUseDetail::whereRaw( "sha1(id) = '$id'" )->delete();
+			//echo $delete; exit;
+			
+			if($delete){
+				$update_qty['qty_out'] = $data_detail_grn_detail[0]->qty_out - $data[0]->taking;			
+				
+				DB::table('detail_good_receipt_note_details')
+					->where("id", "=", $data[0]->id_detail_good_receipt_note_details)
+					->update($update_qty);
+				
+				//Audit Log		
+				$username= auth()->user()->email; 
+				$ipAddress=$_SERVER['REMOTE_ADDR'];
+				$location='0';
+				$access_from=Browser::browserName();
+				$activity='Delete Entry Report Material Use Detail ID="'.$data[0]->id.'"';
+				$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+				
+				return Redirect::to('/production-ent-material-use-detail/'.$id_rmu)->with('pesan', 'Delete Successfuly.');
+			}else{
+				return Redirect::to('/production-ent-material-use-detail/'.$id_rmu)->with('pesan', 'There Is An Error.');
+			}
+			
+		}else{
+			return Redirect::to('/production-ent-material-use-detail/'.$id_rmu)->with('pesan', 'There Is An Error.');
+		}
+	}
 	//END ENTRY MATERIAL USE
 	
 	/*

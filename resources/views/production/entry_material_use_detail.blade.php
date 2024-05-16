@@ -179,75 +179,164 @@
 				<div class="card">
 					<div class="card-header">
 						<h4 class="card-title">Detail Report Material Use</h4>
-						<!--  <p class="card-title-desc"> layout options : from inline, horizontal & custom grid implementations</p> -->
+						
 					</div>
 					<div class="card-body p-4">
-
-						<div class="col-sm-12">
+						<p class="card-title-desc"></p>
+						<div class="alert alert-info alert-border-left alert-dismissible fade show mb-0 text-justify" role="alert">
+							<i class="mdi mdi-alert-circle-outline align-middle me-3"></i><strong>Info</strong> - Jadikan external lot sebagai acuan penggunaan material. Lot number memiliki beberapa external lot number, penggunaan secara terperinci dapat memastikan jumlah stok material yang tersedia secara pasti di setiap external lot number. Jika material yang tersedia di salah satu external lot tidak mencukupi kebutuhan produksi, silahkan gunakan material di external lot yang lainnya.
+							<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+						</div>
+						<div class="mt-4 col-sm-12">
 							<div class="mt-4 mt-lg-0">
-								<form method="post" action="#" class="form-material m-t-40" enctype="multipart/form-data">
+								<form method="post" action="/production-entry-material-use-detail-add" class="form-material m-t-40" enctype="multipart/form-data">
 								@csrf
+								
 									<input id="request_id_original" type="hidden" class="form-control" name="request_id" value="{{ Request::segment(2) }}">
 									
 									<div class="row mb-4 field-wrapper required-field">
 										<label for="horizontal-password-input" class="col-sm-3 col-form-label">Barcode  </label>
 										<div class="col-sm-9">
-											<select class="form-select" name="shift" id="shift" required>
+											<select class="form-select" name="id_barcode" id="id_barcode" required>
 												<option value="">** Please Select A Barcode</option>
 												@foreach ($ms_barcodes as $data)
-													<option value="{{ $data->id }}" >{{ $data->lot_number }}</option>
+													<option value="{{ $data->id }}" data-lot_number="{{ $data->lot_number }}" data-sisa="{{ $data->sisa }}" data-id="{{ sha1($data->id) }}">{{ $data->lot_number }} ( EXT : {{ $data->ext_lot_number }} ) - {{ $data->description }} ( Sisa Per EXT : {{ $data->sisa }} Kg)</option>
 												@endforeach	
 											</select>
-											@if($errors->has('shift'))
-												<div class="text-danger"><b>{{ $errors->first('shift') }}</b></div>
+											@if($errors->has('id_barcode'))
+												<div class="text-danger"><b>{{ $errors->first('id_barcode') }}</b></div>
 											@endif
+											<input type="hidden" name="token" id="token">
+											<input type="hidden" name="token_rmu" id="token_rmu" class="form-control" value="{{ Request::segment(2) }}">
+											<input type="hidden" name="sisa_ext" id="sisa_ext">
 										</div>
 									</div>	
+									<script>
+										$(document).ready(function(){
+											konten = '<div class="alert alert-dark alert-dismissible alert-label-icon label-arrow fade show" role="alert"><i class="mdi mdi-alert-outline label-icon"></i><font class="text-white">Informasi Tidak Tersedia</font></div>';
+											$( "#div-informasi" ).html( konten );
+											
+											$("#id_barcode").change(function(){
+												konten_remaining = '<div class="alert alert-warning alert-dismissible alert-label-icon label-arrow fade show" role="alert"><i class="mdi mdi-alert-outline label-icon"></i><font class="text-white">Informasi Tidak Tersedia</font></div>';
+												$( "#div-info-remaining" ).html( konten_remaining );
+											
+												document.getElementById('token').value = $('#id_barcode option:selected').attr('data-id');
+												document.getElementById('sisa_ext').value = $('#id_barcode option:selected').attr('data-sisa');
+												document.getElementById('taking').value = '';
+												document.getElementById('usage').value = '';
+												
+												$.ajax({
+													type: "GET",
+													url: "/json_get_material_info",
+													data: { lot_number : $('#id_barcode option:selected').attr('data-lot_number') },
+													
+													dataType: "json",
+													beforeSend: function(e) {
+														if(e && e.overrideMimeType) {
+															e.overrideMimeType("application/json;charset=UTF-8");
+														}
+													},
+													success: function(response){
+														konten = '<div class="alert alert-dark alert-dismissible alert-label-icon label-arrow fade show" role="alert"><i class="mdi mdi-alert-outline label-icon"></i><strong><font id="sisa_camp">'+response.stok_ext_all+'</font></strong> Kg - <font class="text-white">Sisa material secara keseluruhan</font></div>';
+														$( "#div-informasi" ).html( konten );
+													},
+													error: function (xhr, ajaxOptions, thrownError) {
+														konten = '<div class="alert alert-dark alert-dismissible alert-label-icon label-arrow fade show" role="alert"><i class="mdi mdi-alert-outline label-icon"></i><font class="text-white">Informasi Tidak Tersedia</font></div>';
+														$( "#div-informasi" ).html( konten );
+														alert(xhr.status + "\n" + xhr.responseText + "\n" + thrownError);
+													}
+												});
+												
+											});
+											
+										});
+									</script>
 									<div class="row mb-4 field-wrapper">
-										<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Raw Material </label>
+										<label for="horizontal-firstname-input" class="col-sm-3 col-form-label"></label>
 										<div class="col-sm-9">
-											<input type="text" class="form-control" name="remarks" readonly>
-											@if($errors->has('remarks'))
-												<div class="text-danger"><b>{{ $errors->first('remarks') }}</b></div>
-											@endif
-										</div>
-									</div>
-									<div class="row mb-4 field-wrapper required-field">
-										<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Sisa Camp</label>
-										<div class="col-sm-9">
-											<input type="text" class="form-control" name="remarks">
-											@if($errors->has('remarks'))
-												<div class="text-danger"><b>{{ $errors->first('remarks') }}</b></div>
-											@endif
+											<div id="div-informasi"></div>
 										</div>
 									</div>
 									<div class="row mb-4 field-wrapper required-field">
 										<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Taking</label>
 										<div class="col-sm-9">
-											<input type="text" class="form-control" name="remarks">
-											@if($errors->has('remarks'))
-												<div class="text-danger"><b>{{ $errors->first('remarks') }}</b></div>
+											<input class="form-control" name="taking" id="taking" type="text">
+											<p class="card-title-desc"><code>.Kg - Catatan : Jumlah taking tidak boleh lebih banyak dari <strong>( Sisa Per EXT )</strong>.</code></p>
+											@if($errors->has('taking'))
+												<div class="text-danger"><b>{{ $errors->first('taking') }}</b></div>
 											@endif
 										</div>
 									</div>
+									<script>
+										$(document).ready(function(){
+											$("#taking").keyup(function() {
+												var n_taking = parseFloat(document.getElementById('taking').value);
+												var n_sisa_ext = parseFloat(document.getElementById('sisa_ext').value);
+
+												if (!isNaN(n_taking) && !isNaN(n_sisa_ext) && n_taking>n_sisa_ext) {
+													document.getElementById('taking').value = n_sisa_ext;
+												}
+											});
+										});
+									</script>
 									<div class="row mb-4 field-wrapper required-field">
 										<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Usage</label>
 										<div class="col-sm-9">
-											<input type="text" class="form-control" name="remarks">
-											@if($errors->has('remarks'))
-												<div class="text-danger"><b>{{ $errors->first('remarks') }}</b></div>
+											<input type="text" class="form-control" name="usage" id="usage">
+											<p class="card-title-desc"><code>.Kg</code></p>
+											@if($errors->has('usage'))
+												<div class="text-danger"><b>{{ $errors->first('usage') }}</b></div>
 											@endif
 										</div>
 									</div>
+									<script>
+										$(document).ready(function(){
+											$("#usage").keyup(function() {
+												var n_taking = parseFloat(document.getElementById('taking').value);
+												var n_usage = parseFloat(document.getElementById('usage').value);
+
+												if (!isNaN(n_taking) && !isNaN(n_usage) && n_usage > n_taking) {
+													document.getElementById('usage').value = n_taking;
+												}
+											});
+										});
+									</script>
 									<div class="row mb-4 field-wrapper required-field">
+										<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Sisa Campuran</label>
+										<div class="col-sm-9">
+											<input class="form-control" name="sisa_campuran" id="sisa_campuran" type="text">
+											<p class="card-title-desc"><code>.Kg</code></p>
+											@if($errors->has('sisa_campuran'))
+												<div class="text-danger"><b>{{ $errors->first('sisa_campuran') }}</b></div>
+											@endif
+										</div>
+									</div>
+									
+									<div class="row mb-4 field-wrapper">
 										<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Remaining</label>
 										<div class="col-sm-9">
-											<input type="text" class="form-control" name="remarks" readonly>
-											@if($errors->has('remarks'))
-												<div class="text-danger"><b>{{ $errors->first('remarks') }}</b></div>
-											@endif
+											<div id="div-info-remaining"></div>
 										</div>
 									</div>
+									<script>
+										$(document).ready(function(){
+											konten = '<div class="alert alert-warning alert-dismissible alert-label-icon label-arrow fade show" role="alert"><i class="mdi mdi-alert-outline label-icon"></i><font class="text-white">Informasi Tidak Tersedia</font></div>';
+											$( "#div-info-remaining" ).html( konten );
+											
+											var usage = document.getElementById('usage');
+											
+											usage.addEventListener('input', function() {
+												var n_taking = parseFloat(document.getElementById('taking').value);
+												var n_usage = parseFloat(document.getElementById('usage').value);
+												
+												var n_usage = n_usage > n_taking ? n_taking : n_usage ;
+												
+												var hasil = (n_taking-n_usage).toFixed(1);
+												konten = '<div class="alert alert-warning alert-dismissible alert-label-icon label-arrow fade show" role="alert"><i class="mdi mdi-alert-outline label-icon"></i><strong><font>'+hasil+'</font></strong> Kg</div>';
+												$( "#div-info-remaining" ).html( konten );
+											});
+										});
+									</script>
 									<div class="row justify-content-end">
 										<div class="col-sm-9">
 											<div>
@@ -290,7 +379,12 @@
 								<tbody>
 									@foreach ($data_detail as $data)
 									<tr>
-										<td>{{ $data->lot_number }}</td>
+										<td>
+											{{ $data->lot_number }} <br>
+											<font style="font-size:8px:"> 
+												EXT : <b>{{ $data->ext_lot_number}}</b>
+											</font>
+										</td>
 										<td>
 										    ID : <b>{{ $data->id_master_products }}</b> <br>
 											{{ $data->description }}
@@ -305,9 +399,9 @@
 										
 										<td>	
 											<center>
-												<form action="#" method="post" class="d-inline" enctype="multipart/form-data">
+												<form action="/production-entry-material-use-detail-delete" method="post" class="d-inline" enctype="multipart/form-data">
 													@csrf		
-													<input type="hidden" class="form-control" name="request_number" value="{{ Request::segment(2) }}">
+													<input type="hidden" class="form-control" name="token_rmu" value="{{ Request::segment(2) }}">
 													<button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure to delete this item ?')" value="{{ sha1($data->id) }}" name="hapus_detail">
 														<i class="bx bx-trash-alt" title="Delete" ></i> DELETE
 													</button>
