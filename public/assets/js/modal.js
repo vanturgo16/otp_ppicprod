@@ -132,6 +132,22 @@ function lot_number(id) {
   });
 }
 
+function lot_number_edit(id,lot_number) {
+  $.ajax({
+    type: 'GET',
+    url: '/generate-code', // Ganti dengan URL rute Laravel yang sesuai
+    data: { id: id }, // Mengirim id sebagai data dalam permintaan Ajax
+    success: function (response) {
+        $('#generatedCode').val(response.data.find);
+        $('#idOke2').val(id); // Mengisi nilai dari elemen dengan ID 'idOke' dengan nilai 'id'
+        $('#lot_numberok').val(lot_number); // Mengisi nilai dari elemen dengan ID 'idOke' dengan nilai 'id'
+    },
+    error: function (error) {
+        console.log(error);
+    }
+});
+}
+
 
 
   function edit_grn_detail(id) {

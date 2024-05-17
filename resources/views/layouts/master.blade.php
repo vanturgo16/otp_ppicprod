@@ -526,6 +526,10 @@
             theme: "classic"
         });
     </script>
+    <script>
+            let baseRoute = '{{ url('') }}';
+    </script>
+    @stack('scripts')
 
 </body>
 

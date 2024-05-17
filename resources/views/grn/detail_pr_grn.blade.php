@@ -134,28 +134,28 @@
                                         <label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Pilih Produk </label>
                                         <div class="col-sm-9">
                                             @if($typex=='RM')
-                                            <select class="form-select" name="id_master_products">
+                                            <select class="form-select data-select2" name="id_master_products">
                                                 <option>Pilih Produk</option>
                                                 @foreach ($rm as $data)
                                                 <option value="{{ $data->id }}">{{ $data->description }}</option>
                                                 @endforeach
                                             </select>
                                             @elseif($typex=='TA')
-                                            <select class="form-select" name="id_master_products">
+                                            <select class="form-select data-select2" name="id_master_products">
                                                 <option>Pilih Produk sparepart & auxiliaries</option>
                                                 @foreach ($ta as $data)
                                                 <option value="{{ $data->id }}">{{ $data->description }}</option>
                                                 @endforeach
                                             </select>
                                             @elseif($typex=='WIP')
-                                            <select class="form-select" name="id_master_products">
+                                            <select class="form-select data-select2" name="id_master_products">
                                                 <option>Pilih Produk</option>
                                                 @foreach ($wip as $data)
                                                 <option value="{{ $data->id }}">{{ $data->description }}</option>
                                                 @endforeach
                                             </select>
                                             @elseif($typex=='FG')
-                                            <select class="form-select" name="id_master_products">
+                                            <select class="form-select data-select2" name="id_master_products">
                                                 <option>Pilih Produk</option>
                                                 @foreach ($fg as $data)
                                                 <option value="{{ $data->id }}">{{ $data->description }}</option>
@@ -181,7 +181,7 @@
                                     <div class="row mb-4 field-wrapper required-field">
                                         <label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Units </label>
                                         <div class="col-sm-9">
-                                            <select class="form-select" name="master_units_id" id="unit_code">
+                                            <select class="form-select data-select2" name="master_units_id" id="unit_code">
                                                 <option>Pilih Unit</option>
                                                 @foreach ($unit as $data)
                                                 <option value="{{ $data->id }}">{{ $data->unit_code }}</option>

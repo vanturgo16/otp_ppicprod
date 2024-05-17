@@ -31,13 +31,14 @@
                                 <h5 class="mb-0">Good Receipt Note</h5>
                                 <div>
                                     <!-- Include modal content -->
-                                   
+                                    
+                                @include('grn.modal')
                                 </div>
                             </div>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table id="datatable" class="table table-bordered dt-responsive  nowrap w-100">
+                                <table id="so_grn_table" class="table table-bordered dt-responsive  nowrap w-100">
                                     <thead>
                                         <tr>
                                         <tr>
@@ -54,43 +55,7 @@
                                             <th>Action</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                    @foreach ($receiptDetails as $data)
-                                            <tr><td></td>
-                                                <td>{{ $data->receipt_number }}</td>
-                                                <td>{{ $data->description }}</td>
-                                                <td>{{ $data->receipt_qty }}</td>
-                                                <td>{{ $data->unit_code }}</td>
-                                                <td>{{ $data->qc_passed }}</td>
-                                                <td>{{ $data->lot_number }}</td>
-                                                <td>{{ $data->note }}</td>
-                                                
-                                                <td>
-                                                        <button type="button" class="btn btn-success btn-sm waves-effect waves-light"
-                                                        data-bs-toggle="modal" onclick="lot_number('{{ $data->id }}');"
-                                                        data-bs-target="#myModal"><i class="bx bx-edit-alt" title="Input Lot"></i> Input Lot</button>
-                                                        <!-- Include modal content -->
-                                                </td>
-                                                <!-- <td> -->
-                                                 @if($data->lot_number!='')   
-                                               
-                                                <!-- <a href="/generateBarcode/{{ $data->lot_number }}" class="btn btn-sm btn-info"><i class=" bx bx-barcode" >Print Barcode</i></a> -->
-                                                @else
-                                                <!-- <button type="submit" class="btn btn-sm btn-danger" >
-                                                    <i class="bx bx-info-circle" > Please Generate Barcode</i>
-                                                </button> -->
-                                                @endif
-                                                <!-- </td> -->
-                                                    @include('grn.modal')
-                                                <td>
-                                                    <a href="/good-lote-number-detail/{{ $data->id }}" class="btn btn-sm btn-primary waves-effect waves-light"><i class=" bx bx-show-alt" ></i></a>
-                                                   
-                                                </td>
-                                             
-                                            </tr>
-                                   @endforeach
-                                        <!-- Add more rows as needed -->
-                                    </tbody>
+                                   
                                 </table>
                             </div>
                         </div>
@@ -101,3 +66,130 @@
     </div>
 
 @endsection
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            // alert('test')
+            var i = 1;
+            let dataTable = $('#so_grn_table').DataTable({
+                dom: '<"top d-flex"<"position-absolute top-0 end-0 d-flex"fl>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>><"clear:both">',
+                initComplete: function(settings, json) {
+                    // Setelah DataTable selesai diinisialisasi
+                    // Tambahkan elemen kustom ke dalam DOM
+                    $('.top').prepend(
+                        `<div class='pull-left col-sm-12 col-md-5'><div class="btn-group mb-4"></div></div>`
+                    );
+                },
+                processing: true,
+                serverSide: true,
+                // scrollX: true,
+                language: {
+                    lengthMenu: "_MENU_",
+                    search: "",
+                    searchPlaceholder: "Search",
+                },
+                pageLength: 5,
+                lengthMenu: [
+                    [5, 10, 20, 25, 50, 100],
+                    [5, 10, 20, 25, 50, 100]
+                ],
+                aaSorting: [
+                    [1, 'desc']
+                ], // start to sort data in second column 
+                ajax: {
+                    url: baseRoute + '/good-lote-number',
+                    data: function(d) {
+                        d.search = $('input[type="search"]').val(); // Kirim nilai pencarian
+                    }
+                },
+                columns: [{
+                        data: null,
+                        render: function(data, type, row, meta) {
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        },
+                        // className: 'align-middle text-center',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'receipt_number',
+                        name: 'receipt_number',
+                        // className: 'align-middle text-center',
+                        orderable: true,
+                    },
+                    {
+                        data: 'description',
+                        name: 'description',
+                        // className: 'align-middle text-center',
+                        orderable: true,
+                    },
+                    {
+                        data: 'receipt_qty',
+                        name: 'receipt_qty',
+                        // className: 'align-middle text-center',
+                        orderable: true,
+                    },
+                    {
+                        data: 'unit_code',
+                        name: 'unit_code',
+                        // className: 'align-middle text-center',
+                        orderable: true,
+                    },
+                    {
+                        data: 'qc_passed',
+                        name: 'qc_passed',
+                        // className: 'align-middle',
+                        orderable: true,
+                    },
+                    {
+                        data: 'lot_number',
+                        name: 'lot_number',
+                        // className: 'align-middle',
+                        orderable: true,
+                    },
+                    {
+                        data: 'note',
+                        name: 'note',
+                        // className: 'align-middle',
+                        orderable: true,
+                    },
+                    {
+                        data: 'generate_lot',
+                        name: 'generate_lot',
+                        orderable: true,
+                        searchable: false
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        // className: 'align-middle text-center',
+                        orderable: false,
+                        searchable: false
+                    },
+                ],
+                createdRow: function(row, data, dataIndex) {
+                    // Tambahkan class "table-success" ke tr jika statusnya "Posted"
+                    if (data.statusLabel === 'Posted') {
+                        $(row).addClass('table-success');
+                    }
+                },
+                bAutoWidth: false,
+                columnDefs: [{
+                        width: "10%",
+                        targets: [3]
+                    }, {
+                        width: '100px', // Menetapkan min-width ke 150px
+                        targets: [6, 7], // Menggunakan class 'progress' pada kolom
+                    },
+                    {
+                        width: '60px', // Menetapkan min-width ke 150px
+                        targets: [4], // Menggunakan class 'progress' pada kolom
+                    }, {
+                        orderable: false,
+                        targets: [0]
+                    }
+                ],
+            });
+        });
+    </script>
+@endpush

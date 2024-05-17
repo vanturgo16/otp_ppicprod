@@ -37,7 +37,7 @@
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <table id="datatable" class="table table-bordered dt-responsive  nowrap w-100">
+                                <table id="so_grn_table" class="table table-bordered dt-responsive  nowrap w-100">
                                     <thead>
                                         <tr>
                                         <tr>
@@ -50,36 +50,7 @@
                                             <th>Action</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                    @php
-                                        $no = 1; // Inisialisasi nomor urut
-                                    @endphp
-                                    @foreach ($details as $data)
-                                            <tr><td>{{ $no++ }}</td>
-                                                <td>{{ $data->id_grn_detail }}</td>
-                                                <td>{{ $data->lot_number }}</td>
-                                                <td>{{ $data->ext_lot_number }}</td>
-                                                <td>{{ $data->qty }}</td>
-                                                <td><button type="button" class="btn btn-success btn-sm waves-effect waves-light"
-                                                        data-bs-toggle="modal" onclick="ext_lot_number('{{ $data->id }}');"
-                                                        data-bs-target="#external_lot"><i class="bx bx-edit-alt" title="Input Ext Lot"></i> Input External Lot</button></td>
-                                                        @include('grn.modal')
-                                                <td>
-                                                @if($data->ext_lot_number!='')   
-                                               
-                                               <a href="/generateBarcode/{{ $data->lot_number }}" class="btn btn-sm btn-info"><i class=" bx bx-barcode" >Print Barcode</i></a>
-                                               <a href="/detail-external-no-lot/{{ $data->lot_number }}" class="btn btn-sm btn-primary"><i class=" bx bx-file" >Detail</i></a>
-                                               @else
-                                               <button type="submit" class="btn btn-sm btn-danger" >
-                                                   <i class="bx bx-info-circle" > Please Generate Barcode</i>
-                                               </button>
-                                               @endif
-                                               </td>
-                                             
-                                            </tr>
-                                    @endforeach
-                                        <!-- Add more rows as needed -->
-                                    </tbody>
+                                    @include('grn.modal')
                                 </table>
                             </div>
                         </div>
@@ -90,3 +61,113 @@
     </div>
 
 @endsection
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            var i = 1;
+            let dataTable = $('#so_grn_table').DataTable({
+                dom: '<"top d-flex"<"position-absolute top-0 end-0 d-flex"fl>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>><"clear:both">',
+                initComplete: function(settings, json) {
+                    // Setelah DataTable selesai diinisialisasi
+                    // Tambahkan elemen kustom ke dalam DOM
+                    $('.top').prepend(
+                        `<div class='pull-left col-sm-12 col-md-5'><div class="btn-group mb-4"></div></div>`
+                    );
+                },
+                processing: true,
+                serverSide: true,
+                // scrollX: true,
+                language: {
+                    lengthMenu: "_MENU_",
+                    search: "",
+                    searchPlaceholder: "Search",
+                },
+                pageLength: 5,
+                lengthMenu: [
+                    [5, 10, 20, 25, 50, 100],
+                    [5, 10, 20, 25, 50, 100]
+                ],
+                aaSorting: [
+                    [1, 'desc']
+                ], // start to sort data in second column 
+                ajax: {
+                    url: baseRoute + '/external-no-lot',
+                    data: function(d) {
+                        d.search = $('input[type="search"]').val(); // Kirim nilai pencarian
+                    }
+                },
+                columns: [{
+                        data: null,
+                        render: function(data, type, row, meta) {
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        },
+                        // className: 'align-middle text-center',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'id_grn_detail',
+                        name: 'id_grn_detail',
+                        // className: 'align-middle text-center',
+                        orderable: true,
+                    },
+                    {
+                        data: 'lot_number',
+                        name: 'lot_number',
+                        // className: 'align-middle text-center',
+                        orderable: true,
+                    },
+                    {
+                        data: 'ext_lot_number',
+                        name: 'ext_lot_number',
+                        // className: 'align-middle text-center',
+                        orderable: true,
+                    },
+                    {
+                        data: 'qty',
+                        name: 'qty',
+                        // className: 'align-middle text-center',
+                        orderable: true,
+                    },
+                    {
+                        data: 'action_generate',
+                        name: 'action_generate',
+                        // className: 'align-middle text-center',
+                        orderable: true,
+                    },
+                    
+                    {
+                        data: 'action',
+                        name: 'action',
+                        // className: 'align-middle text-center',
+                        orderable: false,
+                        searchable: false
+                    },
+                ],
+                createdRow: function(row, data, dataIndex) {
+                    // Tambahkan class "table-success" ke tr jika statusnya "Posted"
+                    if (data.statusLabel === 'Posted') {
+                        $(row).addClass('table-success');
+                    }
+                },
+                bAutoWidth: false,
+                columnDefs: [{
+                        width: "10%",
+                        targets: [3]
+                    }, {
+                        width: '100px', // Menetapkan min-width ke 150px
+                        targets: [6], // Menggunakan class 'progress' pada kolom
+                    }, 
+                    {
+                        width: '60px', // Menetapkan min-width ke 150px
+                        targets: [4], // Menggunakan class 'progress' pada kolom
+                    }, {
+                        orderable: false,
+                        targets: [0]
+                    }
+                ],
+            });
+        });
+    </script>
+@endpush

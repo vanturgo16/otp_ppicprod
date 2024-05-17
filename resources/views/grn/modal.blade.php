@@ -45,6 +45,53 @@
     </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->
 
+<!-- input Lot Number -->
+<div id="input_lot_edit" class="modal fade" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true" data-bs-scroll="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="myModalLabel">Input Lot Number</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="/update_lot_number" class="form-material m-t-40" enctype="multipart/form-data">
+            @method('PUT')
+            @csrf
+            <div class="modal-body">
+                
+                <div class="mb-3">
+                    <label for="example-text-input" class="form-label">Lot Number</label>
+                    <input class="form-control" type="text" name="lot_number" id="lot_numberok" readonly>
+                    <input class="form-control" type="hidden" name="id" id="idOke2">
+                    @error('lot_number')
+                        <div class="form-group has-danger mb-0">
+                            <div class="form-control-feedback">{{ $message }}</div>
+                        </div>
+                    @enderror
+                </div>
+                
+                <div class="mb-3">
+                    <label for="example-text-input" class="form-label">Qty</label>
+                    <input class="form-control" type="number" name="qty_generate_barcode" id="" >
+                    @error('qty')
+                        <div class="form-group has-danger mb-0">
+                            <div class="form-control-feedback">{{ $message }}</div>
+                        </div>
+                    @enderror
+                </div>
+                
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary waves-effect" data-bs-dismiss="modal">Back</button>
+                <!-- <button type="submit" class="btn btn-primary waves-effect waves-light">Save & Add More</button> -->
+                <button type="submit" class="btn btn-primary waves-effect waves-light">Save</button>
+            </div>
+
+            </form>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
 
 <!-- Edit GRN PR detail -->
 <div id="edit-pr-detail" class="modal fade" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true" data-bs-scroll="true">

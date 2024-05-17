@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use DataTables;
 use App\Traits\AuditLogsTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -26,15 +27,61 @@ class GrnController extends Controller
 {
     use AuditLogsTrait;
 
-    public function index(){
+    public function index(Request $request){
 
-        $goodReceiptNotes = GoodReceiptNote::select('good_receipt_notes.id','receipt_number', 'purchase_requisitions.request_number', 'purchase_orders.po_number', 'good_receipt_notes.date', 'external_doc_number', 'master_suppliers.name', 'qc_status', 'good_receipt_notes.type', 'good_receipt_notes.status')
-        ->leftJoin('purchase_requisitions', 'good_receipt_notes.reference_number', '=', 'purchase_requisitions.id')
-        ->leftJoin('purchase_orders', 'good_receipt_notes.id_purchase_orders', '=', 'purchase_orders.id')
-        ->leftJoin('master_suppliers', 'good_receipt_notes.id_master_suppliers', '=', 'master_suppliers.id')
-        ->get();
+        // $goodReceiptNotes = GoodReceiptNote::select('good_receipt_notes.id','receipt_number', 'purchase_requisitions.request_number', 'purchase_orders.po_number', 'good_receipt_notes.date', 'external_doc_number', 'master_suppliers.name', 'qc_status', 'good_receipt_notes.type', 'good_receipt_notes.status')
+        // ->leftJoin('purchase_requisitions', 'good_receipt_notes.reference_number', '=', 'purchase_requisitions.id')
+        // ->leftJoin('purchase_orders', 'good_receipt_notes.id_purchase_orders', '=', 'purchase_orders.id')
+        // ->leftJoin('master_suppliers', 'good_receipt_notes.id_master_suppliers', '=', 'master_suppliers.id')
+        // ->orderBy('good_receipt_notes.created_at', 'desc')
+        // ->limit(10)  // Menambahkan limit di sini
+        // ->get();
 
-        return view('grn.index',compact('goodReceiptNotes'));
+        if (request()->ajax()) {
+            $orderColumn = $request->input('order')[0]['column'];
+            $orderDirection = $request->input('order')[0]['dir'];
+            $columns = ['id', 'receipt_number', 'request_number', 'po_number', 'date', 'external_doc_number', 'name', 'qc_status', 'type', 'status', ''];
+
+            // Query dasar
+            $query = GoodReceiptNote::select('good_receipt_notes.id','receipt_number', 'purchase_requisitions.request_number', 'purchase_orders.po_number', 'good_receipt_notes.date', 'external_doc_number', 'master_suppliers.name', 'qc_status', 'good_receipt_notes.type', 'good_receipt_notes.status')
+            ->leftJoin('purchase_requisitions', 'good_receipt_notes.reference_number', '=', 'purchase_requisitions.id')
+            ->leftJoin('purchase_orders', 'good_receipt_notes.id_purchase_orders', '=', 'purchase_orders.id')
+            ->leftJoin('master_suppliers', 'good_receipt_notes.id_master_suppliers', '=', 'master_suppliers.id')
+            ->orderBy($columns[$orderColumn], $orderDirection);
+
+            // Handle pencarian
+            if ($request->has('search') && $request->input('search')) {
+                $searchValue = $request->input('search');
+                $query->where(function ($query) use ($searchValue) {
+                    $query->where('receipt_number', 'like', '%' . $searchValue . '%')
+                        ->orWhere('purchase_requisitions.request_number', 'like', '%' . $searchValue . '%')
+                        ->orWhere('purchase_orders.po_number', 'like', '%' . $searchValue . '%')
+                        ->orWhere('good_receipt_notes.date', 'like', '%' . $searchValue . '%')
+                        ->orWhere('external_doc_number', 'like', '%' . $searchValue . '%')
+                        ->orWhere('master_suppliers.name', 'like', '%' . $searchValue . '%')
+                        ->orWhere('qc_status', 'like', '%' . $searchValue . '%')
+                        ->orWhere('good_receipt_notes.type', 'like', '%' . $searchValue . '%')
+                        ->orWhere('good_receipt_notes.status', 'like', '%' . $searchValue . '%');
+                });
+            }
+
+            return DataTables::of($query)
+                ->addColumn('action', function ($data) {
+                    return view('grn.action', compact('data'));
+                })
+                ->addColumn('status', function ($data) {
+                    $badgeColor = $data->status == 'Hold' ? 'info' : ($data->status == 'Un Posted' ? 'warning' : 'success');
+                    return '<span class="badge bg-' . $badgeColor . '" style="font-size: smaller;width: 100%">' . $data->status . '</span>';
+                })
+                ->addColumn('statusLabel', function ($data) {
+                    return $data->status;
+                })
+                ->rawColumns(['action', 'status', 'statusLabel'])
+                ->make(true);
+        }
+
+        // return view('grn.index',compact('goodReceiptNotes'));
+        return view('grn.index');
     }
     public function grn_pr_add(){
 
@@ -491,30 +538,80 @@ class GrnController extends Controller
         }
     }
 
-    public function good_lote_number(){
+    public function good_lote_number(Request $request){
 
-        $receiptDetails = DB::table('good_receipt_notes as a')
-                ->leftJoin('good_receipt_note_details as c', 'a.id', '=', 'c.id_good_receipt_notes')
-                ->leftJoin('master_raw_materials as b', 'b.id', '=', 'c.id_master_products')
-                ->leftJoin('master_units as d', 'c.master_units_id', '=', 'd.id')
-                ->select(
-                    'c.id',
-                    'a.receipt_number',
-                    DB::raw("CONCAT(b.rm_code, '-', b.description) as description"),
-                    'c.receipt_qty',
-                    'd.unit_code',
-                    'c.qc_passed',
-                    'c.lot_number',
-                    'c.note'
-                )
-                ->where('a.type', 'RM')
-                ->get();
+        // $receiptDetails = DB::table('good_receipt_notes as a')
+        //         ->leftJoin('good_receipt_note_details as c', 'a.id', '=', 'c.id_good_receipt_notes')
+        //         ->leftJoin('master_raw_materials as b', 'b.id', '=', 'c.id_master_products')
+        //         ->leftJoin('master_units as d', 'c.master_units_id', '=', 'd.id')
+        //         ->select(
+        //             'c.id',
+        //             'a.receipt_number',
+        //             DB::raw("CONCAT(b.rm_code, '-', b.description) as description"),
+        //             'c.receipt_qty',
+        //             'd.unit_code',
+        //             'c.qc_passed',
+        //             'c.lot_number',
+        //             'c.note'
+        //         )
+        //         ->where('a.type', 'RM')
+        //         ->get();
 
             // Menggunakan DB::raw untuk menggabungkan nilai kolom b.rm_code dan b.description dengan CONCAT dalam SQL
             // Hasilnya disimpan dalam alias product_description
 
+            if (request()->ajax()) {
+                $orderColumn = $request->input('order')[0]['column'];
+                $orderDirection = $request->input('order')[0]['dir'];
+                $columns = ['id', 'receipt_number', 'description', 'receipt_qty', 'unit_code', 'qc_passed', 'lot_number', 'status', ''];
+    
+                // Query dasar
+                $query = DB::table('good_receipt_notes as a')
+                        ->leftJoin('good_receipt_note_details as c', 'a.id', '=', 'c.id_good_receipt_notes')
+                        ->leftJoin('master_raw_materials as b', 'b.id', '=', 'c.id_master_products')
+                        ->leftJoin('master_units as d', 'c.master_units_id', '=', 'd.id')
+                        ->select(
+                            'c.id',
+                            'a.receipt_number',
+                            DB::raw("CONCAT(b.rm_code, '-', b.description) as description"),
+                            'c.receipt_qty',
+                            'd.unit_code',
+                            'c.qc_passed',
+                            'c.lot_number',
+                            'c.note'
+                        )
+                        ->where('a.type', 'RM')
+                ->orderBy($columns[$orderColumn], $orderDirection);
+    
+                // Handle pencarian
+                if ($request->has('search') && $request->input('search')) {
+                    $searchValue = $request->input('search');
+                    $query->where(function ($query) use ($searchValue) {
+                        $query->where('a.receipt_number', 'like', '%' . $searchValue . '%')
+                            ->orWhere('description', 'like', '%' . $searchValue . '%')
+                            ->orWhere('c.receipt_qty', 'like', '%' . $searchValue . '%')
+                            ->orWhere('d.unit_code', 'like', '%' . $searchValue . '%')
+                            ->orWhere('c.qc_passed', 'like', '%' . $searchValue . '%')
+                            ->orWhere('c.lot_number', 'like', '%' . $searchValue . '%')
+                            ->orWhere('c.note', 'like', '%' . $searchValue . '%');
+                    });
+                }
+    
+                return DataTables::of($query)
+                    ->addColumn('action', function ($data) {
+                        return view('grn.action_gln', compact('data'));
+                        // return "ACTION";
+                    })
+                    ->addColumn('generate_lot', function ($data) {
+                        return view('grn.action_generate_lot', compact('data'));
+                        // return "ACTION";
+                    })
+                    
+                    ->rawColumns(['action'])
+                    ->make(true);
+            }
 
-        return view('grn.good_lote_number',compact('receiptDetails'));
+        return view('grn.good_lote_number');
     }
     public function generateCode()
     {
@@ -523,8 +620,8 @@ class GrnController extends Controller
 
         // Ambil nomor urut terakhir dari database
         $lastCode = GoodReceiptNoteDetail::whereNotNull('lot_number')
-            ->orderBy('created_at', 'desc')
-            ->value(DB::raw('LEFT(lot_number, 3)'));
+            ->orderBy('id', 'desc')
+            ->value(DB::raw('MID(lot_number, 5, 5)'));
             
         // Jika tidak ada nomor urut sebelumnya, atur ke 0
         $lastCode = $lastCode ? $lastCode : 0;
@@ -633,32 +730,82 @@ class GrnController extends Controller
 
         return view('grn.barcode_grn', compact('barcode','lot_number','qtyGenerateBarcode','qty'));
     }
-    public function grn_qc()
+    public function grn_qc(Request $request)
     {
         // dd('test');
         // die;
 
-        $receiptDetails = DB::table('good_receipt_notes as a')
-                ->leftJoin('good_receipt_note_details as c', 'a.id', '=', 'c.id_good_receipt_notes')
-                ->leftJoin('master_raw_materials as b', 'b.id', '=', 'c.id_master_products')
-                ->leftJoin('master_units as d', 'c.master_units_id', '=', 'd.id')
-                ->leftJoin('cms_users as e', 'e.id', '=', 'c.qc_check_by')
-                ->select(
-                    'c.id',
-                    'a.receipt_number',
-                    DB::raw("CONCAT(b.rm_code, '-', b.description) as description"),
-                    'c.receipt_qty',
-                    'd.unit_code',
-                    'c.qc_passed',
-                    'c.lot_number',
-                    'c.note',
-                    'e.name'
-                )
-                ->where('a.type', 'RM')
-                ->where('a.qc_status', 'Y')
-                ->get();
+        // $receiptDetails = DB::table('good_receipt_notes as a')
+        //         ->leftJoin('good_receipt_note_details as c', 'a.id', '=', 'c.id_good_receipt_notes')
+        //         ->leftJoin('master_raw_materials as b', 'b.id', '=', 'c.id_master_products')
+        //         ->leftJoin('master_units as d', 'c.master_units_id', '=', 'd.id')
+        //         ->leftJoin('cms_users as e', 'e.id', '=', 'c.qc_check_by')
+        //         ->select(
+        //             'c.id',
+        //             'a.receipt_number',
+        //             DB::raw("CONCAT(b.rm_code, '-', b.description) as description"),
+        //             'c.receipt_qty',
+        //             'd.unit_code',
+        //             'c.qc_passed',
+        //             'c.lot_number',
+        //             'c.note',
+        //             'e.name'
+        //         )
+        //         ->where('a.type', 'RM')
+        //         ->where('a.qc_status', 'Y')
+        //         ->get();
 
-        return view('grn.grn_qc', compact('receiptDetails'));
+        if (request()->ajax()) {
+            $orderColumn = $request->input('order')[0]['column'];
+            $orderDirection = $request->input('order')[0]['dir'];
+            $columns = ['id', 'receipt_number', 'description', 'receipt_qty', 'unit_code', 'qc_passed', 'lot_number','note', ''];
+
+            // Query dasar
+            $query = DB::table('good_receipt_notes as a')
+                    ->leftJoin('good_receipt_note_details as c', 'a.id', '=', 'c.id_good_receipt_notes')
+                    ->leftJoin('master_raw_materials as b', 'b.id', '=', 'c.id_master_products')
+                    ->leftJoin('master_units as d', 'c.master_units_id', '=', 'd.id')
+                    ->leftJoin('cms_users as e', 'e.id', '=', 'c.qc_check_by')
+                    ->select(
+                        'c.id',
+                        'a.receipt_number',
+                        DB::raw("CONCAT(b.rm_code, '-', b.description) as description"),
+                        'c.receipt_qty',
+                        'd.unit_code',
+                        'c.qc_passed',
+                        'c.lot_number',
+                        'c.note',
+                        'e.name'
+                    )
+                    ->where('a.type', 'RM')
+                    ->where('a.qc_status', 'Y')
+            ->orderBy($columns[$orderColumn], $orderDirection);
+
+            // Handle pencarian
+            if ($request->has('search') && $request->input('search')) {
+                $searchValue = $request->input('search');
+                $query->where(function ($query) use ($searchValue) {
+                    $query->where('a.receipt_number', 'like', '%' . $searchValue . '%')
+                        ->orWhere('description', 'like', '%' . $searchValue . '%')
+                        ->orWhere('c.receipt_qty', 'like', '%' . $searchValue . '%')
+                        ->orWhere('d.unit_code', 'like', '%' . $searchValue . '%')
+                        ->orWhere('c.qc_passed', 'like', '%' . $searchValue . '%')
+                        ->orWhere('c.lot_number', 'like', '%' . $searchValue . '%')
+                        ->orWhere('c.note', 'like', '%' . $searchValue . '%');
+                });
+            }
+
+            return DataTables::of($query)
+                ->addColumn('action', function ($data) {
+                    return view('grn.action_grn_qc', compact('data'));
+                    // return "ACTION";
+                })
+                
+                ->rawColumns(['action'])
+                ->make(true);
+        }
+
+        return view('grn.grn_qc');
     }
     public function qc_passed($id)
     {
@@ -690,16 +837,51 @@ class GrnController extends Controller
             return Redirect::to('/grn-qc')->with('pesan', 'Data gagal berhasil di un QC.');
         }
     }
-    public function external_no_lot ()
+    public function external_no_lot (Request $request)
     {
         // dd('tes');
         // die;
 
-        $details = DB::select("SELECT * FROM `detail_good_receipt_note_details` group by lot_number");
+        // $details = DB::select("SELECT * FROM `detail_good_receipt_note_details` group by lot_number");
+
+        if (request()->ajax()) {
+            $orderColumn = $request->input('order')[0]['column'];
+            $orderDirection = $request->input('order')[0]['dir'];
+            $columns = ['id', 'id_grn_detail', 'lot_number', 'ext_lot_number', 'qty', '', ''];
+
+            // Query dasar
+            $query = DB::table('detail_good_receipt_note_details')
+            ->groupBy('lot_number')
+            ->orderBy($columns[$orderColumn], $orderDirection);
+
+            // Handle pencarian
+            if ($request->has('search') && $request->input('search')) {
+                $searchValue = $request->input('search');
+                $query->where(function ($query) use ($searchValue) {
+                    $query->where('id_grn_detail', 'like', '%' . $searchValue . '%')
+                        ->orWhere('lot_number', 'like', '%' . $searchValue . '%')
+                        ->orWhere('ext_lot_number', 'like', '%' . $searchValue . '%')
+                        ->orWhere('qty', 'like', '%' . $searchValue . '%');
+                });
+            }
+
+            return DataTables::of($query)
+                ->addColumn('action', function ($data) {
+                    return view('grn.action_external_nolot', compact('data'));
+                    // return "ACTION";
+                })
+                ->addColumn('action_generate', function ($data) {
+                    return view('grn.action_generate_ext_lot', compact('data'));
+                    // return "ACTION";
+                })
+                
+                ->rawColumns(['action'])
+                ->make(true);
+        }
 
 
 
-        return view('grn.external_no_lot',compact('details'));
+        return view('grn.external_no_lot');
     }
     public function update_ext_lot_number(Request $request)
     {
