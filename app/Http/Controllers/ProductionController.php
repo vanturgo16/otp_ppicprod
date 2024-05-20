@@ -826,19 +826,21 @@ class ProductionController extends Controller
             $pesan = [
                 'taking.required' => 'Cannot Be Empty',
                 'usage.required' => 'Cannot Be Empty',                  
+                'sisa_campuran.required' => 'Cannot Be Empty',                  
             ];
 
             $validatedData = $request->validate([
                 'taking' => 'required|lte:sisa_ext',
                 'usage' => 'required|lte:taking',
+                'sisa_campuran' => 'required|lte:taking',
 
             ], $pesan);
 			
-			$validatedData['remaining'] = $_POST['taking']-$_POST['usage'];			
+			$validatedData['remaining'] = $_POST['taking']-$_POST['usage']+$_POST['sisa_campuran'];			
 			$validatedData['id_report_material_uses'] = $data_rmu[0]->id;			
 			$validatedData['id_master_products'] = $data[0]->id;			
 			$validatedData['rm_name'] = $data[0]->rm_name;			
-			$validatedData['sisa_camp'] = '0';			
+			$validatedData['sisa_camp'] = $_POST['sisa_campuran'];			
 			$validatedData['id_good_receipt_note_details'] = $data[0]->id_good_receipt_note_details;		
 			$validatedData['id_detail_good_receipt_note_details'] = $data[0]->id_detail_good_receipt_note_details;			
 						
@@ -862,6 +864,62 @@ class ProductionController extends Controller
             return Redirect::to('/production-ent-material-use-detail/'.$id_rmu)->with('pesan', 'Add Successfuly.');      
         } 
 			
+    }
+	public function production_entry_material_use_detail_edit_get(Request $request, $id)
+    {
+		$data['find'] = ProductionEntryMaterialUseDetail::find($id);
+        $data['ms_barcodes'] = DB::table('detail_good_receipt_note_details as a')
+			->leftJoin('good_receipt_note_details as b', function ($join) {
+				$join->on('a.id_grn_detail', '=', 'b.id');
+				$join->on('a.lot_number', '=', 'b.lot_number');
+			})
+			->leftJoin('master_raw_materials as c', 'b.id_master_products', '=', 'c.id')
+			->leftJoin('good_receipt_notes as d', 'a.id_grn', '=', 'd.id')
+			->where( "a.qty" , ">", "a.qty_out")
+			->whereRaw( "ROUND(a.qty-a.qty_out, 1) > 0")
+			->select('c.description', 'a.*')
+			->selectRaw('ROUND(a.qty-a.qty_out, 1) as sisa')
+			->get();
+		
+		//Audit Log		
+		$username= auth()->user()->email; 
+		$ipAddress=$_SERVER['REMOTE_ADDR'];
+		$location='0';
+		$access_from=Browser::browserName();
+		$activity='Get Edit Detail Report Material Use '.$id;
+		$this->auditLogs($username,$ipAddress,$location,$access_from,$activity); 
+			
+        return response()->json(['data' => $data]);
+    }
+	public function production_entry_material_use_detail_edit_save(Request $request, $id){
+		$pesan = [
+            'id_master_tool_auxiliaries.required' => 'Cannot Be Empty',
+            'qty.required' => 'Cannot Be Empty',
+            'remarks.required' => 'Cannot Be Empty',
+            
+        ];
+
+        $validatedData = $request->validate([
+            'id_master_tool_auxiliaries' => 'required',
+            'qty' => 'required',
+            'remarks' => 'required',
+
+        ], $pesan);
+
+        ProductionReqSparepartAuxiliariesDetail::where('id', $id)
+			->update($validatedData);
+
+        $request_number = $request->input('request_number');
+		
+		//Audit Log		
+		$username= auth()->user()->email; 
+		$ipAddress=$_SERVER['REMOTE_ADDR'];
+		$location='0';
+		$access_from=Browser::browserName();
+		$activity='Save Edit Detail Request Sparepart Auxiliaries '.$id;
+		$this->auditLogs($username,$ipAddress,$location,$access_from,$activity);
+		
+		return Redirect::to('/production-req-sparepart-auxiliaries-detail/'.$request_number)->with('pesan', 'Edit Successfuly.');  
     }
 	public function production_entry_material_use_detail_delete(Request $request){	
 		//print_r($_POST);exit;
@@ -911,6 +969,7 @@ class ProductionController extends Controller
 			return Redirect::to('/production-ent-material-use-detail/'.$id_rmu)->with('pesan', 'There Is An Error.');
 		}
 	}
+	
 	//END ENTRY MATERIAL USE
 	
 	/*

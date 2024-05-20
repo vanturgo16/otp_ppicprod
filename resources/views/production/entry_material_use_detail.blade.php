@@ -311,7 +311,18 @@
 											@endif
 										</div>
 									</div>
-									
+									<script>
+										$(document).ready(function(){
+											$("#sisa_campuran").keyup(function() {
+												var n_taking = parseFloat(document.getElementById('taking').value);
+												var n_sisa_campuran = parseFloat(document.getElementById('sisa_campuran').value);
+
+												if (!isNaN(n_taking) && !isNaN(n_sisa_campuran) && n_sisa_campuran > n_taking) {
+													document.getElementById('sisa_campuran').value = n_taking;
+												}
+											});
+										});
+									</script>
 									<div class="row mb-4 field-wrapper">
 										<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Remaining</label>
 										<div class="col-sm-9">
@@ -324,6 +335,7 @@
 											$( "#div-info-remaining" ).html( konten );
 											
 											var usage = document.getElementById('usage');
+											var sisa_campuran = document.getElementById('sisa_campuran');
 											
 											usage.addEventListener('input', function() {
 												var n_taking = parseFloat(document.getElementById('taking').value);
@@ -335,6 +347,20 @@
 												konten = '<div class="alert alert-warning alert-dismissible alert-label-icon label-arrow fade show" role="alert"><i class="mdi mdi-alert-outline label-icon"></i><strong><font>'+hasil+'</font></strong> Kg</div>';
 												$( "#div-info-remaining" ).html( konten );
 											});
+											
+											sisa_campuran.addEventListener('input', function() {
+												var n_taking = parseFloat(document.getElementById('taking').value);
+												var n_usage = parseFloat(document.getElementById('usage').value);
+												var n_sisa_campuran = parseFloat(document.getElementById('sisa_campuran').value);
+												
+												var n_usage = n_usage > n_taking ? n_taking : n_usage ;
+												var n_sisa_campuran = n_sisa_campuran > n_taking ? n_taking : n_sisa_campuran ;
+												
+												var hasil = ((n_taking-n_usage)+n_sisa_campuran).toFixed(1);
+												konten = '<div class="alert alert-warning alert-dismissible alert-label-icon label-arrow fade show" role="alert"><i class="mdi mdi-alert-outline label-icon"></i><strong><font>'+hasil+'</font></strong> Kg</div>';
+												$( "#div-info-remaining" ).html( konten );
+											});											
+											
 										});
 									</script>
 									<div class="row justify-content-end">
@@ -408,12 +434,12 @@
 												</form>	
 												<button type="button" class="btn btn-info waves-effect waves-light" id=""
 													data-bs-toggle="modal"
-													onclick="#"
-													data-bs-target="#detail-sparepart-auxiliaries-edit" data-id="">
+													onclick="#detail_entry_material_use_edit('{{ $data->id }}')"
+													data-bs-target="#detail-entry-material-use-edit" data-id="">
 													<i class="bx bx-edit-alt" title="Edit"></i> EDIT
 												</button>
-											</center>
-											@include('production.modal')
+											</center>											
+											@include('production.modal_detail_entry_material_use')
 										</td>
 									 
 									</tr>

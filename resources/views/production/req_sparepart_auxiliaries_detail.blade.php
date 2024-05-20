@@ -236,7 +236,7 @@
 													<i class="bx bx-edit-alt" title="Edit"></i> EDIT
 												</button>
 											</center>
-											@include('production.modal')
+											@include('production.modal_detail_req_sparepart_auxiliaries')
 										</td>
 									 
 									</tr>
