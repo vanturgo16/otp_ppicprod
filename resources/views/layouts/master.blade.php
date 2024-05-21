@@ -176,14 +176,15 @@
                                 <li><a href="/good-lote-number" data-key="t-blog-grid">Good Lote Number</a></li>
                                 <li><a href="/grn-qc" data-key="t-blog-grid">GRN Need QC Passed</a></li>
                                 <li><a href="/external-no-lot" data-key="t-blog-grid">External No Lot</a></li>
+                                <li><a href="{{ route('ppic.workOrder.index') }}"
+                                        class="{{ request()->is('ppic/workOrder/*') ? 'active' : '' }}"><i
+                                            data-feather="clipboard"></i>Word Order</a></li>
                             </ul>
+                    </li>
+                            <li>
                             <a href="javascript: void(0);" class="has-arrow">
 								<i data-feather="briefcase"></i>
                                 <span data-key="t-blog">Production</span>
-                            </a>
-                            <a href="javascript: void(0);" class="has-arrow">
-								<i data-feather="briefcase"></i>
-                                <span data-key="t-blog">PPIC</span>
                             </a>
                             <ul class="sub-menu" aria-expanded="false">
                                 <li><a href="/production-req-sparepart-auxiliaries" data-key="t-blog-grid">Request Sparepart & Auxiliaries</a></li>
