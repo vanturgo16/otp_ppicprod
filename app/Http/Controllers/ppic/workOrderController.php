@@ -185,6 +185,7 @@ class workOrderController extends Controller
             $data['id_master_products_material'] = $product_ref->id_master_wips_material == '0' ? null : $product_ref->id_master_wips_material;
             // $data['qty_needed'] = $product_ref->id_master_wips_material;
             $data['id_master_units_needed'] = $product_ref->master_units_id;
+            $data['qty_results'] = $product_ref->qty_results;
         } else if ($typeProduct == 'FG') {
             $product = DB::table('master_product_fgs as a')
                 ->select('a.*', 'b.group_sub_code', 'b.name')
@@ -207,6 +208,13 @@ class workOrderController extends Controller
             } else {
                 $data['id_master_products_material'] = null;
             }
+            $data['qty_results'] = $product_ref->qty_results;
+        }
+
+        if ($data['qty_results'] <> null) {
+            $qty_needed = $request->qty / $data['qty_results'];
+        } else {
+            $qty_needed = null;
         }
 
         DB::beginTransaction();
@@ -224,7 +232,7 @@ class workOrderController extends Controller
                 'qty' => $request->qty,
                 'id_master_units' => $request->id_master_units,
                 // 'qty_results' => $request->qty_results,
-                // 'qty_needed' => $request->qty_needed,
+                'qty_needed' => $qty_needed,
                 'id_master_units_needed' => $data['id_master_units_needed'],
                 'start_date' => $request->start_date,
                 'finish_date' => $request->finish_date,
@@ -238,7 +246,7 @@ class workOrderController extends Controller
 
                 // Simpan data
                 foreach ($product_ref_rm as $product_rm) {
-                    workOrderDetail::create([
+                    workOrderDetails::create([
                         'id_work_orders' => $id_work_order->id,
                         'type_product' => 'RM',
                         'id_master_products' => $product_rm->id_master_raw_materials,

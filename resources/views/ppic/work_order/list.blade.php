@@ -66,9 +66,15 @@
                         class="btn btn-success waves-effect btn-label waves-light">
                         <i class="mdi mdi-plus-box label-icon"></i> Add Data
                     </a>
-                    <a href="{{ route('ppic.workOrder.index') }}" class="btn btn-light waves-effect btn-label waves-light">
-                        <i class="mdi mdi-printer label-icon"></i> Print Work Order
-                    </a>
+                    <form class="d-inline" action="{{ route('ppic.workOrder.print') }}" method="POST" id="" target="_blank">
+                        @csrf
+                        @method('GET')
+                        <input type="hidden" class="form-control" name="so_number" id="so_number"
+                            value="{{ $so_number }}" readonly>
+                        <button type="button" class="btn btn-light waves-effect btn-label waves-light">
+                            <i class="mdi mdi-printer label-icon"></i> Print Work Order
+                        </button>
+                    </form>
                 </div>
             </div>
 
@@ -95,8 +101,8 @@
                             <div class="row">
                                 <div class="col-lg-12">
                                     <div class="table-responsive table-bordered">
-                                        <table class="table table-striped table-hover"
-                                            style="font-size: smaller; min-width: 80rem;" id="table-list-wo">
+                                        <table class="table table-striped table-hover" style="font-size: smaller;"
+                                            id="table-list-wo">
                                             <thead>
                                                 <tr class="text-center">
                                                     <th>No</th>
