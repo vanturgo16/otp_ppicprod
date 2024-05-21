@@ -50,9 +50,18 @@
 									</div>
 								</div>
 								<div class="row mb-4 field-wrapper required-field">
+									<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Status </label>
+									<div class="col-sm-9">
+										<input type="text" class="form-control" name="status" value="Request" readonly>
+										@if($errors->has('status'))
+											<div class="text-danger"><b>{{ $errors->first('status') }}</b></div>
+										@endif
+									</div>
+								</div> 
+								<div class="row mb-4 field-wrapper required-field">
 									<label for="horizontal-password-input" class="col-sm-3 col-form-label">Departements </label>
 									<div class="col-sm-9">
-										<select class="form-select" name="id_master_departements" id="">
+										<select class="form-select" name="id_master_departements" data-trigger id="id_master_departements">
 											<option value="">** Please Select A Departements</option>
 											@foreach ($ms_departements as $data)
 												<option value="{{ $data->id }}">{{ $data->name }}</option>
@@ -62,16 +71,7 @@
 											<div class="text-danger"><b>{{ $errors->first('id_master_departements') }}</b></div>
 										@endif
 									</div>
-								</div>
-								<div class="row mb-4 field-wrapper required-field">
-									<label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Status </label>
-									<div class="col-sm-9">
-										<input type="text" class="form-control" name="status" value="Request" readonly>
-										@if($errors->has('status'))
-											<div class="text-danger"><b>{{ $errors->first('status') }}</b></div>
-										@endif
-									</div>
-								</div>  
+								</div> 
 								<div class="row justify-content-end">
 									<div class="col-sm-9">
 										<div>
