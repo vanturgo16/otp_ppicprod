@@ -36,6 +36,13 @@
     {{-- Jquery --}}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    @if (request()->is('ppic/*'))
+        <link rel="stylesheet" href="{{ asset('assets/css/ppic/style.css') }}">
+    @endif
+
     <style> 
         div.field-wrapper label {
             text-align: right;
@@ -160,9 +167,23 @@
                             </a>
                         </li>
                         <li class="{{ request()->is('ppic/*') ? 'mm-active' : '' }}">
+                        <a href="javascript: void(0);" class="has-arrow">
+								<i data-feather="briefcase"></i>
+                                <span data-key="t-blog">PPIC</span>
+                            </a>
+                            <ul class="sub-menu" aria-expanded="false">
+                                <li><a href="/good-receipt-note" data-key="t-blog-grid">Good Receipt Note</a></li>
+                                <li><a href="/good-lote-number" data-key="t-blog-grid">Good Lote Number</a></li>
+                                <li><a href="/grn-qc" data-key="t-blog-grid">GRN Need QC Passed</a></li>
+                                <li><a href="/external-no-lot" data-key="t-blog-grid">External No Lot</a></li>
+                            </ul>
                             <a href="javascript: void(0);" class="has-arrow">
 								<i data-feather="briefcase"></i>
                                 <span data-key="t-blog">Production</span>
+                            </a>
+                            <a href="javascript: void(0);" class="has-arrow">
+								<i data-feather="briefcase"></i>
+                                <span data-key="t-blog">PPIC</span>
                             </a>
                             <ul class="sub-menu" aria-expanded="false">
                                 <li><a href="/production-req-sparepart-auxiliaries" data-key="t-blog-grid">Request Sparepart & Auxiliaries</a></li>
@@ -174,7 +195,7 @@
                                 <li><a href="/production-ent-report-production" data-key="t-blog-list">Entry Report Production</a></li>
                             </ul>
                         </li>
-
+                        
                         <!--li class="menu-title" data-key="t-menu">Master</li>
                         <li>
                             <a href="{{ route('accounttype.index') }}">
@@ -514,8 +535,6 @@
             <script src="{{ asset('assets/js/ppic/work_order.js') }}"></script>
         @endif
     @endif
-    <!-- Scripts -->
-    @stack('scripts')
 
     <script>
         // Hapus pesan flash setelah 5 detik
