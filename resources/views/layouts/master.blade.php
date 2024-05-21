@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- App favicon -->
+    
     <link rel="shortcut icon" href="{{ asset('assets/images/icon-otp.png') }}">
     <!-- plugin css -->
     <link href="{{ asset('assets/libs/admin-resources/jquery.vectormap/jquery-jvectormap-1.2.2.css') }}" rel="stylesheet"
@@ -26,14 +27,15 @@
     <!-- Icons Css -->
     <link href="{{ asset('assets/css/icons.min.css') }}" rel="stylesheet" type="text/css" />
     <!-- App Css-->
-    <link href="{{ asset('assets/css/app.min.css') }}" id="app-style" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('assets/css/app.min.css') }}" id="app-style" rel="stylesheet" type="text/css" />\
+    <!-- choices css -->
+    <link href="{{ asset('assets/libs/choices.js/public/assets/styles/choices.min.css') }}" rel="stylesheet" type="text/css" />
+
     {{-- Custom --}}
     <link href="{{ asset('assets/css/custom.css') }}" id="app-style" rel="stylesheet" type="text/css" />
     {{-- Jquery --}}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.min.js"></script>
-
-    {{-- select 2 --}}
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
@@ -41,7 +43,7 @@
         <link rel="stylesheet" href="{{ asset('assets/css/ppic/style.css') }}">
     @endif
 
-    <style>
+    <style> 
         div.field-wrapper label {
             text-align: right;
             padding-right: 50px
@@ -165,17 +167,36 @@
                             </a>
                         </li>
                         <li class="{{ request()->is('ppic/*') ? 'mm-active' : '' }}">
-                            <a href="javascript: void(0);" class="has-arrow">
-                                <i data-feather="briefcase"></i>
+                        <a href="javascript: void(0);" class="has-arrow">
+								<i data-feather="briefcase"></i>
                                 <span data-key="t-blog">PPIC</span>
                             </a>
                             <ul class="sub-menu" aria-expanded="false">
+                                <li><a href="/good-receipt-note" data-key="t-blog-grid">Good Receipt Note</a></li>
+                                <li><a href="/good-lote-number" data-key="t-blog-grid">Good Lote Number</a></li>
+                                <li><a href="/grn-qc" data-key="t-blog-grid">GRN Need QC Passed</a></li>
+                                <li><a href="/external-no-lot" data-key="t-blog-grid">External No Lot</a></li>
                                 <li><a href="{{ route('ppic.workOrder.index') }}"
                                         class="{{ request()->is('ppic/workOrder/*') ? 'active' : '' }}"><i
                                             data-feather="clipboard"></i>Word Order</a></li>
                             </ul>
+                    </li>
+                            <li>
+                            <a href="javascript: void(0);" class="has-arrow">
+								<i data-feather="briefcase"></i>
+                                <span data-key="t-blog">Production</span>
+                            </a>
+                            <ul class="sub-menu" aria-expanded="false">
+                                <li><a href="/production-req-sparepart-auxiliaries" data-key="t-blog-grid">Request Sparepart & Auxiliaries</a></li>
+                                <li><a href="/production-ent-material-use" data-key="t-blog-list">Entry Material Use</a></li>
+                                <li><a href="/production-ent-report-blow" data-key="t-blog-list">Entry Report Blow</a></li>
+                                <li><a href="/production-ent-report-slitting" data-key="t-blog-list">Entry Report Slitting</a></li>
+                                <li><a href="/production-ent-report-folding" data-key="t-blog-list">Entry Report Folding</a></li>
+                                <li><a href="/production-ent-report-bag-marketing" data-key="t-blog-list">Entry Report Bag. Marketing</a></li>
+                                <li><a href="/production-ent-report-production" data-key="t-blog-list">Entry Report Production</a></li>
+                            </ul>
                         </li>
-
+                        
                         <!--li class="menu-title" data-key="t-menu">Master</li>
                         <li>
                             <a href="{{ route('accounttype.index') }}">
@@ -496,6 +517,15 @@
     <script src="{{ asset('assets/js/app.js') }}"></script>
     <script src="{{ asset('assets/js/modal.js') }}"></script>
 
+     <!-- choices js -->
+     <script src="{{ asset('assets/libs/choices.js/public/assets/scripts/choices.min.js') }}"></script>
+      <!-- init js -->
+      <script src="{{ asset('assets/js/pages/form-advanced.init.js') }}"></script>
+
+      {{-- select 2 --}}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.min.js"></script>
 
     <script>
@@ -512,8 +542,6 @@
             <script src="{{ asset('assets/js/ppic/work_order.js') }}"></script>
         @endif
     @endif
-    <!-- Scripts -->
-    @stack('scripts')
 
     <script>
         // Hapus pesan flash setelah 5 detik
@@ -544,6 +572,17 @@
             });
         @endif
     </script>
+
+    <script>
+        $('.data-select2').select2({
+            width: 'resolve', // need to override the changed default
+            theme: "classic"
+        });
+    </script>
+    <script>
+            let baseRoute = '{{ url('') }}';
+    </script>
+    @stack('scripts')
 
 </body>
 
