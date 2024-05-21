@@ -17,6 +17,17 @@
                 </div>
             </div>
 
+            @php
+                $so_number = '';
+                $isDisabled = '';
+            @endphp
+            @if (Route::current()->getName() == 'ppic.workOrder.createWithSO')
+                @php
+                    $so_number = decrypt(Request::segment(4));
+                    $isDisabled = 'disabled';
+                @endphp
+            @endif
+
             @if (session('success'))
                 <div class="alert alert-success alert-dismissible alert-label-icon label-arrow fade show" role="alert">
                     <i class="mdi mdi-check-all label-icon"></i><strong>Success</strong> - {{ session('success') }}
@@ -44,7 +55,7 @@
 
             <div class="row pb-3">
                 <div class="col-12">
-                    <a href="{{ route('ppic.workOrder.index') }}"
+                    <a href="{{ $so_number == '' ? route('ppic.workOrder.index') : URL::previous() }}"
                         class="btn btn-primary waves-effect btn-label waves-light">
                         <i class="mdi mdi-arrow-left label-icon"></i> Back To List Data Work Order
                     </a>
@@ -66,10 +77,14 @@
                                         <label for="salesOrderSelect" class="col-sm-3 col-form-label">Sales Order</label>
                                         <div class="col-sm-9">
                                             <select class="form-control data-select2" name="id_sales_orders"
-                                                id="salesOrderSelect" style="width: 100%" required>
+                                                id="salesOrderSelect" style="width: 100%" required {{ $isDisabled }}>
                                                 <option value="">** Please select a Sales Orders</option>
                                                 @foreach ($salesOrders as $data)
-                                                    <option value="{{ $data->id }}" data-so-number="{{ $data->so_number }}">{{ $data->so_number }}</option>
+                                                    <option value="{{ $data->id }}"
+                                                        data-so-number="{{ $data->so_number }}"
+                                                        {{ $data->so_number == $so_number ? 'selected' : '' }}>
+                                                        {{ $data->so_number }}
+                                                    </option>
                                                 @endforeach
                                             </select>
                                         </div>
@@ -93,8 +108,7 @@
                                         <label for="wo_number" class="col-sm-3 col-form-label">WO Number</label>
                                         <div class="col-sm-9">
                                             <input type="text" class="form-control" name="wo_number" id="wo_number"
-                                                value="" required
-                                                readonly>
+                                                value="" required readonly>
                                         </div>
                                     </div>
                                     <div class="row mb-4 field-wrapper required-field">
@@ -114,9 +128,8 @@
                                         <label for="typeProductSelect" class="col-sm-3 col-form-label">Type
                                             Product</label>
                                         <div class="col-sm-9">
-                                            <select class="form-control data-select2 typeProductSelect read"
-                                                name="type_product" onchange="fetchProducts(this);" style="width: 100%"
-                                                required>
+                                            <select class="form-control data-select2 typeProductSelect" name="type_product"
+                                                onchange="fetchProducts(this);" style="width: 100%" required>
                                                 <option value="">** Please
                                                     select a Type Product</option>
                                                 <option value="WIP">WIP</option>
@@ -127,7 +140,7 @@
                                     <div class="row mb-4 field-wrapper required-field">
                                         <label for="productSelect" class="col-sm-3 col-form-label">Product</label>
                                         <div class="col-sm-9">
-                                            <select class="form-control data-select2 productSelect read"
+                                            <select class="form-control data-select2 productSelect"
                                                 name="id_master_products" onchange="fethchProductDetail(this);"
                                                 style="width: 100%" required>
                                                 <option value="">** Please
@@ -138,19 +151,19 @@
                                     <div class="row mb-4 field-wrapper required-field">
                                         <label for="qty" class="col-sm-3 col-form-label">Qty Proccess</label>
                                         <div class="col-sm-9">
-                                            <input type="number" class="form-control qty" name="qty" required readonly>
+                                            <input type="number" class="form-control qty" name="qty" required>
                                         </div>
                                     </div>
                                     <div class="row mb-4 field-wrapper required-field">
                                         <label for="unitSelect" class="col-sm-3 col-form-label">Unit Proccess</label>
                                         <div class="col-sm-9">
-                                            <select class="form-control data-select2 unitSelect read" name="id_master_units"
+                                            <select class="form-control data-select2 unitSelect" name="id_master_units"
                                                 style="width: 100%" required>
                                                 <option value="" selected>**
                                                     Please select a Unit Proccess</option>
                                                 @foreach ($units as $unit)
                                                     <option value="{{ $unit->id }}">
-                                                        {{ $unit->unit }}
+                                                        {{ $unit->unit_code }}
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -166,8 +179,8 @@
                                     <div class="row mb-4 field-wrapper">
                                         <label for="finishDate" class="col-sm-3 col-form-label">Finish Date</label>
                                         <div class="col-sm-9">
-                                            <input type="date" class="form-control" name="finish_date" id="finishDate"
-                                                value="{{ now()->addDays(7)->format('Y-m-d') }}">
+                                            <input type="date" class="form-control" name="finish_date"
+                                                id="finishDate" value="{{ now()->addDays(7)->format('Y-m-d') }}">
                                         </div>
                                     </div>
                                     <div class="row mb-4 field-wrapper">
@@ -179,7 +192,7 @@
                                 </div>
                             </div>
 
-                            <div class="card-header"
+                            {{-- <div class="card-header"
                                 style="cursor: pointer; padding: 5px; margin-top: -20px; background-color: aliceblue;"
                                 id="headerPayment" onclick="toggle('#bodyPayment')">
                                 <h4><i class="mdi mdi-checkbox-marked-outline"></i> Material Needed</h4>
@@ -232,7 +245,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
 
                             <div class="card-footer">
                                 <div class="row justify-content-end">
@@ -242,9 +255,10 @@
                                                     class="fas fa-arrow-left"></i>&nbsp;
                                                 Back</a>
                                             <input type="submit" class="btn btn-primary w-md saveWorkOrder"
-                                                value="Save & Add More" name="save_add_more">
+                                                value="Save & Add More"
+                                                name="{{ $so_number != '' ? 'save_add_more_with_so' : 'save_add_more' }}">
                                             <input type="submit" class="btn btn-success w-md saveWorkOrder"
-                                                value="Save" name="save">
+                                                value="Save" name="{{ $so_number != '' ? 'save_with_so' : 'save' }}">
                                         </div>
                                     </div>
                                 </div>

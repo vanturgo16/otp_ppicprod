@@ -15,10 +15,9 @@
         </li>
         @if ($data->id_master_process_productions == '2')
             <li>
-                <button class="dropdown-item drpdwn-dgr" data-wo-number="{{ $data->wo_number }}"
-                    data-status="{{ $data->status }}" onclick="showModal(this, 'Delete');"><span
-                        class="mdi mdi mdi-view-list"></span>
-                    | WO Details</button>
+                <a class="dropdown-item drpdwn"
+                    href="{{ route('ppic.workOrder.woDetails', encrypt($data->wo_number)) }}"><span
+                        class="mdi mdi-eye"></span> | WO Details</a>
             </li>
         @endif
         @if ($data->status == 'Request' || $data->status == 'Un Posted')
@@ -30,7 +29,7 @@
             </li>
             <li>
                 <a class="dropdown-item drpdwn-pri"
-                    href="{{ route('ppic.workOrder.edit', encrypt($data->wo_number)) }}"><span
+                    href="{{ route('ppic.workOrder.editFromList', encrypt($data->wo_number)) }}"><span
                         class="mdi mdi-circle-edit-outline"></span> | Edit
                     Data</a>
             </li>
