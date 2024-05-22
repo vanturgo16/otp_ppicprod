@@ -149,21 +149,6 @@
                                 <span data-key="t-dashboard">Dashboard</span>
                             </a>
                         </li>
-						<li>
-                            <a href="javascript: void(0);" class="has-arrow">
-								<i data-feather="briefcase"></i>
-                                <span data-key="t-blog">Production</span>
-                            </a>
-                            <ul class="sub-menu" aria-expanded="false">
-                                <li><a href="/production-req-sparepart-auxiliaries" data-key="t-blog-grid">Request Sparepart & Auxiliaries</a></li>
-                                <li><a href="/production-ent-material-use" data-key="t-blog-list">Entry Material Use</a></li>
-                                <li><a href="/production-ent-report-blow" data-key="t-blog-list">Entry Report Blow</a></li>
-                                <li><a href="/production-ent-report-slitting" data-key="t-blog-list">Entry Report Slitting</a></li>
-                                <li><a href="/production-ent-report-folding" data-key="t-blog-list">Entry Report Folding</a></li>
-                                <li><a href="/production-ent-report-bag-marketing" data-key="t-blog-list">Entry Report Bag. Marketing</a></li>
-                                <li><a href="/production-ent-report-production" data-key="t-blog-list">Entry Report Production</a></li>
-                            </ul>
-                        </li>
 						
 						<!--li class="menu-title" data-key="t-menu">Master</li>
                         <li>
