@@ -69,9 +69,9 @@
                     <form class="d-inline" action="{{ route('ppic.workOrder.print') }}" method="POST" id="" target="_blank">
                         @csrf
                         @method('GET')
-                        <input type="hidden" class="form-control" name="so_number" id="so_number"
-                            value="{{ $so_number }}" readonly>
-                        <button type="button" class="btn btn-light waves-effect btn-label waves-light">
+                        <input type="hidden" class="form-control" name="id_sales_orders" id=""
+                            value="{{ $sales_order->id }}" readonly>
+                        <button type="submit" class="btn btn-light waves-effect btn-label waves-light">
                             <i class="mdi mdi-printer label-icon"></i> Print Work Order
                         </button>
                     </form>
