@@ -183,7 +183,7 @@
                     <div class="modal-body">
                         <div class="row">
                             <div class="col">
-                                <select class="form-control data-select2" name="id_sales_orders" id="salesOrderSelect"
+                                <select class="form-control data-select2" name="id_sales_orders" id="salesOrderSelectPrint"
                                     style="width: 100%" required>
                                     <option value="">** Please select a Sales Orders</option>
                                 </select>

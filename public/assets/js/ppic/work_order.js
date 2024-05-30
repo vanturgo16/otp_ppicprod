@@ -197,7 +197,7 @@ $(document).ready(function () {
                 // console.log(response);
                 // Bersihkan konten dropdown sebelum menambahkan opsi baru
                 $('.data-select2').select2("destroy");
-                $('#salesOrderSelect').empty();
+                $('#salesOrderSelectPrint').empty();
 
                 // Iterasi melalui respons untuk membuat opsi dropdown
                 response.forEach(function (item) {
@@ -205,7 +205,7 @@ $(document).ready(function () {
                     var option = $('<option></option>').attr('value', item.id).text(item.so_number + ' - ' + item.status);
 
                     // Tambahkan opsi ke dropdown
-                    $('#salesOrderSelect').append(option);
+                    $('#salesOrderSelectPrint').append(option);
                 });
                 $('.data-select2').select2({
                     width: 'resolve', // need to override the changed default
@@ -219,6 +219,8 @@ $(document).ready(function () {
             }
         });
     });
+
+    $('#table-list-wo').css('min-height','250px');
 
 });
 
