@@ -936,6 +936,12 @@ class workOrderController extends Controller
                 ->first();
         }
 
+        // Urutan kustom yang dinamis
+        $order = ['SLT', 'FNG', 'FLD', 'BLW', 'BGM'];
+
+        // Buat placeholder untuk FIELD
+        $fieldPlaceholders = implode(',', array_fill(0, count($order), '?'));
+
         $work_order_details = DB::table('work_orders as a')
             ->select('a.*', 'c.pc_needed', 'c.dsc', 'd.process_code', 'e.work_center_code', 'f.unit_code', 'g.unit_code as unit_needed')
             ->join(
@@ -961,7 +967,7 @@ class workOrderController extends Controller
             ->join('master_units as f', 'a.id_master_units', '=', 'f.id')
             ->leftJoin('master_units as g', 'a.id_master_units_needed', '=', 'g.id')
             ->where('a.id_sales_orders', $id_sales_orders)
-            ->orderBy('a.id', 'asc')
+            ->orderByRaw("FIELD(SUBSTRING(a.wo_number, 3, 3), $fieldPlaceholders) ASC", $order)
             ->get();
         // echo json_encode($work_order_details);
         // exit;
