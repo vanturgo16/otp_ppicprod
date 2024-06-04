@@ -15,6 +15,7 @@
                     <label for="example-text-input" class="form-label">Lot Number</label>
                     <input class="form-control" type="text" name="lot_number" id="generatedCode" readonly>
                     <input class="form-control" type="hidden" name="id" id="idOke">
+                    <input class="form-control" type="hidden" name="id_grn" id="id_good_receipt_notes">
                     @error('lot_number')
                         <div class="form-group has-danger mb-0">
                             <div class="form-control-feedback">{{ $message }}</div>
@@ -62,6 +63,7 @@
                     <label for="example-text-input" class="form-label">Lot Number</label>
                     <input class="form-control" type="text" name="lot_number" id="lot_numberok" readonly>
                     <input class="form-control" type="hidden" name="id" id="idOke2">
+                    <input class="form-control" type="hidden" name="id_grn" id="id_good_receipt_notes_edit">
                     @error('lot_number')
                         <div class="form-group has-danger mb-0">
                             <div class="form-control-feedback">{{ $message }}</div>

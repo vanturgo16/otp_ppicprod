@@ -572,6 +572,7 @@ class GrnController extends Controller
                         ->leftJoin('master_units as d', 'c.master_units_id', '=', 'd.id')
                         ->select(
                             'c.id',
+                            'c.id_good_receipt_notes',
                             'a.receipt_number',
                             DB::raw("CONCAT(b.rm_code, '-', b.description) as description"),
                             'c.receipt_qty',
@@ -656,8 +657,11 @@ class GrnController extends Controller
         $validatedData = DB::update("UPDATE `good_receipt_note_details` SET `lot_number` = '$request->lot_number',qty_generate_barcode='$request->qty_generate_barcode' WHERE `id` = '$request->id';");
 
         $validatedData = DB::table('detail_good_receipt_note_details')->insert([
+            'id_grn' => $request->id_grn,
             'id_grn_detail' => $request->id,
-            'lot_number' => $request->lot_number
+            'lot_number' => $request->lot_number,
+            'ext_lot_number' => $request->qty_generate_barcode,
+            'qty' => $request->qty_generate_barcode
         ]);
         
 
