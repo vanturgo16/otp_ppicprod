@@ -169,6 +169,13 @@
                                 <span data-key="t-dashboard">Dashboard</span>
                             </a>
                         </li>
+                        <li>
+                            <a href="{{ route('barcode') }}">
+                                <i data-feather="cpu"></i>
+                                <span data-key="t-horizontal">Barcode</span>
+                            </a>
+                        </li>
+
                         <li class="{{ request()->is('ppic/*') ? 'mm-active' : '' }}">
                         <a href="javascript: void(0);" class="has-arrow">
 								<i data-feather="briefcase"></i>
@@ -184,72 +191,6 @@
                                             data-feather="clipboard"></i>Word Order</a></li>
                             </ul>
                     </li>
-        
-                        
-                        <!--li class="menu-title" data-key="t-menu">Master</li>
-                        <li>
-                            <a href="{{ route('accounttype.index') }}">
-                                <i class="mdi mdi-format-list-bulleted-type"></i>
-                                <span>Manage Account Type</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('accountcode.index') }}">
-                                <i class="mdi mdi-barcode-scan"></i>
-                                <span>Manage Account Code</span>
-                            </a>
-                        </li>
-
-                        <li class="menu-title" data-key="t-menu">Accounting</li>
-
-                        <li>
-                            <a href="#">
-                                <i class="mdi mdi-text-box-outline"></i>
-                                <span>Sales Invoice</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('transdatakas.index') }}">
-                                <i class="mdi mdi-script-text"></i>
-                                <span>Kas Transaction</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('transdatabank.index') }}">
-                                <i class="mdi mdi-script-text"></i>
-                                <span>Bank Transaction</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#">
-                                <i class="mdi mdi-script-text"></i>
-                                <span>Sale Transaction</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#">
-                                <i class="mdi mdi-script-text"></i>
-                                <span>Purchase Transaction</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#">
-                                <i class="mdi mdi-script-text"></i>
-                                <span>Expor Transaction</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#">
-                                <i class="mdi mdi-script-text"></i>
-                                <span>Impor Transaction</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#">
-                                <i class="mdi mdi-script-text"></i>
-                                <span>Nr Dr Transaction</span>
-                            </a>
-                        </li-->
 
                     </ul>
                 </div>
