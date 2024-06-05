@@ -185,6 +185,7 @@ class workOrderController extends Controller
             $data['id_master_products_material'] = $product_ref->id_master_wips_material == '0' ? null : $product_ref->id_master_wips_material;
             // $data['qty_needed'] = $product_ref->id_master_wips_material;
             $data['id_master_units_needed'] = $product_ref->master_units_id;
+            $data['qty_results'] = $product_ref->qty_results;
         } else if ($typeProduct == 'FG') {
             $product = DB::table('master_product_fgs as a')
                 ->select('a.*', 'b.group_sub_code', 'b.name')
@@ -207,6 +208,13 @@ class workOrderController extends Controller
             } else {
                 $data['id_master_products_material'] = null;
             }
+            $data['qty_results'] = $product_ref->qty_results;
+        }
+
+        if ($data['qty_results'] <> null) {
+            $qty_needed = $request->qty / $data['qty_results'];
+        } else {
+            $qty_needed = null;
         }
 
         DB::beginTransaction();
@@ -224,7 +232,7 @@ class workOrderController extends Controller
                 'qty' => $request->qty,
                 'id_master_units' => $request->id_master_units,
                 // 'qty_results' => $request->qty_results,
-                // 'qty_needed' => $request->qty_needed,
+                'qty_needed' => $qty_needed,
                 'id_master_units_needed' => $data['id_master_units_needed'],
                 'start_date' => $request->start_date,
                 'finish_date' => $request->finish_date,
@@ -238,7 +246,7 @@ class workOrderController extends Controller
 
                 // Simpan data
                 foreach ($product_ref_rm as $product_rm) {
-                    workOrderDetail::create([
+                    workOrderDetails::create([
                         'id_work_orders' => $id_work_order->id,
                         'type_product' => 'RM',
                         'id_master_products' => $product_rm->id_master_raw_materials,
@@ -928,6 +936,12 @@ class workOrderController extends Controller
                 ->first();
         }
 
+        // Urutan kustom yang dinamis
+        $order = ['SLT', 'FNG', 'FLD', 'BLW', 'BGM'];
+
+        // Buat placeholder untuk FIELD
+        $fieldPlaceholders = implode(',', array_fill(0, count($order), '?'));
+
         $work_order_details = DB::table('work_orders as a')
             ->select('a.*', 'c.pc_needed', 'c.dsc', 'd.process_code', 'e.work_center_code', 'f.unit_code', 'g.unit_code as unit_needed')
             ->join(
@@ -953,7 +967,7 @@ class workOrderController extends Controller
             ->join('master_units as f', 'a.id_master_units', '=', 'f.id')
             ->leftJoin('master_units as g', 'a.id_master_units_needed', '=', 'g.id')
             ->where('a.id_sales_orders', $id_sales_orders)
-            ->orderBy('a.id', 'asc')
+            ->orderByRaw("FIELD(SUBSTRING(a.wo_number, 3, 3), $fieldPlaceholders) ASC", $order)
             ->get();
         // echo json_encode($work_order_details);
         // exit;

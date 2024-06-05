@@ -461,6 +461,12 @@
 
     <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.min.js"></script>
 
+    <script>
+        $(document).ready(function() {
+            $('body').addClass('sidebar-enable');
+            $('body').attr('data-sidebar-size', 'sm');
+        });
+    </script>
     @if (request()->is('ppic/*'))
         <script>
             let baseRoute = '{{ url('') }}';

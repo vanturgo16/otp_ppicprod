@@ -158,7 +158,7 @@ function get_data_pr() {
   });
 }
 
-function lot_number(id) {
+function lot_number(id,id_good_receipt_notes) {
   $.ajax({
       type: 'GET',
       url: '/generate-code', // Ganti dengan URL rute Laravel yang sesuai
@@ -166,6 +166,7 @@ function lot_number(id) {
       success: function (response) {
           $('#generatedCode').val(response.data.find);
           $('#idOke').val(id); // Mengisi nilai dari elemen dengan ID 'idOke' dengan nilai 'id'
+          $('#id_good_receipt_notes').val(id_good_receipt_notes); // Mengisi nilai dari elemen dengan ID 'idOke' dengan nilai 'id'
       },
       error: function (error) {
           console.log(error);
@@ -173,7 +174,7 @@ function lot_number(id) {
   });
 }
 
-function lot_number_edit(id,lot_number) {
+function lot_number_edit(id,lot_number,id_good_receipt_notes) {
   $.ajax({
     type: 'GET',
     url: '/generate-code', // Ganti dengan URL rute Laravel yang sesuai
@@ -182,6 +183,7 @@ function lot_number_edit(id,lot_number) {
         $('#generatedCode').val(response.data.find);
         $('#idOke2').val(id); // Mengisi nilai dari elemen dengan ID 'idOke' dengan nilai 'id'
         $('#lot_numberok').val(lot_number); // Mengisi nilai dari elemen dengan ID 'idOke' dengan nilai 'id'
+        $('#id_good_receipt_notes_edit').val(id_good_receipt_notes); 
     },
     error: function (error) {
         console.log(error);
