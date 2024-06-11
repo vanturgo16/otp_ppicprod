@@ -105,6 +105,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::controller(WarehouseController::class)->group(function () {
         Route::get('/packing-list', 'index')->name('packing-list');
+        Route::get('/create-pl', 'create')->name('packing_list.create');
+        Route::post('/store-pl', 'create')->name('packing_list.store');
+        Route::get('/get-customers', 'getCustomers')->name('get-customers');
         Route::post('/api/save-location', 'lokasi');
         Route::get('/show', 'show');
     });

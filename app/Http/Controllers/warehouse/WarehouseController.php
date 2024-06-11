@@ -5,6 +5,7 @@ namespace App\Http\Controllers\warehouse;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\MstCustomers;
 use DataTables;
 
 
@@ -48,5 +49,37 @@ class WarehouseController extends Controller
         }
 
         return view('warehouse.index');
+    }
+    public function create()
+    {
+        // $customers = MstCustomers::all();
+        return view('warehouse.create_packing_list');
+    }
+    public function getCustomers(Request $request)
+    {
+        $search = $request->search;
+
+        if ($search == '') {
+            $customers = MstCustomers::orderby('name', 'asc')
+                ->select('id', 'name')
+                ->limit(10)
+                ->get();
+        } else {
+            $customers = MstCustomers::orderby('name', 'asc')
+                ->select('id', 'name')
+                ->where('name', 'like', '%' . $search . '%')
+                ->limit(10)
+                ->get();
+        }
+
+        $response = array();
+        foreach ($customers as $customer) {
+            $response[] = array(
+                "id" => $customer->id,
+                "text" => $customer->name
+            );
+        }
+
+        return response()->json($response);
     }
 }
