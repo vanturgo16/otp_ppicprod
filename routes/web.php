@@ -9,6 +9,7 @@ use App\Http\Controllers\MstAccountTypesController;
 use App\Http\Controllers\TransDataBankController;
 use App\Http\Controllers\TransDataKasController;
 use App\Http\Controllers\barcode\BarcodeController;
+use App\Http\Controllers\warehouse\WarehouseController;
 
 //PRODUCTION
 use App\Http\Controllers\ProductionController;
@@ -21,7 +22,7 @@ Route::post('auth/login', [AuthController::class, 'postlogin'])->name('postlogin
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth'])->group(function () {
-	
+
     //Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -32,7 +33,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('accounttype/update/{id}', [MstAccountTypesController::class, 'update'])->name('accounttype.update');
     Route::post('accounttype/activate/{id}', [MstAccountTypesController::class, 'activate'])->name('accounttype.activate');
     Route::post('accounttype/deactivate/{id}', [MstAccountTypesController::class, 'deactivate'])->name('accounttype.deactivate');
-    
+
     //AccountCode
     Route::get('/accountcode', [MstAccountCodesController::class, 'index'])->name('accountcode.index');
     Route::post('/accountcode', [MstAccountCodesController::class, 'index'])->name('accountcode.index');
@@ -58,7 +59,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/good-receipt-note', [GrnController::class, 'index'])->name('index');
     Route::get('/grn-pr-add', [GrnController::class, 'grn_pr_add'])->name('grn_pr_add');
     Route::get('/grn-po-add', [GrnController::class, 'grn_po_add'])->name('grn_po_add');
-    Route::get('/get-data', [GrnController::class, 'get_data'])->name('get_data');  
+    Route::get('/get-data', [GrnController::class, 'get_data'])->name('get_data');
     Route::post('/simpan_pr_grn', [GrnController::class, 'simpan_pr_grn'])->name('simpan_pr_grn');
     Route::post('/simpan_po_grn', [GrnController::class, 'simpan_po_grn'])->name('simpan_po_grn');
     Route::get('/detail-grn-po/{id}', [GrnController::class, 'detail_grn_po'])->name('detail_grn_po');
@@ -86,11 +87,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/external-no-lot', [GrnController::class, 'external_no_lot'])->name('external_no_lot');
     Route::put('/update_ext_lot_number', [GrnController::class, 'update_ext_lot_number'])->name('update_ext_lot_number');
     Route::get('/detail-external-no-lot/{lot_number}', [GrnController::class, 'detail_external_no_lot'])->name('detail_external_no_lot');
-    include __DIR__.'/ppic/workOrder.php';
-  
+    include __DIR__ . '/ppic/workOrder.php';
 
 
-                // mengawas uts
+
+    // mengawas uts
     Route::controller(BarcodeController::class)->group(function () {
         Route::get('/barcode', 'index')->name('barcode');
         Route::get('/create-barcode', 'create')->name('barcode.create');
@@ -100,6 +101,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/print-broker-barcode/{id}', 'print_broker')->name('print_broker');
         Route::get('/print-cbc-barcode/{id}', 'print_cbc')->name('print_cbc');
         Route::get('/table', 'table_print')->name('table_print');
-      
+    });
+
+    Route::controller(WarehouseController::class)->group(function () {
+        Route::get('/packing-list', 'index')->name('packing-list');
+        Route::post('/api/save-location', 'lokasi');
+        Route::get('/show', 'show');
     });
 });
