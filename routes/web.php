@@ -108,7 +108,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/create-pl', 'create')->name('packing_list.create');
         Route::post('/store-pl', 'create')->name('packing_list.store');
         Route::get('/get-customers', 'getCustomers')->name('get-customers');
-        Route::post('/api/save-location', 'lokasi');
-        Route::get('/show', 'show');
+        Route::post('/check-barcode', 'checkBarcode')->name('check-barcode');
+        Route::post('/packing-list-store', 'store')->name('packing_list.store');
+        Route::post('/remove-barcode', 'removeBarcode')->name('remove-barcode');
+        Route::get('/packing-list/{id}/edit', 'edit')->name('packing_list.edit');
+        Route::post('/packing-list/{id}/update', 'update')->name('packing_list.update');
+        Route::post('/packing-list/remove-barcode', 'removeBarcode')->name('packing_list.remove_barcode');
     });
 });
