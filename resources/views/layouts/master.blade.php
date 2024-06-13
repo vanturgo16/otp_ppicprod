@@ -186,9 +186,10 @@
                                 <li><a href="/good-lote-number" data-key="t-blog-grid">Good Lote Number</a></li>
                                 <li><a href="/grn-qc" data-key="t-blog-grid">GRN Need QC Passed</a></li>
                                 <li><a href="/external-no-lot" data-key="t-blog-grid">External No Lot</a></li>
-                                <li><a href="{{ route('ppic.workOrder.index') }}"
+                                <li><a href="{{ route('ppic.workOrder.index') }}" data-key="t-blog-grid">Word Order</a></li>
+                                {{-- <li><a href="{{ route('ppic.workOrder.index') }}"
                                         class="{{ request()->is('ppic/workOrder/*') ? 'active' : '' }}"><i
-                                            data-feather="clipboard"></i>Word Order</a></li>
+                                            data-feather="clipboard"></i>Word Order</a></li> --}}
                             </ul>
                     </li>
 

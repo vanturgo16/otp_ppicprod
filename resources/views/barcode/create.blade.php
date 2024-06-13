@@ -43,7 +43,9 @@
                                                     data-id-sales-orders="{{ $data->id_sales_orders }}" 
                                                     data-id-master-products-material="{{ $data->id_master_process_productions }}"
                                                     data-id-master-customers="{{ $data->id_master_customers }}"
-                                                    data-id-master-products="{{ $data->id_master_products }}">
+                                                    data-id-master-products="{{ $data->id_master_products }}"
+                                                    data-type-product-code="{{ $data->type_product_code }}"
+                                                    data-group-sub-code="{{ $data->group_sub_code }}">
                                                     {{ $data->wo_number }} {{ $data->status }} {{ $data->id }}
                                                 </option>
                                                 @endforeach
@@ -56,7 +58,8 @@
                                             <input type="hidden" class="form-control" id="id_master_process_productions" name="id_master_process_productions" value="">
                                             <input type="hidden" class="form-control" id="id_master_customers" name="id_master_customers" value="">
                                             <input type="hidden" class="form-control" id="id_master_products" name="id_master_products" value="">
-                                      
+                                            <input type="hidden" class="form-control" id="type_product_code" name="type_product_code" value="">
+                                            <input type="hidden" class="form-control" id="group_sub_code" name="group_sub_code" value="">
                                     <div class="row mb-4 field-wrapper">
                                         <label for="horizontal-password-input" class="col-sm-3 col-form-label">Work Center</label>
                                         <div class="col-sm-9">
@@ -115,12 +118,16 @@
             var idMasterProductsMaterial = selectedOption.data('id-master-products-material');
             var idMasterCustomers = selectedOption.data('id-master-customers');
             var idMasterProducts = selectedOption.data('id-master-products');
+            var typeProductCode = selectedOption.data('type-product-code');
+            var groupSubCode = selectedOption.data('group-sub-code');
 
             // Update hidden fields
             $('#id_sales_orders').val(idSalesOrders);
             $('#id_master_process_productions').val(idMasterProductsMaterial);
             $('#id_master_customers').val(idMasterCustomers);
             $('#id_master_products').val(idMasterProducts);
+            $('#type_product_code').val(typeProductCode);
+            $('#group_sub_code').val(groupSubCode);
         });
     });
 </script>
