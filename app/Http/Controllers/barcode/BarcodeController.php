@@ -36,9 +36,12 @@ class BarcodeController extends Controller
 
         $wo = DB::table('work_orders as a')
         ->join('sales_orders as b', 'a.id_sales_orders', '=', 'b.id')
+        ->leftjoin('master_product_fgs as c', 'a.id_master_products', '=', 'c.id')
         ->where('a.status', 'Posted')
-        ->select('a.*', 'b.id as id_sal', 'b.id_master_customers')
+        ->select('a.*', 'b.id as id_sal', 'b.id_master_customers','c.type_product_code','c.group_sub_code')
         ->get();
+
+        // dd($wo);
 
         $wc = DB::table('master_work_centers')->where('status','Active')->get();
         
@@ -73,7 +76,7 @@ class BarcodeController extends Controller
 
     public function store(Request $request)
     {
-        
+        // Validate the request data
         $this->validate($request, [
             'id_work_orders'    => 'required',
             'id_work_centers'   => 'required',
@@ -81,18 +84,21 @@ class BarcodeController extends Controller
             'qty'               => 'required',
         ]);
     
-
         $id_work_orders = $request->input('id_work_orders');
-
+    
         // Temukan data tambahan terkait dengan id_work_orders yang dipilih
         $workOrder = DB::table('work_orders')->where('id', $id_work_orders)->first();
-
+    
         if ($workOrder) {
             $id_sales_orders = $workOrder->id_sales_orders;
             $id_master_process_productions = $workOrder->id_master_process_productions;
-         
+            
+            // Retrieve additional fields from the request
+            $type_product_code = $request->input('type_product_code');
+            $group_sub_code = $request->input('group_sub_code');
+            
             // Gunakan transaksi database untuk memastikan atomisitas
-            DB::transaction(function() use ($request, $id_work_orders) {
+            DB::transaction(function() use ($request, $id_work_orders, $type_product_code, $group_sub_code) {
                 // Simpan detail soal menggunakan model Barcode
                 $detailsoal = Barcode::create([
                     'id_work_orders'                => $id_work_orders,
@@ -106,7 +112,6 @@ class BarcodeController extends Controller
                     'staff'                         => Auth::user()->name
                 ]);
                 
-    
                 // Generate barcode numbers and save them
                 if ($detailsoal) {
                     $qty = $request->input('qty');
@@ -116,12 +121,12 @@ class BarcodeController extends Controller
                         ->orderBy('barcode_number', 'desc')
                         ->first();
     
-                    $lastNumber = $lastBarcode ? intval(substr($lastBarcode->barcode_number, 4)) : 0;
+                    $lastNumber = $lastBarcode ? intval(substr($lastBarcode->barcode_number, 4, 5)) : 0;
     
                     $barcodeDetails = [];
                     for ($i = 1; $i <= $qty; $i++) {
                         $lastNumber++;
-                        $barcodeNumber = $yearMonth . str_pad($lastNumber, 5, '0', STR_PAD_LEFT);
+                        $barcodeNumber = $yearMonth . str_pad($lastNumber, 5, '0', STR_PAD_LEFT) . $type_product_code . $group_sub_code;
                         $barcodeDetails[] = [
                             'id_barcode' => $detailsoal->id,
                             'barcode_number' => $barcodeNumber,
@@ -139,6 +144,7 @@ class BarcodeController extends Controller
             return redirect('/barcode')->with(['error' => 'Data Work Order tidak ditemukan!']);
         }
     }
+    
 
     public function print_standar($id)
     {
