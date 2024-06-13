@@ -24,7 +24,7 @@
     <a href="/print/{{ $data->id }}" class="btn btn-sm btn-secondary">
         <i class="bx bx-printer"></i> Print
     </a>
-    <a href="/edit/{{ $data->id }}" class="btn btn-sm btn-warning">
+    <a href="/packing-list/{{ $data->id }}/edit" class="btn btn-sm btn-warning">
         <i class="bx bx-edit"></i> Edit
     </a>
     <form action="/delete/{{ $data->id }}" method="post" class="d-inline" data-id="">

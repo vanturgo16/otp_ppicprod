@@ -6,11 +6,11 @@
         <div class="row">
             <div class="col-12">
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                    <h4 class="mb-sm-0 font-size-18">Tambah Packing List</h4>
+                    <h4 class="mb-sm-0 font-size-18">Edit Packing List</h4>
                     <div class="page-title-right">
                         <ol class="breadcrumb m-0">
                             <li class="breadcrumb-item"><a href="{{ route('packing-list') }}">Packing List</a></li>
-                            <li class="breadcrumb-item active">Tambah Packing List</li>
+                            <li class="breadcrumb-item active">Edit Packing List</li>
                         </ol>
                     </div>
                 </div>
@@ -20,40 +20,36 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-body">
-                        <form action="{{ route('packing_list.store') }}" method="POST" id="packing-list-form">
+                        <form action="{{ route('packing_list.update', $packingList->id) }}" method="POST" id="packing-list-edit-form">
                             @csrf
+                            @method('PUT')
                             <div class="mb-3">
                                 <label for="packing_number" class="form-label">Packing Number</label>
-                                <input type="text" class="form-control" id="packing_number" name="packing_number" value="{{ $nextPackingNumber }}" readonly>
+                                <input type="text" class="form-control" id="packing_number" name="packing_number" value="{{ $packingList->packing_number }}" readonly>
                             </div>
                             <div class="mb-3">
                                 <label for="date" class="form-label">Date</label>
-                                <input type="date" class="form-control" id="date" name="date" required>
+                                <input type="date" class="form-control" id="date" name="date" value="{{ $packingList->date }}" required>
                             </div>
                             <div class="mb-3">
                                 <label for="customer" class="form-label">Customer</label>
-                                <select class="form-control" id="customer" name="customer" required></select>
-                                <input type="hidden" id="customer_id" name="customer_id">
+                                <input type="text" class="form-control" id="customer" name="customer" value="{{ $customer->name }}" readonly>
+                                <input type="hidden" id="customer_id" name="customer_id" value="{{ $customer->id }}">
                             </div>
                             <div class="mb-3">
                                 <label for="all_barcodes" class="form-label">All Barcodes</label>
-                                <select class="form-control" id="all_barcodes" name="all_barcodes" required>
-                                    <option value="" disabled selected>Please select All Barcodes</option>
-                                    <option value="Y">Y</option>
-                                    <option value="N">N</option>
-                                </select>
+                                <input type="text" class="form-control" id="all_barcodes" name="all_barcodes" value="{{ $packingList->all_barcodes }}" readonly>
                             </div>
-                            <button type="submit" class="btn btn-primary" id="save-button">Simpan</button>
+                            <button type="submit" class="btn btn-primary" id="save-button">Update</button>
                             <a href="{{ route('packing-list') }}" class="btn btn-secondary">Kembali</a>
                         </form>
                     </div>
                 </div>
-                <div class="card" id="packing-list-detail-card" style="display: none;">
+                <div class="card" id="packing-list-detail-card">
                     <div class="card-body">
                         <h5 class="card-title">Packing List Detail</h5>
                         <form id="packing-list-detail-form">
-                            <input type="hidden" id="packing_list_id" name="packing_list_id">
-                            <div class="mb-3" id="change_so_wrapper">
+                            <div class="mb-3" id="change_so_wrapper" style="{{ $packingList->all_barcodes == 'Y' ? 'display: block;' : 'display: none;' }}">
                                 <label for="change_so" class="form-label">Change SO</label>
                                 <input type="text" class="form-control" id="change_so" name="change_so">
                             </div>
@@ -73,7 +69,12 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <!-- Data barcode akan dimuat di sini -->
+                                    @foreach($details as $detail)
+                                    <tr data-id="{{ $detail->id }}">
+                                        <td>{{ $detail->id_sales_orders }}</td>
+                                        <td>{{ $detail->barcode }}</td>
+                                        <td><button type="button" class="btn btn-danger btn-sm remove-barcode">Remove</button></td>
+                                        @endforeach
                                 </tbody>
                             </table>
                         </div>
@@ -83,6 +84,7 @@
         </div>
     </div>
 </div>
+<input type="hidden" id="packing_list_id" value="{{ $packingList->id }}">
 @endsection
 
 @push('styles')
@@ -94,30 +96,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
-        $('#customer').select2({
-            placeholder: 'Pilih Customer',
-            ajax: {
-                url: '{{ route("get-customers") }}',
-                dataType: 'json',
-                delay: 250,
-                data: function(params) {
-                    return {
-                        search: params.term // Mengambil parameter pencarian
-                    };
-                },
-                processResults: function(data) {
-                    return {
-                        results: data
-                    };
-                },
-                cache: true
-            }
-        }).on('select2:select', function(e) {
-            var data = e.params.data;
-            $('#customer_id').val(data.id);
-        });
-
-        $('#packing-list-form').on('submit', function(e) {
+        $('#packing-list-edit-form').on('submit', function(e) {
             e.preventDefault();
 
             var formData = $(this).serialize();
@@ -130,30 +109,17 @@
                 success: function(response) {
                     console.log("Response:", response);
                     if (response.success) {
-                        $('#packing-list-detail-card').show();
-                        $('#packing-list-form').find('input, select').attr('disabled', true);
-                        $('#packing_list_id').val(response.packing_list_id);
-                        $('#save-button').hide(); // Menyembunyikan tombol simpan
-                        $('#barcode').focus(); // Memfokuskan pada input barcode
+                        Swal.fire('Success', 'Data berhasil diupdate', 'success');
                     } else {
-                        Swal.fire('Error', response.error || 'Gagal menyimpan data packing list', 'error');
+                        Swal.fire('Error', response.error || 'Gagal mengupdate data packing list', 'error');
                     }
                 },
                 error: function(xhr, status, error) {
                     console.log("AJAX Error:", xhr.responseText);
-                    Swal.fire('Error', 'Gagal menyimpan data packing list', 'error');
+                    Swal.fire('Error', 'Gagal mengupdate data packing list', 'error');
                 }
             });
         });
-
-        $('#all_barcodes').change(function() {
-            if ($(this).val() === 'Y') {
-                $('#change_so_wrapper').show();
-            } else {
-                $('#change_so_wrapper').hide();
-                $('#change_so').val('');
-            }
-        }).trigger('change'); // Trigger change event on page load to set the initial state
 
         $('#barcode').on('input', function() {
             if ($(this).val().length === 11) {
@@ -196,7 +162,7 @@
             var id = row.data('id');
 
             $.ajax({
-                url: '{{ route("remove-barcode") }}',
+                url: '{{ route("packing_list.remove_barcode") }}',
                 method: 'POST',
                 data: {
                     id: id,
@@ -206,12 +172,8 @@
                     if (response.success) {
                         row.remove();
                     } else {
-                        Swal.fire('Error', 'Gagal menghapus barcode', 'error');
+                        Swal.fire('Error', 'Gagal menghapus data barcode', 'error');
                     }
-                },
-                error: function(xhr, status, error) {
-                    console.log("AJAX Error:", xhr.responseText);
-                    Swal.fire('Error', 'Gagal menghapus barcode', 'error');
                 }
             });
         });
