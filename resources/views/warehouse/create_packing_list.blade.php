@@ -67,8 +67,11 @@
                             <table class="table table-bordered" id="barcode-table">
                                 <thead>
                                     <tr>
+                                        <th>No</th>
                                         <th>Change SO</th>
                                         <th>Barcode</th>
+                                        <th>Number Of Box</th>
+                                        <th>Weight</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -83,13 +86,7 @@
         </div>
     </div>
 </div>
-@endsection
 
-@push('styles')
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-@endpush
-
-@push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
@@ -170,8 +167,13 @@
                     success: function(response) {
                         if (response.exists) {
                             var newRow = '<tr data-id="' + response.id + '">' +
+                                '<td class="row-number">' + ($('#barcode-table tbody tr').length + 1) + '</td>' +
                                 '<td>' + ($('#change_so').val() || '') + '</td>' +
                                 '<td>' + $('#barcode').val() + '</td>' +
+                                (endsWithB($('#barcode').val()) ?
+                                    '<td><input type="number" class="form-control number_of_box" data-id="' + response.id + '" name="number_of_box"></td>' +
+                                    '<td><input type="number" class="form-control weight" data-id="' + response.id + '" name="weight"></td>' :
+                                    '<td></td><td></td>') +
                                 '<td><button type="button" class="btn btn-danger btn-sm remove-barcode">Remove</button></td>' +
                                 '</tr>';
                             $('#barcode-table tbody').append(newRow);
@@ -191,6 +193,32 @@
             }
         });
 
+        $(document).on('change', '.number_of_box, .weight', function() {
+            var id = $(this).data('id');
+            var field = $(this).attr('name');
+            var value = $(this).val();
+
+            $.ajax({
+                url: '{{ route("update-barcode-detail") }}',
+                method: 'POST',
+                data: {
+                    id: id,
+                    field: field,
+                    value: value,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (!response.success) {
+                        Swal.fire('Error', 'Gagal memperbarui data', 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.log("AJAX Error:", xhr.responseText);
+                    Swal.fire('Error', 'Gagal memperbarui data', 'error');
+                }
+            });
+        });
+
         $(document).on('click', '.remove-barcode', function() {
             var row = $(this).closest('tr');
             var id = row.data('id');
@@ -205,6 +233,7 @@
                 success: function(response) {
                     if (response.success) {
                         row.remove();
+                        updateRowNumbers();
                     } else {
                         Swal.fire('Error', 'Gagal menghapus barcode', 'error');
                     }
@@ -215,6 +244,16 @@
                 }
             });
         });
+
+        function endsWithB(barcode) {
+            return barcode.slice(-1) === 'B';
+        }
+
+        function updateRowNumbers() {
+            $('#barcode-table tbody tr').each(function(index, row) {
+                $(row).find('.row-number').text(index + 1);
+            });
+        }
     });
 </script>
-@endpush
+@endsection
