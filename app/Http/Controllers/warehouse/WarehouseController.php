@@ -210,4 +210,44 @@ class WarehouseController extends Controller
 
         return redirect()->route('packing-list')->with('success', 'Packing List updated successfully');
     }
+    public function updateBarcodeDetail(Request $request)
+    {
+        $id = $request->input('id');
+        $field = $request->input('field');
+        $value = $request->input('value');
+
+        try {
+            DB::table('packing_list_details')->where('id', $id)->update([$field => $value]);
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+    public function printPackingList($id)
+    {
+        $packingList = DB::table('packing_lists')
+            ->join('master_customers', 'packing_lists.id_master_customers', '=', 'master_customers.id')
+            ->select('packing_lists.packing_number', 'packing_lists.date', 'master_customers.name as customer_name')
+            ->where('packing_lists.id', $id)
+            ->first();
+
+        $details = DB::table('packing_list_details')
+            ->join('barcode_detail', 'packing_list_details.barcode', '=', 'barcode_detail.barcode_number')
+            ->join('barcodes', 'barcode_detail.id_barcode', '=', 'barcodes.id')
+            ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
+            ->join('master_product_fgs', 'sales_orders.id_master_product', '=', 'master_product_fgs.id')
+            ->join('master_units', 'master_product_fgs.id_master_units', '=', 'master_units.id')
+            ->select(
+                'master_product_fgs.product_code',
+                'master_product_fgs.description',
+                // 'master_product_fgs.cust_product_code',
+                'barcode_detail.barcode_number',
+                'sales_orders.so_number',
+                'master_units.unit'
+            )
+            ->where('packing_list_details.id_packing_lists', $id)
+            ->get();
+
+        return view('warehouse.print_packing_list', compact('packingList', 'details'));
+    }
 }

@@ -114,5 +114,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/packing-list/{id}/edit', 'edit')->name('packing_list.edit');
         Route::post('/packing-list/{id}/update', 'update')->name('packing_list.update');
         Route::post('/packing-list/remove-barcode', 'removeBarcode')->name('packing_list.remove_barcode');
+        Route::post('update-barcode-detail', 'updateBarcodeDetail')->name('update-barcode-detail');
+        Route::get('print/{id}', 'printPackingList')->name('packing_list.print');
     });
 });
