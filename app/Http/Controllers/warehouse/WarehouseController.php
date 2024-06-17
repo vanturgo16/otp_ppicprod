@@ -276,6 +276,6 @@ class WarehouseController extends Controller
             ->where('id_packing_lists', $id)
             ->get();
 
-        return view('warehouse.show_packing_list', compact('packingList', 'details', 'customer'));
+        return view('warehouse.show_packing_list', compact('packingList', 'details'));
     }
 }
