@@ -1,5 +1,5 @@
 <div class="btn-group" role="group" aria-label="Action Buttons">
-    <a href="/good-lote-number-detail/{{ $data->id }}" class="btn btn-sm btn-primary waves-effect waves-light">
+    <a href="/packing-list/{{ $data->id }}" class="btn btn-sm btn-primary waves-effect waves-light">
         <i class="bx bx-show-alt"></i>
     </a>
 

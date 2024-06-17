@@ -6,7 +6,7 @@
     <div class="container-fluid">
         <div class="row mb-3">
             <div class="col-12">
-                <a href="{{ route('packing-list.index') }}" class="btn btn-secondary">
+                <a href="{{ route('packing-list') }}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> Back To List Data Packing List
                 </a>
             </div>
@@ -26,7 +26,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="customer" class="form-label">Customers</label>
-                            <p>{{ $customer->name }}</p>
+                            <p>{{ $packingList->customer_name }}</p>
                         </div>
                         <div class="mb-3">
                             <label for="all_barcodes" class="form-label">All Barcodes</label>
@@ -49,7 +49,7 @@
                             <tbody>
                                 @foreach($details as $detail)
                                 <tr>
-                                    <td>{{ $detail->change_so }}</td>
+                                    <td>{{ $detail->id_sales_orders }}</td>
                                     <td>{{ $detail->barcode }}</td>
                                     <td>{{ $detail->number_of_box }}</td>
                                     <td>{{ $detail->weight }}</td>
@@ -57,7 +57,7 @@
                                 @endforeach
                             </tbody>
                         </table>
-                        <a href="{{ route('packing-list.index') }}" class="btn btn-secondary">Back</a>
+                        <a href="{{ route('packing-list') }}" class="btn btn-secondary">Back</a>
                     </div>
                 </div>
             </div>
