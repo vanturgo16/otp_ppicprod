@@ -278,4 +278,33 @@ class WarehouseController extends Controller
 
         return view('warehouse.show_packing_list', compact('packingList', 'details'));
     }
+    public function post($id)
+    {
+        $packingList = PackingList::find($id);
+        $packingList->status = 'Posted';
+        $packingList->save();
+
+        return redirect()->route('packing-list')->with('pesan', 'Status berhasil diubah menjadi Posted.');
+    }
+
+    public function unpost($id)
+    {
+        $packingList = PackingList::find($id);
+        $packingList->status = 'Request';
+        $packingList->save();
+
+        return redirect()->route('packing-list')->with('pesan', 'Status berhasil diubah menjadi Request.');
+    }
+    public function destroy($id)
+    {
+        DB::transaction(function () use ($id) {
+            // Hapus detail packing list
+            DB::table('packing_list_details')->where('id_packing_lists', $id)->delete();
+
+            // Hapus packing list
+            DB::table('packing_lists')->where('id', $id)->delete();
+        });
+
+        return redirect()->route('packing-list')->with('pesan', 'Data berhasil dihapus.');
+    }
 }

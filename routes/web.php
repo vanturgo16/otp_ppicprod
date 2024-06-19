@@ -10,6 +10,7 @@ use App\Http\Controllers\TransDataBankController;
 use App\Http\Controllers\TransDataKasController;
 use App\Http\Controllers\barcode\BarcodeController;
 use App\Http\Controllers\warehouse\WarehouseController;
+use App\Http\Controllers\warehouse\DeliveryNoteController;
 
 //PRODUCTION
 use App\Http\Controllers\ProductionController;
@@ -117,5 +118,15 @@ Route::middleware(['auth'])->group(function () {
         Route::post('update-barcode-detail', 'updateBarcodeDetail')->name('update-barcode-detail');
         Route::get('print/{id}', 'printPackingList')->name('packing_list.print');
         Route::get('packing-list/{id}', 'show')->name('packing-list.show');
+        Route::put('packing-list/{id}/post', 'post')->name('packing-list.post');
+        Route::put('packing-list/{id}/unpost', 'unpost')->name('packing-list.unpost');
+        Route::delete('/packing-list/{id}', 'destroy')->name('packing-list.destroy');
+    });
+    Route::controller(DeliveryNoteController::class)->group(function () {
+        Route::get('delivery_notes/list', 'list')->name('delivery_notes.list');
+        Route::put('delivery_notes/{id}/post', 'post')->name('delivery_notes.post');
+        Route::put('delivery_notes/{id}/unpost', 'unpost')->name('delivery_notes.unpost');
+        Route::delete('delivery_notes/{id}', 'destroy')->name('delivery_notes.destroy');
+        Route::resource('delivery_notes', DeliveryNoteController::class)->except(['index', 'show']);
     });
 });
