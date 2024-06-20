@@ -88,9 +88,7 @@
                 [5, 10, 20, 25, 50, 100],
                 [5, 10, 20, 25, 50, 100]
             ],
-            aaSorting: [
-                [1, 'desc']
-            ],
+            aaSorting: [],
             ajax: {
                 url: '{{ route("delivery_notes.list") }}',
                 data: function(d) {
@@ -108,42 +106,45 @@
                 {
                     data: 'dn_number',
                     name: 'dn_number',
-                    orderable: true,
+                    orderable: true
                 },
                 {
                     data: 'packing_number',
                     name: 'packing_number',
-                    orderable: true,
+                    orderable: true
                 },
                 {
                     data: 'po_number',
                     name: 'po_number',
                     orderable: true,
+                    render: function(data, type, row) {
+                        return data.split(' - ')[0];
+                    }
                 },
                 {
                     data: 'date',
                     name: 'date',
-                    orderable: true,
+                    orderable: true
                 },
                 {
                     data: 'dn_type',
                     name: 'dn_type',
-                    orderable: true,
+                    orderable: true
                 },
                 {
                     data: 'transaction_type',
                     name: 'transaction_type',
-                    orderable: true,
+                    orderable: true
                 },
                 {
                     data: 'vehicle',
                     name: 'vehicle',
-                    orderable: true,
+                    orderable: true
                 },
                 {
                     data: 'status',
                     name: 'status',
-                    orderable: true,
+                    orderable: true
                 },
                 {
                     data: 'action',
@@ -167,7 +168,7 @@
                 },
                 {
                     width: '100px',
-                    targets: [9],
+                    targets: [5]
                 },
                 {
                     orderable: false,
@@ -178,43 +179,43 @@
 
         function generateActionButtons(data) {
             let buttons = `<div class="btn-group" role="group" aria-label="Action Buttons">
-                <a href="/delivery_notes/${data.id}" class="btn btn-sm btn-primary waves-effect waves-light">
-                    <i class="bx bx-show-alt"></i>
-                </a>`;
-
-            if (data.status == 'Request') {
-                buttons += `<form action="/delivery_notes/${data.id}/post" method="post" class="d-inline" data-id="">
-                    @method('PUT')
-                    @csrf
-                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Anda yakin mau Post item ini ?')">
-                        <i class="bx bx-check-circle" title="Posted"> Posted</i>
-                    </button>
-                </form>`;
-            } else if (data.status == 'Posted') {
-                buttons += `<form action="/delivery_notes/${data.id}/unpost" method="post" class="d-inline" data-id="">
-                    @method('PUT')
-                    @csrf
-                    <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Anda yakin mau Un Post item ini ?')">
-                        <i class="bx bx-undo" title="Un Posted"> Un Posted</i>
-                    </button>
-                </form>`;
-            }
-
-            buttons += `<a href="/print/${data.id}" class="btn btn-sm btn-secondary">
-                <i class="bx bx-printer"></i> Print
+            <a href="/delivery_notes/${data.id}" class="btn btn-sm btn-primary waves-effect waves-light">
+                <i class="bx bx-show-alt"></i>
             </a>`;
 
             if (data.status == 'Request') {
+                buttons += `<form action="/delivery_notes/${data.id}/post" method="post" class="d-inline" data-id="">
+                @method('PUT')
+                @csrf
+                <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Anda yakin mau Post item ini ?')">
+                    <i class="bx bx-check-circle" title="Posted"> Posted</i>
+                </button>
+            </form>`;
+            } else if (data.status == 'Posted') {
+                buttons += `<form action="/delivery_notes/${data.id}/unpost" method="post" class="d-inline" data-id="">
+                @method('PUT')
+                @csrf
+                <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Anda yakin mau Un Post item ini ?')">
+                    <i class="bx bx-undo" title="Un Posted"> Un Posted</i>
+                </button>
+            </form>`;
+            }
+
+            buttons += `<a href="/print/${data.id}" class="btn btn-sm btn-secondary">
+            <i class="bx bx-printer"></i> Print
+        </a>`;
+
+            if (data.status == 'Request') {
                 buttons += `<a href="/delivery_notes/${data.id}/edit" class="btn btn-sm btn-warning">
-                    <i class="bx bx-edit"></i> Edit
-                </a>
-                <form action="/delivery_notes/${data.id}" method="post" class="d-inline" data-id="">
-                    @method('DELETE')
-                    @csrf
-                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Anda yakin mau menghapus item ini ?')">
-                        <i class="bx bx-trash"></i> Delete
-                    </button>
-                </form>`;
+                <i class="bx bx-edit"></i> Edit
+            </a>
+            <form action="/delete/${data.id}" method="post" class="d-inline" data-id="">
+                @method('DELETE')
+                @csrf
+                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Anda yakin mau menghapus item ini ?')">
+                    <i class="bx bx-trash"></i> Delete
+                </button>
+            </form>`;
             }
 
             buttons += `</div>`;
