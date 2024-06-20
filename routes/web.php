@@ -113,7 +113,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/packing-list-store', 'store')->name('packing_list.store');
         Route::post('/remove-barcode', 'removeBarcode')->name('remove-barcode');
         Route::get('/packing-list/{id}/edit', 'edit')->name('packing_list.edit');
-        Route::post('/packing-list/{id}/update', 'update')->name('packing_list.update');
+        Route::put('/packing-list/{id}/update', 'update')->name('packing_list.update');
         Route::post('/packing-list/remove-barcode', 'removeBarcode')->name('packing_list.remove_barcode');
         Route::post('update-barcode-detail', 'updateBarcodeDetail')->name('update-barcode-detail');
         Route::get('print/{id}', 'printPackingList')->name('packing_list.print');
@@ -127,6 +127,13 @@ Route::middleware(['auth'])->group(function () {
         Route::put('delivery_notes/{id}/post', 'post')->name('delivery_notes.post');
         Route::put('delivery_notes/{id}/unpost', 'unpost')->name('delivery_notes.unpost');
         Route::delete('delivery_notes/{id}', 'destroy')->name('delivery_notes.destroy');
-        Route::resource('delivery_notes', DeliveryNoteController::class)->except(['index', 'show']);
+        Route::get('delivery_notes/{id}', 'show')->name('delivery_notes.show');
+        Route::get('delivery_notes/{id}/edit', 'edit')->name('delivery_notes.edit');
+        Route::put('delivery_notes/{id}/update', 'update')->name('delivery_notes.update');
+        Route::get('delivery_notes/create', 'create')->name('delivery_notes.create');
+        Route::post('delivery_notes', 'store')->name('delivery_notes.store');
+        Route::get('getPackingListDetails/{id}', 'getPackingListDetails')->name('delivery_notes.getPackingListDetails');
+
+        // Route::resource('delivery_notes', DeliveryNoteController::class)->except(['index', 'show']);
     });
 });
