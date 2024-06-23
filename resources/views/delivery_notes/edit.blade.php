@@ -54,7 +54,8 @@
                             </div>
                             <div class="mb-3">
                                 <label for="po_number" class="form-label">Nomor PO</label>
-                                <input type="text" class="form-control" id="po_number" name="po_number" value="{{ old('po_number', $deliveryNote->reference_number . ' - ' . $deliveryNote->so_number) }}" readonly required>
+                                <input type="hidden" id="po_number" name="po_number" value="{{ old('po_number', $deliveryNote->po_number) }}" required>
+                                <input type="text" class="form-control" id="po_number_display" name="po_number_display" value="{{ old('po_number_display', $deliveryNote->reference_number . ' - ' . $deliveryNote->so_number) }}" readonly required>
                             </div>
                             <div class="mb-3">
                                 <label for="id_master_customer" class="form-label">Nama Customer</label>
@@ -114,7 +115,8 @@
                     type: 'GET',
                     dataType: 'json',
                     success: function(data) {
-                        $('#po_number').val(data.reference_number + ' - ' + data.so_number);
+                        $('#po_number').val(data.sales_order_id); // Store sales_order_id in hidden input
+                        $('#po_number_display').val(data.reference_number + ' - ' + data.so_number); // Display reference number
                         $('#id_master_customer').val(data.customer_id);
                         $('#customer_name').val(data.customer_name);
                         $('#dn_type').val(data.so_category);
