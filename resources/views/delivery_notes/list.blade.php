@@ -1,4 +1,3 @@
-<!-- resources/views/delivery_notes/list.blade.php -->
 @extends('layouts.master')
 
 @section('konten')
@@ -118,7 +117,7 @@
                     name: 'po_number',
                     orderable: true,
                     render: function(data, type, row) {
-                        return data.split(' - ')[0];
+                        return data; // Menampilkan reference_number yang sudah dijoin
                     }
                 },
                 {
@@ -201,7 +200,7 @@
             </form>`;
             }
 
-            buttons += `<a href="/print/${data.id}" class="btn btn-sm btn-secondary">
+            buttons += `<a href="${data.id}/print" class="btn btn-sm btn-secondary">
             <i class="bx bx-printer"></i> Print
         </a>`;
 

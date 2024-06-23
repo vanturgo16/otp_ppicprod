@@ -127,11 +127,12 @@ Route::middleware(['auth'])->group(function () {
         Route::put('delivery_notes/{id}/post', 'post')->name('delivery_notes.post');
         Route::put('delivery_notes/{id}/unpost', 'unpost')->name('delivery_notes.unpost');
         Route::delete('delivery_notes/{id}', 'destroy')->name('delivery_notes.destroy');
-        Route::get('delivery_notes/{id}', 'show')->name('delivery_notes.show');
+        Route::get('delivery_notes/{id}/show', 'show')->name('delivery_notes.show');
         Route::get('delivery_notes/{id}/edit', 'edit')->name('delivery_notes.edit');
         Route::put('delivery_notes/{id}/update', 'update')->name('delivery_notes.update');
         Route::get('delivery_notes/create', 'create')->name('delivery_notes.create');
         Route::post('delivery_notes', 'store')->name('delivery_notes.store');
+        Route::get('delivery_notes/{id}/print', 'print')->name('delivery_notes.print');
         Route::get('getPackingListDetails/{id}', 'getPackingListDetails')->name('delivery_notes.getPackingListDetails');
 
         // Route::resource('delivery_notes', DeliveryNoteController::class)->except(['index', 'show']);
