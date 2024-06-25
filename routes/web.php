@@ -134,6 +134,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('delivery_notes', 'store')->name('delivery_notes.store');
         Route::get('delivery_notes/{id}/print', 'print')->name('delivery_notes.print');
         Route::get('getPackingListDetails/{id}', 'getPackingListDetails')->name('delivery_notes.getPackingListDetails');
+        Route::put('/delivery_note_details/{id}/remark', 'updateRemark')->name('delivery_note_details.updateRemark');
 
         // Route::resource('delivery_notes', DeliveryNoteController::class)->except(['index', 'show']);
     });

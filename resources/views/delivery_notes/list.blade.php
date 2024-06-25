@@ -63,6 +63,30 @@
         </div>
     </div>
 </div>
+
+<!-- Modal for Remark -->
+<div class="modal fade" id="remarkModal" tabindex="-1" aria-labelledby="remarkModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="remarkModalLabel">Remark</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="remarkForm">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" id="remarkDetailId" name="id">
+                    <div class="mb-3">
+                        <label for="remark" class="form-label">Remark</label>
+                        <textarea class="form-control" id="remark" name="remark" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -178,7 +202,7 @@
 
         function generateActionButtons(data) {
             let buttons = `<div class="btn-group" role="group" aria-label="Action Buttons">
-            <a href="/delivery_notes/${data.id}" class="btn btn-sm btn-primary waves-effect waves-light">
+            <a href="/delivery_notes/${data.id}/show" class="btn btn-sm btn-primary waves-effect waves-light">
                 <i class="bx bx-show-alt"></i>
             </a>`;
 
@@ -203,6 +227,9 @@
             buttons += `<a href="${data.id}/print" class="btn btn-sm btn-secondary">
             <i class="bx bx-printer"></i> Print
         </a>`;
+            buttons += `<a href="/print/${data.id_packing_lists}" class="btn btn-sm btn-info">
+            <i class="bx bx-book-open"></i> Packing List
+        </a>`;
 
             if (data.status == 'Request') {
                 buttons += `<a href="/delivery_notes/${data.id}/edit" class="btn btn-sm btn-warning">
@@ -217,10 +244,41 @@
             </form>`;
             }
 
+            buttons += `<button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#remarkModal" onclick="showRemark('${data.id}', '${data.remark || ''}')">
+                <i class="bx bx-comment"></i> Remark
+            </button>`;
+
             buttons += `</div>`;
 
             return buttons;
         }
+
+        window.showRemark = function(id, remark) {
+            $('#remarkDetailId').val(id);
+            $('#remark').val(remark ? remark : '');
+            $('#remarkModal').modal('show');
+        }
+
+        $('#remarkForm').on('submit', function(e) {
+            e.preventDefault();
+            var id = $('#remarkDetailId').val();
+            var remark = $('#remark').val();
+            var _token = $("input[name=_token]").val();
+
+            $.ajax({
+                url: '/delivery_note_details/' + id + '/remark',
+                method: 'PUT',
+                data: {
+                    _token: _token,
+                    remark: remark
+                },
+                success: function(response) {
+                    $('#remarkModal').modal('hide');
+                    dataTable.ajax.reload();
+                    alert(response.success);
+                }
+            });
+        });
     });
 </script>
 @endpush

@@ -1,115 +1,141 @@
-@extends('layouts.print')
+<!DOCTYPE html>
+<html>
 
-@section('content')
-<style>
-    .header-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
+<head>
+    <title>Cetak Delivery Note</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
 
-    .signature-row {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 50px;
-    }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+        }
 
-    .signature {
-        text-align: center;
-        width: 40%;
-    }
+        h1,
+        h2 {
+            text-align: center;
+        }
 
-    .signature p {
-        margin-bottom: 100px;
-    }
+        p {
+            margin: 0;
+            padding: 5px 0;
+        }
 
-    .signature-name {
-        margin-top: 50px;
-        font-weight: bold;
-    }
-</style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
 
-<div class="page-content">
-    <div class="container-fluid">
-        <div class="header-row">
-            <div>
-                <h3>PT OLEFINA TIFAPLAS POLIKEMINDO</h3>
-            </div>
-            <div>
-                <p>{{ \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }}</p>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-12 text-center">
-                <h2>SURAT PENGANTAR</h2>
-                <h3>{{ $deliveryNote->dn_number }}</h3>
-            </div>
-        </div>
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="float-left">
-                    <p><strong>Tanggal:</strong> {{ \Carbon\Carbon::parse($deliveryNote->date)->translatedFormat('d F Y') }}</p>
-                    <p><strong>No. PO:</strong> {{ $deliveryNote->po_number }}</p>
-                    <p><strong>No. Pol. Kendaraan:</strong> {{ $deliveryNote->vehicle }}</p>
-                </div>
-                <div class="float-right">
-                    <p><strong>Customer:</strong> {{ $deliveryNote->customer_name }}</p>
-                    <p><strong>Cust. Product Code:</strong> -</p>
-                </div>
-                <div class="clear"></div>
-            </div>
-        </div>
-        <div class="row mt-4">
-            <div class="col-12">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Description</th>
-                            <th>Perforasi</th>
-                            <th>Qty</th>
-                            <th>Unit</th>
-                            <th>Weight</th>
-                            <th>Remarks</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($details as $detail)
-                        <tr>
-                            <td>{{ $detail->description }}</td>
-                            <td>{{ $detail->perforasi ?? '-' }}</td>
-                            <td>{{ $detail->qty }}</td>
-                            <td>{{ $detail->unit }}</td>
-                            <td>{{ $detail->weight }} KG</td>
-                            <td>{{ $detail->remark ?? '-' }}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="row mt-4">
-            <div class="col-12">
-                <p><strong>Note:</strong> {{ $deliveryNote->note }}</p>
-            </div>
-        </div>
-        <div class="signature-row">
-            <div class="signature">
-                <p>Diterima</p>
-                <p>(....................)</p>
-            </div>
-            <div class="signature">
-                <p>Pengemudi,</p>
-                <p>(....................)</p>
-            </div>
-            <div class="signature">
-                <p>Security,</p>
-                <p>(....................)</p>
-            </div>
-            <div class="signature">
-                <p>Pembuat,</p>
-                <p>(....................)</p>
-            </div>
-        </div>
+        table,
+        th,
+        td {
+            border: 1px solid black;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .note {
+            margin-top: 20px;
+        }
+
+        .signatures {
+            width: 100%;
+            margin-top: 50px;
+            text-align: center;
+        }
+
+        .signatures td {
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>PT OLEFINA TIFAPLAS POLIKEMINDO</h1>
+        <p>Jl. Raya Serang KM 16.8 Desa Telaga, Kec. Cikupa<br>
+            Tangerang, 15710<br>
+            Phone: 02159663657 Fax: 0</p>
+        <h2>SURAT PENGANTAR</h2>
+        <p>No. DN: {{ $deliveryNote->dn_number }}</p>
+        <p style="text-align:right;">Tanggal Cetak: {{ date('d/m/Y') }}</p>
+
+        <table>
+            <tr>
+                <td>Tanggal</td>
+                <td>: {{ date('d/m/Y', strtotime($deliveryNote->date)) }}</td>
+            </tr>
+            <tr>
+                <td>No. PO</td>
+                <td>: {{ $deliveryNote->sales_order_po_number }}</td>
+            </tr>
+            <tr>
+                <td>No. Pol. Kendaraan</td>
+                <td>: {{ $deliveryNote->vehicle_number }}</td>
+            </tr>
+            <tr>
+                <td>Cust. Product Code</td>
+                <td>: -</td>
+            </tr>
+        </table>
+
+        <p>Kepada Yth,</p>
+        <p>{{ $deliveryNote->customer_name }}</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Perforasi</th>
+                    <th>Qty</th>
+                    <th>Unit</th>
+                    <th>Weight</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ $packingListDetails->product_description }}</td>
+                    <td>{{ $packingListDetails->perforasi }}</td>
+                    <td>{{ $packingListDetails->total_qty }}</td>
+                    <td>{{ $packingListDetails->unit_name }}</td>
+                    <td>{{ $packingListDetails->total_weight }} KG</td>
+                    <td>{{ $packingListDetails->remark }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p class="note">Note: {{ $deliveryNote->note }}</p>
+
+        <table class="signatures">
+            <tr>
+                <td>Diterima,</td>
+                <td>Pengemudi,</td>
+                <td>Security,</td>
+                <td>Pembuat,</td>
+            </tr>
+            <tr>
+                <td>(...................)</td>
+                <td>(...................)</td>
+                <td>(...................)</td>
+                <td>(...................)</td>
+            </tr>
+        </table>
     </div>
-</div>
-@endsection
+</body>
+
+</html>
