@@ -91,8 +91,6 @@ Route::middleware(['auth'])->group(function () {
     include __DIR__ . '/ppic/workOrder.php';
 
 
-
-    // mengawas uts
     Route::controller(BarcodeController::class)->group(function () {
         Route::get('/barcode', 'index')->name('barcode');
         Route::get('/create-barcode', 'create')->name('barcode.create');

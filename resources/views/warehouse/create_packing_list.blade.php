@@ -70,6 +70,7 @@
                                         <th>No</th>
                                         <th>Change SO</th>
                                         <th>Barcode</th>
+                                        <th>Product Name</th>
                                         <th>Number Of Box</th>
                                         <th>Weight</th>
                                         <th>Action</th>
@@ -170,6 +171,7 @@
                                 '<td class="row-number">' + ($('#barcode-table tbody tr').length + 1) + '</td>' +
                                 '<td>' + ($('#change_so').val() || '') + '</td>' +
                                 '<td>' + $('#barcode').val() + '</td>' +
+                                '<td>' + (response.product_name || '') + '</td>' +
                                 (endsWithB($('#barcode').val()) ?
                                     '<td><input type="number" class="form-control number_of_box" data-id="' + response.id + '" name="number_of_box"></td>' +
                                     '<td><input type="number" class="form-control weight" data-id="' + response.id + '" name="weight"></td>' :
@@ -181,11 +183,20 @@
                             $('#change_so').val('');
                             $('#barcode').focus();
                         } else if (response.duplicate) {
-                            Swal.fire('Error', 'Barcode sudah terdaftar di packing list', 'error');
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Barcode sudah terdaftar di packing list',
+                            }).then(() => {
+                                $('#barcode').val('');
+                                $('#barcode').focus();
+                            });
                         } else {
                             $('#barcode-error').show();
                             setTimeout(function() {
                                 $('#barcode-error').hide();
+                                $('#barcode').val('');
+                                $('#barcode').focus();
                             }, 3000);
                         }
                     }

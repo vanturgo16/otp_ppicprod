@@ -120,7 +120,6 @@ class WarehouseController extends Controller
         $nextNumber = $lastPackingList ? intval(substr($lastPackingList->packing_number, 4)) + 1 : 1;
         return $yearMonth . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
     }
-
     public function checkBarcode(Request $request)
     {
         $barcode = $request->input('barcode');
@@ -139,16 +138,21 @@ class WarehouseController extends Controller
 
         $exists = false;
         $insertedId = null;
+        $productName = null;
+
         if ($changeSo) {
             // Validasi berdasarkan sales order
-            $exists = DB::table('barcodes')
+            $barcodeRecord = DB::table('barcodes')
                 ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
                 ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
+                ->join('master_product_fgs', 'sales_orders.id_master_products', '=', 'master_product_fgs.id') // Join untuk mendapatkan nama produk
                 ->where('barcode_detail.barcode_number', $barcode)
                 ->where('sales_orders.so_number', $changeSo)
-                ->exists();
+                ->select('barcode_detail.*', 'master_product_fgs.product_name')
+                ->first();
 
-            if ($exists) {
+            if ($barcodeRecord) {
+                $exists = true;
                 $insertedId = DB::table('packing_list_details')->insertGetId([
                     'barcode' => $barcode,
                     'id_sales_orders' => DB::table('sales_orders')->where('so_number', $changeSo)->value('id'),
@@ -156,26 +160,31 @@ class WarehouseController extends Controller
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);
+                $productName = $barcodeRecord->product_name; // Ambil nama produk
             }
         } else {
             // Validasi berdasarkan customer
-            $exists = DB::table('barcodes')
+            $barcodeRecord = DB::table('barcodes')
                 ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
+                ->join('master_product_fgs', 'barcodes.id_master_products', '=', 'master_product_fgs.id') // Join untuk mendapatkan nama produk
                 ->where('barcode_detail.barcode_number', $barcode)
                 ->where('barcodes.id_master_customers', $customerId)
-                ->exists();
+                ->select('barcode_detail.*', 'master_product_fgs.description')
+                ->first();
 
-            if ($exists) {
+            if ($barcodeRecord) {
+                $exists = true;
                 $insertedId = DB::table('packing_list_details')->insertGetId([
                     'barcode' => $barcode,
                     'id_packing_lists' => $packingListId,
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);
+                $productName = $barcodeRecord->description; // Ambil nama produk
             }
         }
 
-        return response()->json(['exists' => $exists, 'duplicate' => false, 'id' => $insertedId]);
+        return response()->json(['exists' => $exists, 'duplicate' => false, 'id' => $insertedId, 'product_name' => $productName]);
     }
 
 
