@@ -66,8 +66,10 @@
                                         <th>No</th>
                                         <th>Change SO</th>
                                         <th>Barcode</th>
+                                        <th>Product Name</th>
                                         <th>Number Of Box</th>
                                         <th>Weight</th>
+                                        <th>PCS</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -77,11 +79,12 @@
                                         <td class="row-number">{{ $index + 1 }}</td>
                                         <td>{{ $detail->id_sales_orders }}</td>
                                         <td>{{ $detail->barcode }}</td>
-                                        @if (str_ends_with($detail->barcode, 'B'))
-                                        <td><input type="number" class="form-control number_of_box" data-id="{{ $detail->id }}" name="number_of_box" value="{{ $detail->number_of_box }}"></td>
+                                        <td>{{ $detail->product_description }}</td>
+                                        <td><input type="number" class="form-control number_of_box" data-id="{{ $detail->id }}" name="number_of_box" value="{{ $index + 1 }}"></td>
                                         <td><input type="number" class="form-control weight" data-id="{{ $detail->id }}" name="weight" value="{{ $detail->weight }}"></td>
+                                        @if (str_ends_with($detail->barcode, 'B'))
+                                        <td><input type="number" class="form-control pcs" data-id="{{ $detail->id }}" name="pcs" value="{{ $detail->pcs }}"></td>
                                         @else
-                                        <td></td>
                                         <td></td>
                                         @endif
                                         <td><button type="button" class="btn btn-danger btn-sm remove-barcode">Remove</button></td>
@@ -151,10 +154,12 @@
                                 '<td class="row-number">' + ($('#barcode-table tbody tr').length + 1) + '</td>' +
                                 '<td>' + ($('#change_so').val() || '') + '</td>' +
                                 '<td>' + $('#barcode').val() + '</td>' +
-                                (endsWithB($('#barcode').val()) ?
-                                    '<td><input type="number" class="form-control number_of_box" data-id="' + response.id + '" name="number_of_box"></td>' +
-                                    '<td><input type="number" class="form-control weight" data-id="' + response.id + '" name="weight"></td>' :
-                                    '<td></td><td></td>') +
+                                '<td>' + (response.product_name || '') + '</td>' +
+                                (response.is_bag ?
+                                    '<td><input type="number" class="form-control number_of_box" data-id="' + response.id + '" name="number_of_box" value="' + ($('#barcode-table tbody tr')) + '"></td>' +
+                                    '<td><input type="number" class="form-control weight" data-id="' + response.id + '" name="weight"></td>' +
+                                    '<td><input type="number" class="form-control pcs" data-id="' + response.id + '" name="pcs"></td>' :
+                                    '<td></td><td></td><td></td>') +
                                 '<td><button type="button" class="btn btn-danger btn-sm remove-barcode">Remove</button></td>' +
                                 '</tr>';
                             $('#barcode-table tbody').append(newRow);
@@ -174,7 +179,7 @@
             }
         });
 
-        $(document).on('change', '.number_of_box, .weight', function() {
+        $(document).on('change', '.number_of_box, .weight, .pcs', function() {
             var id = $(this).data('id');
             var field = $(this).attr('name');
             var value = $(this).val();
@@ -203,6 +208,7 @@
         $(document).on('click', '.remove-barcode', function() {
             var row = $(this).closest('tr');
             var id = row.data('id');
+            var pcs = row.find('.pcs').val(); // Ambil nilai pcs sebelum menghapus
 
             $.ajax({
                 url: '{{ route("packing_list.remove_barcode") }}',
@@ -213,6 +219,26 @@
                 },
                 success: function(response) {
                     if (response.success) {
+                        var barcode = row.find('td:eq(2)').text();
+                        var isBag = barcode.slice(-1) === 'B';
+
+                        if (isBag) {
+                            $.ajax({
+                                url: '{{ route("adjust-stock") }}',
+                                method: 'POST',
+                                data: {
+                                    barcode: barcode,
+                                    pcs: pcs,
+                                    _token: '{{ csrf_token() }}'
+                                },
+                                success: function(response) {
+                                    if (!response.success) {
+                                        Swal.fire('Error', 'Gagal mengembalikan stok', 'error');
+                                    }
+                                }
+                            });
+                        }
+
                         row.remove();
                         updateRowNumbers();
                     } else {
@@ -222,13 +248,10 @@
             });
         });
 
-        function endsWithB(barcode) {
-            return barcode.slice(-1) === 'B';
-        }
-
         function updateRowNumbers() {
             $('#barcode-table tbody tr').each(function(index, row) {
                 $(row).find('.row-number').text(index + 1);
+                $(row).find('.number_of_box').val(index + 1); // Perbarui nilai Number Of Box
             });
         }
     });

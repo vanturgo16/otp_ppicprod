@@ -73,6 +73,7 @@
                                         <th>Product Name</th>
                                         <th>Number Of Box</th>
                                         <th>Weight</th>
+                                        <th>PCS</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -163,6 +164,7 @@
                         customer_id: $('#customer_id').val(),
                         change_so: $('#change_so').val(),
                         packing_list_id: $('#packing_list_id').val(),
+                        pcs: $('#pcs').val(), // Kirim nilai pcs jika ada
                         _token: '{{ csrf_token() }}'
                     },
                     success: function(response) {
@@ -172,10 +174,11 @@
                                 '<td>' + ($('#change_so').val() || '') + '</td>' +
                                 '<td>' + $('#barcode').val() + '</td>' +
                                 '<td>' + (response.product_name || '') + '</td>' +
-                                (endsWithB($('#barcode').val()) ?
-                                    '<td><input type="number" class="form-control number_of_box" data-id="' + response.id + '" name="number_of_box"></td>' +
-                                    '<td><input type="number" class="form-control weight" data-id="' + response.id + '" name="weight"></td>' :
-                                    '<td></td><td></td>') +
+                                '<td><input type="number" class="form-control number_of_box" data-id="' + response.id + '" name="number_of_box" value="' + ($('#barcode-table tbody tr')) + '"></td>' +
+                                '<td><input type="number" class="form-control weight" data-id="' + response.id + '" name="weight"></td>' +
+                                (response.is_bag ?
+                                    '<td><input type="number" class="form-control pcs" data-id="' + response.id + '" name="pcs" value="0"></td>' :
+                                    '<td></td>') +
                                 '<td><button type="button" class="btn btn-danger btn-sm remove-barcode">Remove</button></td>' +
                                 '</tr>';
                             $('#barcode-table tbody').append(newRow);
@@ -183,14 +186,7 @@
                             $('#change_so').val('');
                             $('#barcode').focus();
                         } else if (response.duplicate) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: 'Barcode sudah terdaftar di packing list',
-                            }).then(() => {
-                                $('#barcode').val('');
-                                $('#barcode').focus();
-                            });
+                            Swal.fire('Error', 'Barcode sudah terdaftar di packing list', 'error');
                         } else {
                             $('#barcode-error').show();
                             setTimeout(function() {
@@ -204,7 +200,7 @@
             }
         });
 
-        $(document).on('change', '.number_of_box, .weight', function() {
+        $(document).on('change', '.number_of_box, .weight, .pcs', function() {
             var id = $(this).data('id');
             var field = $(this).attr('name');
             var value = $(this).val();
@@ -233,9 +229,10 @@
         $(document).on('click', '.remove-barcode', function() {
             var row = $(this).closest('tr');
             var id = row.data('id');
+            var pcs = row.find('.pcs').val(); // Ambil nilai pcs sebelum menghapus
 
             $.ajax({
-                url: '{{ route("remove-barcode") }}',
+                url: '{{ route("packing_list.remove_barcode") }}',
                 method: 'POST',
                 data: {
                     id: id,
@@ -243,26 +240,39 @@
                 },
                 success: function(response) {
                     if (response.success) {
+                        var barcode = row.find('td:eq(2)').text();
+                        var isBag = barcode.slice(-1) === 'B';
+
+                        if (isBag) {
+                            $.ajax({
+                                url: '{{ route("adjust-stock") }}',
+                                method: 'POST',
+                                data: {
+                                    barcode: barcode,
+                                    pcs: pcs,
+                                    _token: '{{ csrf_token() }}'
+                                },
+                                success: function(response) {
+                                    if (!response.success) {
+                                        Swal.fire('Error', 'Gagal mengembalikan stok', 'error');
+                                    }
+                                }
+                            });
+                        }
+
                         row.remove();
                         updateRowNumbers();
                     } else {
-                        Swal.fire('Error', 'Gagal menghapus barcode', 'error');
+                        Swal.fire('Error', 'Gagal menghapus data barcode', 'error');
                     }
-                },
-                error: function(xhr, status, error) {
-                    console.log("AJAX Error:", xhr.responseText);
-                    Swal.fire('Error', 'Gagal menghapus barcode', 'error');
                 }
             });
         });
 
-        function endsWithB(barcode) {
-            return barcode.slice(-1) === 'B';
-        }
-
         function updateRowNumbers() {
             $('#barcode-table tbody tr').each(function(index, row) {
                 $(row).find('.row-number').text(index + 1);
+                $(row).find('.number_of_box').val(index + 1); // Perbarui nilai Number Of Box
             });
         }
     });

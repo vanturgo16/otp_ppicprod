@@ -120,12 +120,14 @@ class WarehouseController extends Controller
         $nextNumber = $lastPackingList ? intval(substr($lastPackingList->packing_number, 4)) + 1 : 1;
         return $yearMonth . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
     }
+
     public function checkBarcode(Request $request)
     {
         $barcode = $request->input('barcode');
         $customerId = $request->input('customer_id');
         $changeSo = $request->input('change_so');
         $packingListId = $request->input('packing_list_id');
+        $pcs = $request->input('pcs', 0);
 
         // Cek apakah barcode sudah ada di tabel packing_list_details
         $duplicate = DB::table('packing_list_details')
@@ -139,6 +141,7 @@ class WarehouseController extends Controller
         $exists = false;
         $insertedId = null;
         $productName = null;
+        $isBag = false;
 
         if ($changeSo) {
             // Validasi berdasarkan sales order
@@ -148,19 +151,30 @@ class WarehouseController extends Controller
                 ->join('master_product_fgs', 'sales_orders.id_master_products', '=', 'master_product_fgs.id') // Join untuk mendapatkan nama produk
                 ->where('barcode_detail.barcode_number', $barcode)
                 ->where('sales_orders.so_number', $changeSo)
-                ->select('barcode_detail.*', 'master_product_fgs.product_name')
+                ->where('barcodes.status', 'In Stock') // Tambahkan kondisi status
+                ->select('barcode_detail.*', 'master_product_fgs.product_name', 'master_product_fgs.id as product_id')
                 ->first();
 
             if ($barcodeRecord) {
                 $exists = true;
+                $productName = $barcodeRecord->product_name; // Ambil nama produk
+                $isBag = (substr($barcode, -1) === 'B');
+
                 $insertedId = DB::table('packing_list_details')->insertGetId([
                     'barcode' => $barcode,
                     'id_sales_orders' => DB::table('sales_orders')->where('so_number', $changeSo)->value('id'),
                     'id_packing_lists' => $packingListId,
+                    'pcs' => $isBag ? $pcs : 0, // Simpan jumlah pcs jika itu bag
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);
-                $productName = $barcodeRecord->product_name; // Ambil nama produk
+
+                // Kurangi stok jika barcode adalah bag
+                if ($isBag) {
+                    DB::table('master_product_fgs')
+                        ->where('id', $barcodeRecord->product_id)
+                        ->decrement('stock', $pcs);
+                }
             }
         } else {
             // Validasi berdasarkan customer
@@ -169,56 +183,125 @@ class WarehouseController extends Controller
                 ->join('master_product_fgs', 'barcodes.id_master_products', '=', 'master_product_fgs.id') // Join untuk mendapatkan nama produk
                 ->where('barcode_detail.barcode_number', $barcode)
                 ->where('barcodes.id_master_customers', $customerId)
-                ->select('barcode_detail.*', 'master_product_fgs.description')
+                ->where('barcodes.status', 'In Stock') // Tambahkan kondisi status
+                ->select('barcode_detail.*', 'master_product_fgs.description', 'master_product_fgs.id as product_id')
                 ->first();
 
             if ($barcodeRecord) {
                 $exists = true;
+                $productName = $barcodeRecord->description; // Ambil nama produk
+                $isBag = (substr($barcode, -1) === 'B');
+
                 $insertedId = DB::table('packing_list_details')->insertGetId([
                     'barcode' => $barcode,
                     'id_packing_lists' => $packingListId,
+                    'pcs' => $isBag ? $pcs : 0, // Simpan jumlah pcs jika itu bag
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);
-                $productName = $barcodeRecord->description; // Ambil nama produk
+
+                // Kurangi stok jika barcode adalah bag
+                if ($isBag) {
+                    DB::table('master_product_fgs')
+                        ->where('id', $barcodeRecord->product_id)
+                        ->decrement('stock', $pcs);
+                }
             }
         }
 
-        return response()->json(['exists' => $exists, 'duplicate' => false, 'id' => $insertedId, 'product_name' => $productName]);
+        return response()->json(['exists' => $exists, 'duplicate' => false, 'id' => $insertedId, 'product_name' => $productName, 'is_bag' => $isBag]);
     }
 
+    public function adjustStock(Request $request)
+    {
+        $barcode = $request->input('barcode');
+        $pcs = $request->input('pcs');
 
+        $product = DB::table('barcodes')
+            ->join('master_product_fgs', 'barcodes.id_master_products', '=', 'master_product_fgs.id')
+            ->where('barcode_detail.barcode_number', $barcode)
+            ->select('master_product_fgs.id as product_id')
+            ->first();
 
+        if ($product) {
+            try {
+                DB::table('master_product_fgs')
+                    ->where('id', $product->product_id)
+                    ->increment('stock', $pcs); // Kembalikan stok berdasarkan pcs
+
+                return response()->json(['success' => true]);
+            } catch (\Exception $e) {
+                return response()->json(['success' => false, 'error' => $e->getMessage()]);
+            }
+        } else {
+            return response()->json(['success' => false, 'error' => 'Product not found']);
+        }
+    }
     public function removeBarcode(Request $request)
     {
         $id = $request->input('id');
 
-        DB::table('packing_list_details')->where('id', $id)->delete();
+        // Ambil informasi barcode dari tabel packing_list_details
+        $barcodeDetail = DB::table('packing_list_details')->where('id', $id)->first();
 
-        return response()->json(['success' => true]);
+        if ($barcodeDetail) {
+            // Ambil informasi produk terkait dari tabel barcodes dan master_product_fgs
+            $barcodeRecord = DB::table('barcodes')
+                ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
+                ->join('master_product_fgs', 'barcodes.id_master_products', '=', 'master_product_fgs.id')
+                ->where('barcode_detail.barcode_number', $barcodeDetail->barcode)
+                ->select('master_product_fgs.id as product_id')
+                ->first();
+
+            if ($barcodeRecord) {
+                $barcode = $barcodeDetail->barcode;
+                $pcs = $barcodeDetail->pcs;
+
+                // Kembalikan stok ke jumlah sebelumnya
+                if (substr($barcode, -1) === 'B') {
+                    // Jika barcode adalah bag, kembalikan stok berdasarkan pcs
+                    DB::table('master_product_fgs')
+                        ->where('id', $barcodeRecord->product_id)
+                        ->increment('stock', $pcs);
+                } else {
+                    // Jika bukan bag, tambahkan stok sebesar 1 (atau sesuaikan jika diperlukan jumlah yang berbeda)
+                    DB::table('master_product_fgs')
+                        ->where('id', $barcodeRecord->product_id)
+                        ->increment('stock', 1);
+                }
+
+                // Hapus entri barcode dari tabel packing_list_details
+                DB::table('packing_list_details')->where('id', $id)->delete();
+
+                return response()->json(['success' => true]);
+            }
+        }
+
+        return response()->json(['success' => false, 'message' => 'Barcode not found']);
     }
+
+
     public function edit($id)
     {
         $packingList = DB::table('packing_lists')->where('id', $id)->first();
-        $details = DB::table('packing_list_details')->where('id_packing_lists', $id)->get();
+
+        $details = DB::table('packing_list_details')
+            ->join('barcode_detail', 'packing_list_details.barcode', '=', 'barcode_detail.barcode_number')
+            ->join('barcodes', 'barcodes.id', '=', 'barcode_detail.id_barcode')
+            ->join('master_product_fgs', 'barcodes.id_master_products', '=', 'master_product_fgs.id')
+            ->where('packing_list_details.id_packing_lists', $id)
+            ->select(
+                'packing_list_details.*',
+                'master_product_fgs.description as product_description'
+            )
+            ->get();
         $customer = DB::table('master_customers')->where('id', $packingList->id_master_customers)->first();
 
         return view('warehouse.edit', compact('packingList', 'details', 'customer'));
     }
 
 
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'date' => 'required|date',
-        ]);
 
-        $packingList = PackingList::findOrFail($id);
-        $packingList->date = $request->date;
-        $packingList->save();
-
-        return redirect()->route('packing-list')->with('success', 'Packing List updated successfully');
-    }
     public function updateBarcodeDetail(Request $request)
     {
         $id = $request->input('id');
@@ -226,12 +309,113 @@ class WarehouseController extends Controller
         $value = $request->input('value');
 
         try {
-            DB::table('packing_list_details')->where('id', $id)->update([$field => $value]);
-            return response()->json(['success' => true]);
+            $oldDetail = DB::table('packing_list_details')->where('id', $id)->first();
+
+            if ($field == 'barcode') {
+                $barcode = $value;
+                $customerId = $request->input('customer_id');
+                $changeSo = $request->input('change_so');
+
+                // Cek apakah barcode sudah ada di tabel packing_list_details
+                $duplicate = DB::table('packing_list_details')
+                    ->where('barcode', $barcode)
+                    ->where('id', '!=', $id)
+                    ->exists();
+
+                if ($duplicate) {
+                    return response()->json(['exists' => false, 'duplicate' => true]);
+                }
+
+                $exists = false;
+                $productName = null;
+                $isBag = false;
+
+                if ($changeSo) {
+                    // Validasi berdasarkan sales order
+                    $barcodeRecord = DB::table('barcodes')
+                        ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
+                        ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
+                        ->join('master_product_fgs', 'sales_orders.id_master_products', '=', 'master_product_fgs.id') // Join untuk mendapatkan nama produk
+                        ->where('barcode_detail.barcode_number', $barcode)
+                        ->where('sales_orders.so_number', $changeSo)
+                        ->where('barcodes.status', 'In Stock') // Tambahkan kondisi status
+                        ->select('barcode_detail.*', 'master_product_fgs.product_name', 'master_product_fgs.id as product_id')
+                        ->first();
+
+                    if ($barcodeRecord) {
+                        $exists = true;
+                        $productName = $barcodeRecord->product_name; // Ambil nama produk
+                        $isBag = (substr($barcode, -1) === 'B');
+                    }
+                } else {
+                    // Validasi berdasarkan customer
+                    $barcodeRecord = DB::table('barcodes')
+                        ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
+                        ->join('master_product_fgs', 'barcodes.id_master_products', '=', 'master_product_fgs.id') // Join untuk mendapatkan nama produk
+                        ->where('barcode_detail.barcode_number', $barcode)
+                        ->where('barcodes.id_master_customers', $customerId)
+                        ->where('barcodes.status', 'In Stock') // Tambahkan kondisi status
+                        ->select('barcode_detail.*', 'master_product_fgs.description', 'master_product_fgs.id as product_id')
+                        ->first();
+
+                    if ($barcodeRecord) {
+                        $exists = true;
+                        $productName = $barcodeRecord->description; // Ambil nama produk
+                        $isBag = (substr($barcode, -1) === 'B');
+                    }
+                }
+
+                if ($exists) {
+                    // Kembalikan stok untuk barcode lama
+                    $oldBarcodeRecord = DB::table('barcodes')
+                        ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
+                        ->join('master_product_fgs', 'barcodes.id_master_products', '=', 'master_product_fgs.id')
+                        ->where('barcode_detail.barcode_number', $oldDetail->barcode)
+                        ->select('master_product_fgs.id as product_id')
+                        ->first();
+
+                    if ($oldBarcodeRecord && substr($oldDetail->barcode, -1) === 'B') {
+                        DB::table('master_product_fgs')
+                            ->where('id', $oldBarcodeRecord->product_id)
+                            ->increment('stock', $oldDetail->pcs); // Mengembalikan stok berdasarkan pcs
+                    }
+
+                    // Perbarui detail barcode
+                    DB::table('packing_list_details')->where('id', $id)->update([$field => $value]);
+
+                    return response()->json(['success' => true, 'product_name' => $productName, 'is_bag' => $isBag]);
+                } else {
+                    return response()->json(['success' => false, 'error' => 'Barcode not found or not valid for the given conditions.']);
+                }
+            } else {
+                // Update pcs and adjust stock if it's a bag
+                if ($field == 'pcs' && $oldDetail && substr($oldDetail->barcode, -1) === 'B') {
+                    $barcodeRecord = DB::table('barcodes')
+                        ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
+                        ->join('master_product_fgs', 'barcodes.id_master_products', '=', 'master_product_fgs.id')
+                        ->where('barcode_detail.barcode_number', $oldDetail->barcode)
+                        ->select('master_product_fgs.id as product_id')
+                        ->first();
+
+                    if ($barcodeRecord) {
+                        $oldPcs = $oldDetail->pcs;
+                        $difference = $value - $oldPcs;
+
+                        DB::table('master_product_fgs')
+                            ->where('id', $barcodeRecord->product_id)
+                            ->decrement('stock', $difference); // Sesuaikan stok berdasarkan pcs baru
+                    }
+                }
+
+                DB::table('packing_list_details')->where('id', $id)->update([$field => $value]);
+                return response()->json(['success' => true]);
+            }
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'error' => $e->getMessage()]);
         }
     }
+
+
     public function printPackingList($id)
     {
         $packingList = DB::table('packing_lists')
