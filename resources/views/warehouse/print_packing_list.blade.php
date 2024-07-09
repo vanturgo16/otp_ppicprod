@@ -1,4 +1,3 @@
-<!-- resources/views/warehouse/print_packing_list.blade.php -->
 @extends('layouts.print')
 
 @section('content')
@@ -81,11 +80,11 @@
                             <td>{{ $detail->description }}</td>
                             <td>{{ $detail->barcode_number }}</td>
                             <td>{{ $detail->so_number }}</td>
-                            <td>1 {{ $detail->unit }}</td>
-                            <td>{{ $detail->weight ?? 'N/A' }} KG</td>
+                            <td>{{ substr($detail->barcode_number, -1) === 'B' ? $detail->pcs . ' PCS' : '0 ' . $detail->unit }}</td>
+                            <td>{{ substr($detail->barcode_number, -1) === 'B' ? ($detail->weight ?? 'N/A') : ($detail->production_weight ?? 'N/A') }} KG</td>
                             @php
-                            $totalRoll += 1;
-                            $totalWeight += $detail->weight ?? 0;
+                            $totalRoll += substr($detail->barcode_number, -1) === 'B' ? $detail->pcs : 0;
+                            $totalWeight += substr($detail->barcode_number, -1) === 'B' ? $detail->weight : $detail->production_weight;
                             @endphp
                         </tr>
                         @endforeach
@@ -95,7 +94,7 @@
         </div>
         <div class="row mt-4">
             <div class="col-12" style="float: right; text-align: right;">
-                <p><strong>Subtotal:</strong> {{ $totalRoll }} roll</p>
+                <p><strong>Subtotal:</strong> {{ $totalRoll }} {{$detail->unit}}</p>
                 <p><strong>Total Berat:</strong> {{ number_format($totalWeight, 2) }} KG</p>
             </div>
         </div>
