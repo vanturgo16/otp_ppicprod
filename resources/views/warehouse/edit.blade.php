@@ -80,7 +80,7 @@
                                         <td>{{ $detail->id_sales_orders }}</td>
                                         <td>{{ $detail->barcode }}</td>
                                         <td>{{ $detail->product_description }}</td>
-                                        <td><input type="number" class="form-control number_of_box" data-id="{{ $detail->id }}" name="number_of_box" value="{{ $index + 1 }}"></td>
+                                        <td><input type="number" class="form-control number_of_box" data-id="{{ $detail->id }}" name="number_of_box" value="{{ $detail->number_of_box }}"></td>
                                         <td><input type="number" class="form-control weight" data-id="{{ $detail->id }}" name="weight" value="{{ $detail->weight }}"></td>
                                         @if (str_ends_with($detail->barcode, 'B'))
                                         <td><input type="number" class="form-control pcs" data-id="{{ $detail->id }}" name="pcs" value="{{ $detail->pcs }}"></td>
@@ -156,7 +156,7 @@
                                 '<td>' + $('#barcode').val() + '</td>' +
                                 '<td>' + (response.product_name || '') + '</td>' +
                                 (response.is_bag ?
-                                    '<td><input type="number" class="form-control number_of_box" data-id="' + response.id + '" name="number_of_box" value="' + ($('#barcode-table tbody tr')) + '"></td>' +
+                                    '<td><input type="number" class="form-control number_of_box" data-id="' + response.id + '" name="number_of_box"></td>' +
                                     '<td><input type="number" class="form-control weight" data-id="' + response.id + '" name="weight"></td>' +
                                     '<td><input type="number" class="form-control pcs" data-id="' + response.id + '" name="pcs"></td>' :
                                     '<td></td><td></td><td></td>') +
@@ -167,7 +167,15 @@
                             $('#change_so').val('');
                             $('#barcode').focus();
                         } else if (response.duplicate) {
-                            Swal.fire('Error', 'Barcode sudah terdaftar di packing list', 'error');
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Barcode sudah terdaftar di packing list',
+                                didClose: () => {
+                                    // Kosongkan input barcode setelah pesan error ditutup
+                                    $('#barcode').val('').focus();
+                                }
+                            });
                         } else {
                             $('#barcode-error').show();
                             setTimeout(function() {
@@ -251,7 +259,6 @@
         function updateRowNumbers() {
             $('#barcode-table tbody tr').each(function(index, row) {
                 $(row).find('.row-number').text(index + 1);
-                $(row).find('.number_of_box').val(index + 1); // Perbarui nilai Number Of Box
             });
         }
     });

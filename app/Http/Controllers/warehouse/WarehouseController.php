@@ -151,7 +151,7 @@ class WarehouseController extends Controller
                 ->join('master_product_fgs', 'sales_orders.id_master_products', '=', 'master_product_fgs.id') // Join untuk mendapatkan nama produk
                 ->where('barcode_detail.barcode_number', $barcode)
                 ->where('sales_orders.so_number', $changeSo)
-                ->where('barcodes.status', 'In Stock') // Tambahkan kondisi status
+                ->where('barcode_detail.status', 'In Stock') // Tambahkan kondisi status
                 ->select('barcode_detail.*', 'master_product_fgs.product_name', 'master_product_fgs.id as product_id')
                 ->first();
 
@@ -175,6 +175,11 @@ class WarehouseController extends Controller
                         ->where('id', $barcodeRecord->product_id)
                         ->decrement('stock', $pcs);
                 }
+
+                // Update status di tabel barcode_detail
+                DB::table('barcode_detail')
+                    ->where('barcode_number', $barcode)
+                    ->update(['status' => 'Packing List']);
             }
         } else {
             // Validasi berdasarkan customer
@@ -183,7 +188,7 @@ class WarehouseController extends Controller
                 ->join('master_product_fgs', 'barcodes.id_master_products', '=', 'master_product_fgs.id') // Join untuk mendapatkan nama produk
                 ->where('barcode_detail.barcode_number', $barcode)
                 ->where('barcodes.id_master_customers', $customerId)
-                ->where('barcodes.status', 'In Stock') // Tambahkan kondisi status
+                ->where('barcode_detail.status', 'In Stock') // Tambahkan kondisi status
                 ->select('barcode_detail.*', 'master_product_fgs.description', 'master_product_fgs.id as product_id')
                 ->first();
 
@@ -206,6 +211,11 @@ class WarehouseController extends Controller
                         ->where('id', $barcodeRecord->product_id)
                         ->decrement('stock', $pcs);
                 }
+
+                // Update status di tabel barcode_detail
+                DB::table('barcode_detail')
+                    ->where('barcode_number', $barcode)
+                    ->update(['status' => 'Packing List']);
             }
         }
 
@@ -269,6 +279,11 @@ class WarehouseController extends Controller
                         ->where('id', $barcodeRecord->product_id)
                         ->increment('stock', 1);
                 }
+
+                // Update status barcode di tabel barcode_detail
+                DB::table('barcode_detail')
+                    ->where('barcode_number', $barcode)
+                    ->update(['status' => 'In Stock']);
 
                 // Hapus entri barcode dari tabel packing_list_details
                 DB::table('packing_list_details')->where('id', $id)->delete();
@@ -338,7 +353,7 @@ class WarehouseController extends Controller
                         ->join('master_product_fgs', 'sales_orders.id_master_products', '=', 'master_product_fgs.id') // Join untuk mendapatkan nama produk
                         ->where('barcode_detail.barcode_number', $barcode)
                         ->where('sales_orders.so_number', $changeSo)
-                        ->where('barcodes.status', 'In Stock') // Tambahkan kondisi status
+                        ->where('barcode_detail.status', 'In Stock') // Tambahkan kondisi status
                         ->select('barcode_detail.*', 'master_product_fgs.product_name', 'master_product_fgs.id as product_id')
                         ->first();
 
@@ -354,7 +369,7 @@ class WarehouseController extends Controller
                         ->join('master_product_fgs', 'barcodes.id_master_products', '=', 'master_product_fgs.id') // Join untuk mendapatkan nama produk
                         ->where('barcode_detail.barcode_number', $barcode)
                         ->where('barcodes.id_master_customers', $customerId)
-                        ->where('barcodes.status', 'In Stock') // Tambahkan kondisi status
+                        ->where('barcode_detail.status', 'In Stock') // Tambahkan kondisi status
                         ->select('barcode_detail.*', 'master_product_fgs.description', 'master_product_fgs.id as product_id')
                         ->first();
 
@@ -379,6 +394,16 @@ class WarehouseController extends Controller
                             ->where('id', $oldBarcodeRecord->product_id)
                             ->increment('stock', $oldDetail->pcs); // Mengembalikan stok berdasarkan pcs
                     }
+
+                    // Update status barcode lama di tabel barcode_detail
+                    DB::table('barcode_detail')
+                        ->where('barcode_number', $oldDetail->barcode)
+                        ->update(['status' => 'In Stock']);
+
+                    // Update status barcode baru di tabel barcode_detail
+                    DB::table('barcode_detail')
+                        ->where('barcode_number', $barcode)
+                        ->update(['status' => 'Packing List']);
 
                     // Perbarui detail barcode
                     DB::table('packing_list_details')->where('id', $id)->update([$field => $value]);
@@ -416,6 +441,7 @@ class WarehouseController extends Controller
     }
 
 
+
     public function printPackingList($id)
     {
         $packingList = DB::table('packing_lists')
@@ -445,17 +471,19 @@ class WarehouseController extends Controller
             ->select(
                 'master_product_fgs.product_code',
                 'master_product_fgs.description',
-                // 'master_product_fgs.cust_product_code',
                 'barcode_detail.barcode_number',
                 'sales_orders.so_number',
                 'master_units.unit',
-                DB::raw('COALESCE(report_blow_production_results.weight, report_sf_production_results.weight) as weight')
+                'packing_list_details.pcs',
+                'packing_list_details.weight',
+                DB::raw('COALESCE(report_blow_production_results.weight, report_sf_production_results.weight) as production_weight')
             )
             ->where('packing_list_details.id_packing_lists', $id)
             ->get();
 
         return view('warehouse.print_packing_list', compact('packingList', 'details'));
     }
+
 
     public function show($id)
     {
@@ -491,6 +519,34 @@ class WarehouseController extends Controller
     public function destroy($id)
     {
         DB::transaction(function () use ($id) {
+            // Ambil semua detail packing list
+            $details = DB::table('packing_list_details')->where('id_packing_lists', $id)->get();
+
+            foreach ($details as $detail) {
+                // Ambil informasi barcode dari tabel barcodes dan master_product_fgs
+                $barcodeRecord = DB::table('barcodes')
+                    ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
+                    ->join('master_product_fgs', 'barcodes.id_master_products', '=', 'master_product_fgs.id')
+                    ->where('barcode_detail.barcode_number', $detail->barcode)
+                    ->select('master_product_fgs.id as product_id')
+                    ->first();
+
+                if ($barcodeRecord) {
+                    // Kembalikan stok sesuai kondisi barcode
+                    if (substr($detail->barcode, -1) === 'B') {
+                        // Jika barcode berakhiran 'B', kembalikan stok berdasarkan pcs
+                        DB::table('master_product_fgs')
+                            ->where('id', $barcodeRecord->product_id)
+                            ->increment('stock', $detail->pcs);
+                    } else {
+                        // Jika barcode bukan berakhiran 'B', kembalikan stok berdasarkan jumlah barcode
+                        DB::table('master_product_fgs')
+                            ->where('id', $barcodeRecord->product_id)
+                            ->increment('stock', 1);
+                    }
+                }
+            }
+
             // Hapus detail packing list
             DB::table('packing_list_details')->where('id_packing_lists', $id)->delete();
 
@@ -499,5 +555,30 @@ class WarehouseController extends Controller
         });
 
         return redirect()->route('packing-list')->with('pesan', 'Data berhasil dihapus.');
+    }
+
+    public function update(Request $request, $id)
+    {
+        // Validasi input date
+        $request->validate([
+            'date' => 'required|date',
+        ]);
+
+        // Cari packing list berdasarkan id
+        $packingList = DB::table('packing_lists')->where('id', $id)->first();
+
+        if ($packingList) {
+            // Update tanggal pada tabel packing_lists
+            DB::table('packing_lists')->where('id', $id)->update([
+                'date' => $request->date,
+                'updated_at' => now()
+            ]);
+
+            // Redirect kembali ke halaman packing list dengan pesan sukses
+            return response()->json(['success' => true, 'message' => 'Packing List updated successfully']);
+        } else {
+            // Redirect kembali ke halaman packing list dengan pesan error jika tidak ditemukan
+            return response()->json(['success' => false, 'message' => 'Packing List not found']);
+        }
     }
 }
