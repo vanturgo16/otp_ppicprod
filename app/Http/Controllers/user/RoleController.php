@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
-
+use Illuminate\Support\Str;
 class RoleController extends Controller
 {
 
@@ -25,7 +25,7 @@ class RoleController extends Controller
      */
     public function index()
     {
-        $roles = Role::all();
+        $roles = Role::get();
 
         // latest()->when(request()->q, function ($roles) {
         //     $roles = $roles->where('name', 'like', '%' . request()->q . '%');
@@ -41,8 +41,25 @@ class RoleController extends Controller
      */
     public function create()
     {
+        // Retrieve all permissions
         $permissions = Permission::latest()->get();
-        return view('role.create', compact('permissions'));
+    
+        // Define the permission groups
+        $permissionsGroups = [
+            'Akunting', 'Warehouse', 'Marketing', 'Purchasing', 'Configuration', 'PPIC', 'Produksi'
+        ];
+    
+        // Group permissions based on predefined groups
+        $groupedPermissions = $permissions->groupBy(function($permission) use ($permissionsGroups) {
+            foreach ($permissionsGroups as $group) {
+                if (Str::contains($permission->name, $group)) {
+                    return $group;
+                }
+            }
+            return 'Other';
+        });
+    
+        return view('role.create', compact('groupedPermissions', 'permissionsGroups'));
     }
 
     /**

@@ -20,7 +20,7 @@ class PermissionController extends Controller
 
     public function index()
     {
-        $permissions = Permission::all();
+        $permissions = Permission::get();
         return view('permission.index', compact('permissions'));
       
     }
