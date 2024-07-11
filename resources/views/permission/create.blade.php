@@ -31,7 +31,7 @@
                         <div class="d-flex justify-content-between align-items-center">
 
                             <div>
-                                <a href="{{url('/permission/create') }}" class="btn btn-primary waves-effect waves-light">Back to Permissions</a>
+                                <a href="{{url('/permission') }}" class="btn btn-primary waves-effect waves-light">Back to Permissions</a>
                                 
                                 <!-- Include modal content -->
                                
