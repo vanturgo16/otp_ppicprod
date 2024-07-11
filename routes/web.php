@@ -9,6 +9,9 @@ use App\Http\Controllers\MstAccountTypesController;
 use App\Http\Controllers\TransDataBankController;
 use App\Http\Controllers\TransDataKasController;
 use App\Http\Controllers\barcode\BarcodeController;
+use App\Http\Controllers\user\PermissionController;
+use App\Http\Controllers\user\RoleController;
+use App\Http\Controllers\user\UserController;
 use App\Http\Controllers\warehouse\WarehouseController;
 use App\Http\Controllers\warehouse\DeliveryNoteController;
 
@@ -96,10 +99,37 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/create-barcode', 'create')->name('barcode.create');
         Route::post('/store-barcode', 'store')->name('post.create');
         Route::get('/cange-barcode-so/{id}', 'cange')->name('barcode.cange');
+        Route::get('/show-barcode/{id}', 'show')->name('show_barcode');
+        Route::get('/print-satuan-standar-barcode/{id}', 'print_satuan_standar')->name('print_satuan_standar');
         Route::get('/print-standar-barcode/{id}', 'print_standar')->name('print_standar');
         Route::get('/print-broker-barcode/{id}', 'print_broker')->name('print_broker');
         Route::get('/print-cbc-barcode/{id}', 'print_cbc')->name('print_cbc');
         Route::get('/table', 'table_print')->name('table_print');
+    });
+
+    // Permissions route group
+    Route::controller(PermissionController::class)->group(function () {
+        Route::get('/permission', 'index')->name('permission.index');
+        Route::get('/permission/json', 'jsonpermission')->name('permission.json');
+        Route::get('/permission/create', 'create')->name('permission.create');
+        Route::post('/permission', 'store')->name('permission.store');
+    });
+
+    // Role access management route group
+    Route::controller(RoleController::class)->group(function () {
+        Route::get('/role', 'index')->name('role.index');
+        Route::get('/role/create', 'create')->name('role.create');
+        Route::post('/role', 'store')->name('role.store');
+        Route::get('/role/edit/{role}', 'edit')->name('role.edit');
+        Route::patch('/role/update/{role}', 'update')->name('role.update');
+    });
+
+    Route::controller(UserController::class)->group(function () {
+        Route::get('/user', 'index')->name('user.index');
+        Route::get('/user/edit/{user}', 'edit')->name('user.edit');
+        Route::patch('/user/update/{user}', 'update');
+        Route::delete('/hapus-user/{user}', 'destroy');
+
     });
 
     Route::controller(WarehouseController::class)->group(function () {

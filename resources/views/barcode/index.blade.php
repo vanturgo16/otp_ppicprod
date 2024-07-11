@@ -29,28 +29,30 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="d-flex justify-content-between align-items-center">
-                            <form action="" method="GET" class="d-flex">
+                            <form action="{{ route('barcode') }}" method="GET" class="d-flex">
                                 <div class="form-group me-2">
                                     <label for="start_date">Start Date</label>
-                                    <input type="date" name="start_date" id="start_date" class="form-control">
+                                    <input type="date" name="start_date" id="start_date" class="form-control" value="{{ request('start_date') }}">
                                 </div>
                                 <div class="form-group me-2">
                                     <label for="end_date">End Date</label>
-                                    <input type="date" name="end_date" id="end_date" class="form-control">
+                                    <input type="date" name="end_date" id="end_date" class="form-control" value="{{ request('end_date') }}">
                                 </div>
-                                <div class="form-group me-2">
-                                    <label for="end_date">Work Centers</label>
-                                    <select class="form-select" name="barcode_type" id="barcode_type">
-                                        <option value="Barcode Blow Film">Barcode Blow Film</option>
-                                        <option value="Barcode Slitting">Barcode Slitting</option>
-                                        <option value="Barcode Folding">Barcode Folding</option>
-                                        <option value="Barcode Bag Making">Barcode Bag Making</option>
+                                {{-- <div class="form-group me-2">
+                                    <label for="work_center">Work Centers</label>
+                                    <select class="form-select" name="work_center" id="work_center">
+                                        <option value="">All Work Centers</option>
+                                        @foreach($work_centers as $center)
+                                            <option value="{{ $center }}" {{ request('work_center') == $center ? 'selected' : '' }}>Barcode {{ $center }}</option>
+                                        @endforeach
                                     </select>
-                                </div>
+                                </div> --}}
                                 <div class="form-group align-self-end">
                                     <button type="submit" class="btn btn-primary">Search</button>
                                 </div>
                             </form>
+                            
+                            
                             <div>
                                 <a href="/create-barcode" class="btn btn-primary waves-effect waves-light">Add New Generate Barcode</a>
                                 
@@ -74,6 +76,7 @@
                         <th>Group</th>
                         <th>staff</th>
                         <th>Creted_at</th>
+                        <th>jml</th>
                         <th>Action</th>
                     </tr>
                     </thead>
@@ -93,6 +96,7 @@
                         <td>{{ $data->shift }}</td>
                         <td>{{ $data->staff }}</td>
                         <td>{{ $data->created_at }}</td>
+                        <td><b>{{ $data->barcode_count }}</b></td>
                         <td>
                             <div class="btn-group">
                                 <button type="button" class="btn btn-success">Print</button>
@@ -109,7 +113,7 @@
 
                                 </div>
                             </div>
-                           
+                            <a href="{{ route('show_barcode', $data->id) }}" class="btn btn-primary waves-effect waves-light">Detail Barcode</a>
                         </td>
                     </tr>
                     @endforeach

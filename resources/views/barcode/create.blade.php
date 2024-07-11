@@ -46,7 +46,8 @@
                                                     data-id-master-products="{{ $data->id_master_products }}"
                                                     data-type-product-code="{{ $data->type_product_code }}"
                                                     data-group-sub-code="{{ $data->group_sub_code }}">
-                                                    {{ $data->wo_number }} {{ $data->status }} {{ $data->id }}
+                                                    {{ $data->wo_number }} {{ $data->status }} | {{ $data->note }} 
+                                                    {{-- {{ $data->id }} --}}
                                                 </option>
                                                 @endforeach
                                             </select>
@@ -86,10 +87,12 @@
 
                                     <div class="row mb-4 field-wrapper">
                                         <label for="horizontal-firstname-input" class="col-sm-3 col-form-label">QTY</label>
-                                        <div class="col-sm-9">
-                                            <input type="number" class="form-control" name="qty" value="">
+                                        <div class="col-sm-8">
+                                            <input type="number" class="form-control" name="qty" value="" placeholder="Masukan Qty">
                                         </div>
                                     </div>
+                                    
+                                    
                                     <div class="row left-content-end">
                                         <div class="col-sm-9">
                                             <div>

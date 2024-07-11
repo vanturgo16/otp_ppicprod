@@ -5,7 +5,7 @@
     <div class="container-fluid">
         <button onclick="window.print()" class="btn btn-primary no-print">Print</button>
         <div class="barcode-print">
-            @foreach ($barcodeDetails as $barcode)
+          
             <div class="barcode-item">
               
 <table class="barcode-table">
@@ -83,7 +83,7 @@
 </table>
 
             </div>
-            @endforeach
+           
         </div>
     </div>
 </div>

@@ -176,6 +176,8 @@
                             </a>
                         </li>
 
+                        
+
                         <li class="{{ request()->is('ppic/*') ? 'mm-active' : '' }}">
                         <a href="javascript: void(0);" class="has-arrow">
 								<i data-feather="briefcase"></i>
@@ -190,6 +192,18 @@
                                 {{-- <li><a href="{{ route('ppic.workOrder.index') }}"
                                         class="{{ request()->is('ppic/workOrder/*') ? 'active' : '' }}"><i
                                             data-feather="clipboard"></i>Word Order</a></li> --}}
+                            </ul>
+                    </li>
+                    <li class="{{ request()->is('user/*') ? 'mm-active' : '' }}">
+                        <a href="javascript: void(0);" class="has-arrow">
+								<i data-feather="users"></i>
+                                <span data-key="t-blog">User Management</span>
+                            </a>
+                            <ul class="sub-menu" aria-expanded="false">
+                                <li><a href="/user" data-key="t-blog-grid">Users</a></li>
+                                <li><a href="/permission" data-key="t-blog-grid">Permissions</a></li>
+                                <li><a href="/role" data-key="t-blog-grid">Account settings</a></li>
+                                
                             </ul>
                     </li>
 

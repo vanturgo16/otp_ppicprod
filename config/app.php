@@ -171,6 +171,7 @@ return [
         Milon\Barcode\BarcodeServiceProvider::class,
 
         Yajra\DataTables\DataTablesServiceProvider::class,
+        Spatie\Permission\PermissionServiceProvider::class,
     ])->toArray(),
 
     /*
