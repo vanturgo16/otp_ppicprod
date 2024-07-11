@@ -14,11 +14,11 @@
         <div class="row">
             <div class="col-12">
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                    <h4 class="mb-sm-0 font-size-18"> List Permissions</h4>
+                    <h4 class="mb-sm-0 font-size-18"> Edit User Access </h4>
                     <div class="page-title-right">
                         <ol class="breadcrumb m-0">
                             <li class="breadcrumb-item"><a href="javascript: void(0);">PPIC</a></li>
-                            <li class="breadcrumb-item active"> List Permissions</li>
+                            <li class="breadcrumb-item active"> Edit User Access </li>
                         </ol>
                     </div>
                 </div>
@@ -31,7 +31,7 @@
                         <div class="d-flex justify-content-between align-items-center">
 
                             <div>
-                                <a href="{{url('/permission/create') }}" class="btn btn-primary waves-effect waves-light">Add New Permissions</a>
+                                <a href="{{url('/user') }}" class="btn btn-primary waves-effect waves-light">Back to User</a>
                                 
                                 <!-- Include modal content -->
                                
