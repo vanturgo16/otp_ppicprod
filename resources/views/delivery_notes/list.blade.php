@@ -42,7 +42,7 @@
                                     <tr>
                                         <th>No</th>
                                         <th>DN Number</th>
-                                        <th>Packing Number</th>
+                                        <th>Packing Numbers</th>
                                         <th>PO Number</th>
                                         <th>Date</th>
                                         <th>DN Type</th>
@@ -132,8 +132,8 @@
                     orderable: true
                 },
                 {
-                    data: 'packing_number',
-                    name: 'packing_number',
+                    data: 'packing_numbers',
+                    name: 'packing_numbers',
                     orderable: true
                 },
                 {
@@ -235,7 +235,7 @@
                 buttons += `<a href="/delivery_notes/${data.id}/edit" class="btn btn-sm btn-warning">
                 <i class="bx bx-edit"></i> Edit
             </a>
-            <form action="/delete/${data.id}" method="post" class="d-inline" data-id="">
+            <form action="/delivery_notes/${data.id}" method="post" class="d-inline" data-id="">
                 @method('DELETE')
                 @csrf
                 <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Anda yakin mau menghapus item ini ?')">
