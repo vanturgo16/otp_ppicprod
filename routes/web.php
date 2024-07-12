@@ -121,20 +121,39 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/packing-list/{id}', 'destroy')->name('packing-list.destroy');
         Route::post('/adjust-stock', 'adjustStock')->name('adjust-stock');
     });
+
+    // Route::controller(DeliveryNoteController::class)->group(function () {
+    //     Route::get('delivery_notes/list', 'list')->name('delivery_notes.list');
+    //     Route::put('delivery_notes/{id}/post', 'post')->name('delivery_notes.post');
+    //     Route::put('delivery_notes/{id}/unpost', 'unpost')->name('delivery_notes.unpost');
+    //     Route::delete('delivery_notes/{id}', 'destroy')->name('delivery_notes.destroy');
+    //     Route::get('delivery_notes/{id}/show', 'show')->name('delivery_notes.show');
+    //     Route::get('delivery_notes/{id}/edit', 'edit')->name('delivery_notes.edit');
+    //     Route::put('delivery_notes/{id}/update', 'update')->name('delivery_notes.update');
+    //     Route::get('delivery_notes/create', 'create')->name('delivery_notes.create');
+    //     Route::post('delivery_notes', 'store')->name('delivery_notes.store');
+    //     Route::get('delivery_notes/{id}/print', 'print')->name('delivery_notes.print');
+    //     Route::get('getPackingListDetails/{id}', 'getPackingListDetails')->name('delivery_notes.getPackingListDetails');
+    //     Route::put('/delivery_note_details/{id}/remark', 'updateRemark')->name('delivery_note_details.updateRemark');
+
+    //     Route::get('delivery_notes/{id}/add_packing_list', 'addPackingList')->name('delivery_notes.add_packing_list');
+    //     Route::post('delivery_notes/{id}/store_packing_list', 'storePackingList')->name('delivery_notes.store_packing_list');
+    // });
     Route::controller(DeliveryNoteController::class)->group(function () {
-        Route::get('delivery_notes/list', 'list')->name('delivery_notes.list');
+        Route::get('delivery_notes', 'list')->name('delivery_notes.list');
+        Route::get('delivery_notes/create', 'create')->name('delivery_notes.create');
+        Route::post('delivery_notes', 'store')->name('delivery_notes.store');
+        Route::get('delivery_notes/{id}/add_packing_list', 'addPackingList')->name('delivery_notes.add_packing_list');
+        Route::post('delivery_notes/{id}/store_packing_list', 'storePackingList')->name('delivery_notes.store_packing_list');
+        Route::get('getPackingListDetails/{id}', 'getPackingListDetails')->name('delivery_notes.getPackingListDetails');
+        Route::get('getPackingListsByCustomer/{customerId}', 'getPackingListsByCustomer')->name('getPackingListsByCustomer');
         Route::put('delivery_notes/{id}/post', 'post')->name('delivery_notes.post');
         Route::put('delivery_notes/{id}/unpost', 'unpost')->name('delivery_notes.unpost');
         Route::delete('delivery_notes/{id}', 'destroy')->name('delivery_notes.destroy');
         Route::get('delivery_notes/{id}/show', 'show')->name('delivery_notes.show');
         Route::get('delivery_notes/{id}/edit', 'edit')->name('delivery_notes.edit');
         Route::put('delivery_notes/{id}/update', 'update')->name('delivery_notes.update');
-        Route::get('delivery_notes/create', 'create')->name('delivery_notes.create');
-        Route::post('delivery_notes', 'store')->name('delivery_notes.store');
         Route::get('delivery_notes/{id}/print', 'print')->name('delivery_notes.print');
-        Route::get('getPackingListDetails/{id}', 'getPackingListDetails')->name('delivery_notes.getPackingListDetails');
         Route::put('/delivery_note_details/{id}/remark', 'updateRemark')->name('delivery_note_details.updateRemark');
-
-        // Route::resource('delivery_notes', DeliveryNoteController::class)->except(['index', 'show']);
     });
 });

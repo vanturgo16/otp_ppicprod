@@ -174,7 +174,7 @@
                                 '<td>' + ($('#change_so').val() || '') + '</td>' +
                                 '<td>' + $('#barcode').val() + '</td>' +
                                 '<td>' + (response.product_name || '') + '</td>' +
-                                '<td><input type="number" class="form-control number_of_box" data-id="' + response.id + '" name="number_of_box" value="' + ($('#barcode-table tbody tr')) + '"></td>' +
+                                '<td><input type="number" class="form-control number_of_box" data-id="' + response.id + '" name="number_of_box"></td>' +
                                 '<td><input type="number" class="form-control weight" data-id="' + response.id + '" name="weight"></td>' +
                                 (response.is_bag ?
                                     '<td><input type="number" class="form-control pcs" data-id="' + response.id + '" name="pcs" value="0"></td>' :
@@ -186,13 +186,19 @@
                             $('#change_so').val('');
                             $('#barcode').focus();
                         } else if (response.duplicate) {
-                            Swal.fire('Error', 'Barcode sudah terdaftar di packing list', 'error');
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Barcode sudah terdaftar di packing list',
+                                didClose: () => {
+                                    // Kosongkan input barcode setelah pesan error ditutup
+                                    $('#barcode').val('').focus();
+                                }
+                            });
                         } else {
                             $('#barcode-error').show();
                             setTimeout(function() {
                                 $('#barcode-error').hide();
-                                $('#barcode').val('');
-                                $('#barcode').focus();
                             }, 3000);
                         }
                     }
@@ -272,7 +278,6 @@
         function updateRowNumbers() {
             $('#barcode-table tbody tr').each(function(index, row) {
                 $(row).find('.row-number').text(index + 1);
-                $(row).find('.number_of_box').val(index + 1); // Perbarui nilai Number Of Box
             });
         }
     });

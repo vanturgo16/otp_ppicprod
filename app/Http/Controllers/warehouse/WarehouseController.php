@@ -544,6 +544,11 @@ class WarehouseController extends Controller
                             ->where('id', $barcodeRecord->product_id)
                             ->increment('stock', 1);
                     }
+
+                    // Update status barcode di tabel barcode_detail
+                    DB::table('barcode_detail')
+                        ->where('barcode_number', $detail->barcode)
+                        ->update(['status' => 'In Stock']);
                 }
             }
 
@@ -556,6 +561,7 @@ class WarehouseController extends Controller
 
         return redirect()->route('packing-list')->with('pesan', 'Data berhasil dihapus.');
     }
+
 
     public function update(Request $request, $id)
     {
