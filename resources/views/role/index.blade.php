@@ -71,12 +71,12 @@
                                 @endforeach
                             </td>
                             <td class="text-center">
-                                {{-- @can('roles.edit')  --}}
-                                <a href="/role/edit/{{ $role->id }}" class="btn btn-sm btn-primary">EDIT
+                                {{-- @can('PPIC_roles.edit')  --}}
+                                <a href="/role/edit/{{ $role->id }}" class="btn btn-sm btn-primary">Edit
                                     {{-- <i class="icon-pencil"></i> --}}
                                 </a>
                                 {{-- @endcan  --}}
-                                {{-- @can('roles.delete')  --}}
+                                {{-- @can('PPIC_roles.delete')  --}}
                                 <button onClick="Delete(this.id)" class="btn btn-sm btn-danger" id="{{ $role->id }}">
                                     {{-- <i class="icon-trash"></i>  --}}Delete
                                 </button>
