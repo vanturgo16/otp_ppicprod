@@ -70,19 +70,19 @@
                                 </select>
                             </div>
                             <div class="mb-3">
-                                <label for="po_number" class="form-label">PO Number</label>
+                                <label for="po_number" class="form-label">Nomor PO</label>
                                 <input type="text" class="form-control" id="po_number" name="po_number" required>
                             </div>
                             <div class="mb-3">
-                                <label for="dn_type" class="form-label">DN Type</label>
+                                <label for="dn_type" class="form-label">Tipe DN</label>
                                 <input type="text" class="form-control" id="dn_type" name="dn_type" required>
                             </div>
                             <div class="mb-3">
-                                <label for="transaction_type" class="form-label">Transaction Type</label>
+                                <label for="transaction_type" class="form-label">Tipe Transaksi</label>
                                 <input type="text" class="form-control" id="transaction_type" name="transaction_type" required>
                             </div>
                             <div class="mb-3">
-                                <label for="salesman_name" class="form-label">Salesman Name</label>
+                                <label for="salesman_name" class="form-label">Nama Salesman</label>
                                 <input type="text" class="form-control" id="salesman_name" name="salesman_name" required>
                             </div>
                             <button type="submit" class="btn btn-primary">Tambah Packing List</button>
@@ -91,10 +91,10 @@
                             <table class="table table-bordered">
                                 <thead>
                                     <tr>
-                                        <th>Packing List Number</th>
-                                        <th>PO Number</th>
-                                        <th>DN Type</th>
-                                        <th>Transaction Type</th>
+                                        <th>Nomor Packing List</th>
+                                        <th>Nomor PO</th>
+                                        <th>Tipe DN</th>
+                                        <th>Tipe Transaksi</th>
                                         <th>Salesman</th>
                                     </tr>
                                 </thead>
@@ -115,6 +115,7 @@
 
         $('#delivery-note-form').on('submit', function(e) {
             e.preventDefault();
+            console.log("Form Delivery Note disubmit!"); // Debug statement
             var formData = $(this).serialize();
 
             $.ajax({
@@ -122,10 +123,11 @@
                 method: 'POST',
                 data: formData,
                 success: function(response) {
+                    console.log("Respon Form Delivery Note: ", response); // Debug statement
                     if (response.success) {
                         $('#delivery_note_id').val(response.delivery_note_id);
                         $('#packing-list-card').show();
-                        $('#delivery-note-form button[type="submit"]').text('Back').removeClass('btn-primary').addClass('btn-secondary'); // Ubah teks dan gaya tombol
+                        $('#delivery-note-form button[type="submit"]').text('Kembali').removeClass('btn-primary').addClass('btn-secondary');
                     } else {
                         alert(response.message || 'Gagal menyimpan data');
                     }
@@ -137,15 +139,46 @@
             });
         });
 
+        $('#packing_list').change(function() {
+            var packingListId = $(this).val();
+            console.log("Packing List dipilih: ", packingListId); // Debug statement
+
+            if (packingListId) {
+                loadPackingListDetails(packingListId);
+            }
+        });
+
+        function loadPackingListDetails(packingListId) {
+            $.ajax({
+                url: '{{ url("getPackingListDetails") }}/' + packingListId,
+                method: 'GET',
+                success: function(response) {
+                    console.log("Detail Packing List dimuat: ", response); // Debug statement
+                    $('#po_number').val(response.po_number);
+                    $('#dn_type').val(response.dn_type);
+                    $('#transaction_type').val(response.transaction_type);
+                    $('#salesman_name').val(response.salesman_name);
+                },
+                error: function(xhr) {
+                    console.error(xhr.responseText);
+                    alert('Gagal memuat detail Packing List');
+                }
+            });
+        }
+
         $('#packing-list-form').on('submit', function(e) {
             e.preventDefault();
+            console.log("Form Packing List disubmit!"); // Debug statement
             var formData = $(this).serialize();
+
+            console.log("Data Form: ", formData); // Debug statement
 
             $.ajax({
                 url: '{{ url("delivery_notes") }}/' + $('#delivery_note_id').val() + '/store_packing_list',
                 method: 'POST',
                 data: formData,
                 success: function(response) {
+                    console.log("Respon Form Packing List: ", response); // Debug statement
                     if (response.success) {
                         var packingListId = $('#packing_list').val();
                         var packingListNumber = $('#packing_list option:selected').text();
@@ -159,7 +192,7 @@
                             '</tr>'
                         );
                         $('#packing_list').val('').trigger('change');
-                        $('#delivery-note-form button[type="submit"]').text('Simpan').removeClass('btn-secondary').addClass('btn-primary'); // Kembalikan teks dan gaya tombol
+                        $('#delivery-note-form button[type="submit"]').text('Simpan').removeClass('btn-secondary').addClass('btn-primary');
                     } else {
                         alert(response.message || 'Gagal menambahkan packing list');
                     }
@@ -169,11 +202,11 @@
                     alert('Gagal menambahkan packing list');
                 }
             });
-
         });
 
         $('#customer').change(function() {
             var customerId = $(this).val();
+            console.log("Customer berubah: ", customerId); // Debug statement
             if (customerId) {
                 loadPackingLists(customerId);
             }
@@ -184,6 +217,7 @@
                 url: '{{ url("getPackingListsByCustomer") }}/' + customerId,
                 method: 'GET',
                 success: function(response) {
+                    console.log("Packing List dimuat: ", response); // Debug statement
                     $('#packing_list').empty().append('<option value="" selected disabled>** Pilih Packing List</option>');
                     $.each(response, function(key, value) {
                         $('#packing_list').append('<option value="' + value.id + '">' + value.packing_number + '</option>');
@@ -195,8 +229,8 @@
                 }
             });
         }
-
     });
 </script>
+
 @endpush
 @endsection

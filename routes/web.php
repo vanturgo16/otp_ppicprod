@@ -129,13 +129,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/user/edit/{user}', 'edit')->name('user.edit');
         Route::patch('/user/update/{user}', 'update');
         Route::delete('/hapus-user/{user}', 'destroy');
-
     });
 
     Route::controller(WarehouseController::class)->group(function () {
         Route::get('/packing-list', 'index')->name('packing-list');
         Route::get('/create-pl', 'create')->name('packing_list.create');
-        Route::post('/store-pl', 'create')->name('packing_list.store');
+        // Route::post('/store-pl', 'create')->name('packing_list.store');
         Route::get('/get-customers', 'getCustomers')->name('get-customers');
         Route::post('/check-barcode', 'checkBarcode')->name('check-barcode');
         Route::post('/packing-list-store', 'store')->name('packing_list.store');
