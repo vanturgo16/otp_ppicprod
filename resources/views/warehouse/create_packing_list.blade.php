@@ -20,7 +20,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-body">
-                        <form action="{{ route('packing_list.store') }}" method="POST" id="packing-list-form">
+                        <form action="/packing-list-store" method="POST" id="packing-list-form">
                             @csrf
                             <div class="mb-3">
                                 <label for="packing_number" class="form-label">Packing Number</label>

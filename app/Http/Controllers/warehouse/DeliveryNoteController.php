@@ -203,21 +203,17 @@ class DeliveryNoteController extends Controller
             ->join('master_salesmen', 'sales_orders.id_master_salesmen', '=', 'master_salesmen.id')
             ->join('master_customers', 'sales_orders.id_master_customers', '=', 'master_customers.id')
             ->select(
-                'sales_orders.id as sales_order_id',
-                'sales_orders.reference_number',
-                'sales_orders.so_number',
-                'sales_orders.so_category',
-                'sales_orders.so_type',
-                'master_salesmen.id as salesman_id',
-                'master_salesmen.name as salesman_name',
-                'master_customers.id as customer_id',
-                'master_customers.name as customer_name'
+                'sales_orders.reference_number as po_number',
+                'sales_orders.so_category as dn_type',
+                'sales_orders.so_type as transaction_type',
+                'master_salesmen.name as salesman_name'
             )
             ->where('packing_list_details.id_packing_lists', $id)
             ->first();
 
         return response()->json($details);
     }
+
 
     public function show($id)
     {
@@ -375,7 +371,7 @@ class DeliveryNoteController extends Controller
             ->first();
 
         // Jika data tidak ditemukan
-        if (!$deliveryNote atau !$packingListDetails) {
+        if (!$deliveryNote || !$packingListDetails) {
             return redirect()->route('delivery_notes.list')->with('pesan', 'Data Delivery Note tidak ditemukan.');
         }
 
@@ -403,13 +399,11 @@ class DeliveryNoteController extends Controller
     public function getPackingListsByCustomer($customerId)
     {
         $packingLists = DB::table('packing_lists')
-            ->join('sales_orders', 'packing_lists.id_sales_orders', '=', 'sales_orders.id')
+            ->join('sales_orders', 'packing_lists.id_master_customers', '=', 'sales_orders.id_master_customers')
             ->where('sales_orders.id_master_customers', $customerId)
             ->select('packing_lists.id', 'packing_lists.packing_number')
             ->get();
-    
+
         return response()->json($packingLists);
     }
-    
-
 }
