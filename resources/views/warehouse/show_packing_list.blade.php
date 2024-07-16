@@ -42,17 +42,21 @@
                                 <tr>
                                     <th>Change SO</th>
                                     <th>Barcode</th>
+                                    <th>Product Name</th>
                                     <th>Number Of Box</th>
                                     <th>Weight</th>
+                                    <th>PCS</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($details as $detail)
                                 <tr>
-                                    <td>{{ $detail->id_sales_orders }}</td>
+                                    <td>{{ $detail->change_so }}</td>
                                     <td>{{ $detail->barcode }}</td>
+                                    <td>{{ $detail->description }}</td>
                                     <td>{{ $detail->number_of_box }}</td>
                                     <td>{{ $detail->weight }}</td>
+                                    <td>{{ $detail->pcs }}</td>
                                 </tr>
                                 @endforeach
                             </tbody>

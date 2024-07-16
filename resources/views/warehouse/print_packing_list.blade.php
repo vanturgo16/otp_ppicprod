@@ -62,7 +62,7 @@
                             <th>No</th>
                             <th>Item Code</th>
                             <th>Description</th>
-                            <th>No. Lot</th>
+                            <th>Barcode</th>
                             <th>No. SO</th>
                             <th>Isi Dus</th>
                             <th>Berat</th>
