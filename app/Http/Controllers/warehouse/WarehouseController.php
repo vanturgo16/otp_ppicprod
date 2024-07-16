@@ -151,11 +151,14 @@ class WarehouseController extends Controller
                 ->join('master_product_fgs', 'sales_orders.id_master_products', '=', 'master_product_fgs.id') // Join untuk mendapatkan nama produk
                 ->where('barcode_detail.barcode_number', $barcode)
                 ->where('sales_orders.so_number', $changeSo)
-                ->where('barcode_detail.status', 'In Stock') // Tambahkan kondisi status
                 ->select('barcode_detail.*', 'master_product_fgs.product_name', 'master_product_fgs.id as product_id')
                 ->first();
 
             if ($barcodeRecord) {
+                if ($barcodeRecord->status !== 'In Stock') {
+                    return response()->json(['exists' => false, 'status' => false, 'message' => 'Barcode belum ada di stock']);
+                }
+
                 $exists = true;
                 $productName = $barcodeRecord->product_name; // Ambil nama produk
                 $isBag = (substr($barcode, -1) === 'B');
@@ -180,6 +183,8 @@ class WarehouseController extends Controller
                 DB::table('barcode_detail')
                     ->where('barcode_number', $barcode)
                     ->update(['status' => 'Packing List']);
+            } else {
+                return response()->json(['exists' => false, 'status' => false, 'message' => 'Barcode tidak sesuai dengan SO yang diberikan']);
             }
         } else {
             // Validasi berdasarkan customer
@@ -188,11 +193,14 @@ class WarehouseController extends Controller
                 ->join('master_product_fgs', 'barcodes.id_master_products', '=', 'master_product_fgs.id') // Join untuk mendapatkan nama produk
                 ->where('barcode_detail.barcode_number', $barcode)
                 ->where('barcodes.id_master_customers', $customerId)
-                ->where('barcode_detail.status', 'In Stock') // Tambahkan kondisi status
                 ->select('barcode_detail.*', 'master_product_fgs.description', 'master_product_fgs.id as product_id')
                 ->first();
 
             if ($barcodeRecord) {
+                if ($barcodeRecord->status !== 'In Stock') {
+                    return response()->json(['exists' => false, 'status' => false, 'message' => 'Barcode belum ada di stock']);
+                }
+
                 $exists = true;
                 $productName = $barcodeRecord->description; // Ambil nama produk
                 $isBag = (substr($barcode, -1) === 'B');
@@ -216,6 +224,8 @@ class WarehouseController extends Controller
                 DB::table('barcode_detail')
                     ->where('barcode_number', $barcode)
                     ->update(['status' => 'Packing List']);
+            } else {
+                return response()->json(['exists' => false, 'status' => false, 'message' => 'Barcode tidak sesuai dengan customer yang diberikan']);
             }
         }
 
@@ -494,11 +504,23 @@ class WarehouseController extends Controller
             ->first();
 
         $details = DB::table('packing_list_details')
-            ->where('id_packing_lists', $id)
+            ->join('barcode_detail', 'packing_list_details.barcode', '=', 'barcode_detail.barcode_number')
+            ->join('barcodes', 'barcode_detail.id_barcode', '=', 'barcodes.id')
+            ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
+            ->join('master_product_fgs', 'sales_orders.id_master_products', '=', 'master_product_fgs.id')
+            ->join('master_units', 'master_product_fgs.id_master_units', '=', 'master_units.id')
+            ->select(
+                'packing_list_details.*',
+                'sales_orders.so_number as change_so',
+                'master_product_fgs.description'
+            )
+            ->where('packing_list_details.id_packing_lists', $id)
             ->get();
 
         return view('warehouse.show_packing_list', compact('packingList', 'details'));
     }
+
+
     public function post($id)
     {
         $packingList = PackingList::find($id);
