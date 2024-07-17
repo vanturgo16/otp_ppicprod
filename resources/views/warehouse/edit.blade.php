@@ -111,6 +111,9 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
+        var today = new Date().toISOString().split('T')[0];
+        $('#date').val(today);
+
         $('#packing-list-edit-form').on('submit', function(e) {
             e.preventDefault();
 
@@ -171,6 +174,16 @@
                                 icon: 'error',
                                 title: 'Error',
                                 text: 'Barcode sudah terdaftar di packing list',
+                                didClose: () => {
+                                    // Kosongkan input barcode setelah pesan error ditutup
+                                    $('#barcode').val('').focus();
+                                }
+                            });
+                        } else if (!response.exists && response.status === false) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: response.message,
                                 didClose: () => {
                                     // Kosongkan input barcode setelah pesan error ditutup
                                     $('#barcode').val('').focus();
