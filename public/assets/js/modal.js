@@ -257,16 +257,18 @@ function lot_number_edit(id,lot_number,id_good_receipt_notes) {
   }
 
   function ext_lot_number(id) {
-    $.ajax({
-        type: 'GET',
-        data: { id: id }, // Mengirim id sebagai data dalam permintaan Ajax
-        success: function (response) {
-            $('#id_ext_lot').val(id); // Mengisi nilai dari elemen dengan ID 'idOke' dengan nilai 'id'
-        },
-        error: function (error) {
-            console.log(error);
-        }
-    });
+    // console.log(id);
+    $('#id_ext_lot').val(id);
+    // $.ajax({
+    //     type: 'GET',
+    //     data: { id: id }, // Mengirim id sebagai data dalam permintaan Ajax
+    //     success: function (response) {
+    //         $('#id_ext_lot').val(5); // Mengisi nilai dari elemen dengan ID 'idOke' dengan nilai 'id'
+    //     },
+    //     error: function (error) {
+    //         console.log(error);
+    //     }
+    // });
   }
 
 

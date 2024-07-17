@@ -889,49 +889,106 @@ class GrnController extends Controller
     }
     public function update_ext_lot_number(Request $request)
     {
-        // dd($request->lot_number);
-        // die;
-        $validatedData = DB::update("UPDATE `detail_good_receipt_note_details` SET `ext_lot_number` = '$request->ext_lot_number',qty='$request->qty' WHERE `id` = '$request->id';");
+        // Validasi data input
+        $request->validate([
+            'id' => 'required|integer',
+            'ext_lot_number' => 'required|string',
+            'qty' => 'required|numeric',
+        ]);
 
+        // Update tabel detail_good_receipt_note_details
+        $statusUpdate = DB::table('detail_good_receipt_note_details')
+            ->where('id', $request->id)
+            ->update([
+                'ext_lot_number' => $request->ext_lot_number,
+                'qty' => $request->qty,
+            ]);
+
+        // Cek apakah update berhasil
+        if (!$statusUpdate) {
+            return redirect()->back()->with('error', 'Gagal mengupdate data');
+        }
+
+        // Ambil id_grn_detail
         $id_grn_detail = DetailGoodReceiptNoteDetail::select('id_grn_detail')->where('id', $request->id)->first();
 
+        if (!$id_grn_detail) {
+            return redirect()->back()->with('error', 'ID tidak ditemukan');
+        }
+
+        // Ambil id_master_products
         $result = GoodReceiptNoteDetail::select('id_master_products')->where('id', $id_grn_detail->id_grn_detail)->first();
-        $id_master_products=$result->id_master_products;
+        $id_master_products = $result->id_master_products;
 
-        $stockk = DB::table('master_raw_materials')
-        ->select('stock')
-        ->where('id', $id_master_products)
-        ->first();
+        // Ambil type_product
+        $type_product = GoodReceiptNoteDetail::select('type_product')->where('id', $id_grn_detail->id_grn_detail)->first();
 
-        $stok=$stockk->stock;
-        // dd($stok);
-        // die;
-        $tmbhstok = $stok+$request->qty;
+        if (!$type_product) {
+            return redirect()->back()->with('error', 'Tipe produk tidak ditemukan');
+        }
 
-        $validatedData = DB::update("UPDATE `master_raw_materials` SET `stock` = '$tmbhstok' WHERE `id` = '$id_master_products'");
-        
+        // Ambil stok saat ini dan tabel yang sesuai berdasarkan tipe produk
+        switch ($type_product->type_product) {
+            case 'RM':
+                $stock = DB::table('master_raw_materials')->select('stock')->where('id', $id_master_products)->first();
+                $table = 'master_raw_materials';
+                break;
+            case 'WIP':
+                $stock = DB::table('master_wips')->select('stock')->where('id', $id_master_products)->first();
+                $table = 'master_wips';
+                break;
+            case 'TA':
+                $stock = DB::table('master_tool_auxiliaries')->select('stock')->where('id', $id_master_products)->first();
+                $table = 'master_tool_auxiliaries';
+                break;
+            case 'FG':
+                $stock = DB::table('master_product_fgs')->select('stock')->where('id', $id_master_products)->first();
+                $table = 'master_product_fgs';
+                break;
+            default:
+                return redirect()->back()->with('error', 'Tipe produk tidak valid');
+        }
+
+        if (!$stock) {
+            return redirect()->back()->with('error', 'Stok tidak ditemukan');
+        }
+
+        // Update stok
+        $stokBaru = $stock->stock + $request->qty;
+        $statusUpdateStok = DB::table($table)
+            ->where('id', $id_master_products)
+            ->update(['stock' => $stokBaru]);
+
+        if (!$statusUpdateStok) {
+            return redirect()->back()->with('error', 'Gagal mengupdate stok');
+        }
+
+        // Ambil data good_receipt_note_details
         $allStocks = DB::table('good_receipt_note_details')
-        ->where('id', $id_grn_detail->id_grn_detail)
-        ->first(); 
-       
+            ->where('id', $id_grn_detail->id_grn_detail)
+            ->first();
 
-        $validatedData = DB::table('history_stocks')->insert([
+        if (!$allStocks) {
+            return redirect()->back()->with('error', 'Detail penerimaan barang tidak ditemukan');
+        }
+
+        // Insert record baru ke tabel history_stocks
+        $statusInsert = DB::table('history_stocks')->insert([
             'id_good_receipt_notes_details' => $allStocks->id,
             'type_product' => $allStocks->type_product,
             'id_master_products' => $allStocks->id_master_products,
-            'qty' => $tmbhstok,
+            'qty' => $request->qty,
             'type_stock' => 'IN',
             'date' => DB::raw('CURRENT_DATE()')
         ]);
 
-        if ($validatedData) {
-            return redirect('/external-no-lot')->with('pesan', 'Data berhasil ditambahkan');
-        } else {
-            // Penanganan jika $id tidak ditemukan
-            return redirect()->back()->with('error', 'ID tidak ditemukan');
+        if (!$statusInsert) {
+            return redirect()->back()->with('error', 'Gagal menambahkan catatan riwayat stok');
         }
-        
+
+        return redirect('/external-no-lot')->with('pesan', 'Data berhasil ditambahkan');
     }
+
     public function detail_external_no_lot ($lot_number)
     {
         // dd($id);
