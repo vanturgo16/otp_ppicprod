@@ -111,6 +111,8 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        var today = new Date().toISOString().split('T')[0];
+        $('#date').val(today);
         $('.select2').select2();
 
         $('#delivery-note-form').on('submit', function(e) {
