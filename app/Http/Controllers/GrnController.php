@@ -85,7 +85,7 @@ class GrnController extends Controller
     }
     public function grn_pr_add(){
 
-        $pr = PurchaseRequisitions::all();
+        $pr = PurchaseRequisitions::where('status', 'Posted')->get();
 
         // Ambil nomor urut terakhir dari database
         $lastCode = GoodReceiptNote::orderBy('created_at', 'desc')
@@ -105,7 +105,9 @@ class GrnController extends Controller
     }
     public function grn_po_add(){
         // Ambil nomor urut terakhir dari database
-        $po = DB::table('purchase_orders')->get();
+        $po = DB::table('purchase_orders')
+        ->where('status', 'Posted')
+        ->get();
 
         $lastCode = GoodReceiptNote::orderBy('created_at', 'desc')
         ->value(DB::raw('RIGHT(receipt_number, 7)'));
@@ -1047,17 +1049,28 @@ class GrnController extends Controller
     }
     public function posted_grn($id)
     {
-        $idx=$id;
-        $validatedData = DB::update("UPDATE `good_receipt_notes` SET `status` = 'Posted' WHERE `id` = '$idx';");
+        $idx = $id;
 
-        if ($validatedData) {
-            //redirect dengan pesan sukses
+        // Ambil po_number dari tabel good_receipt_notes berdasarkan id
+        $poNumber = DB::table('good_receipt_notes')
+            ->where('id', $idx)
+            ->value('id_purchase_orders');
+
+        // Perbarui status pada good_receipt_notes
+        $validatedData1 = DB::update("UPDATE `good_receipt_notes` SET `status` = 'Posted' WHERE `id` = ?", [$idx]);
+
+        // Perbarui status pada purchase_orders
+        $validatedData2 = DB::update("UPDATE `purchase_orders` SET `status` = 'Closed' WHERE `id` = ?", [$poNumber]);
+
+        if ($validatedData1 && $validatedData2) {
+            // Redirect dengan pesan sukses
             return Redirect::to('/good-receipt-note')->with('pesan', 'Data berhasil diposted.');
         } else {
-            //redirect dengan pesan error
+            // Redirect dengan pesan error
             return Redirect::to('/good-receipt-note')->with('pesan', 'Data gagal diposted.');
         }
     }
+
     public function unposted_grn($id)
     {
         $idx=$id;

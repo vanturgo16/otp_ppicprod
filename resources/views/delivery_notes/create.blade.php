@@ -40,6 +40,12 @@
                                 </select>
                             </div>
                             <div class="mb-3">
+                                <label for="customer_address" class="form-label">Alamat Customer</label>
+                                <select class="form-control select2" id="customer_address" name="id_master_customer_addresses" required>
+                                    <option value="" selected disabled>** Pilih Alamat Customer</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
                                 <label for="vehicle" class="form-label">Kendaraan</label>
                                 <select class="form-control select2" id="vehicle" name="id_master_vehicle" required>
                                     <option value="" selected disabled>** Pilih Kendaraan</option>
@@ -111,8 +117,6 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
-        var today = new Date().toISOString().split('T')[0];
-        $('#date').val(today);
         $('.select2').select2();
 
         $('#delivery-note-form').on('submit', function(e) {
@@ -211,6 +215,7 @@
             console.log("Customer berubah: ", customerId); // Debug statement
             if (customerId) {
                 loadPackingLists(customerId);
+                loadCustomerAddresses(customerId); // Panggil fungsi untuk memuat alamat customer
             }
         });
 
@@ -228,6 +233,24 @@
                 error: function(xhr) {
                     console.error(xhr.responseText);
                     alert('Gagal memuat daftar Packing List');
+                }
+            });
+        }
+
+        function loadCustomerAddresses(customerId) {
+            $.ajax({
+                url: '{{ url("get-customer-addresses") }}/' + customerId,
+                method: 'GET',
+                success: function(response) {
+                    console.log("Alamat Customer dimuat: ", response); // Debug statement
+                    $('#customer_address').empty().append('<option value="" selected disabled>** Pilih Alamat Customer</option>');
+                    $.each(response, function(key, value) {
+                        $('#customer_address').append('<option value="' + value.id + '">' + value.address + '</option>');
+                    });
+                },
+                error: function(xhr) {
+                    console.error(xhr.responseText);
+                    alert('Gagal memuat alamat customer');
                 }
             });
         }
