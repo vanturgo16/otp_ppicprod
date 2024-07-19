@@ -511,7 +511,7 @@ class WarehouseController extends Controller
             ->join('master_units', 'master_product_fgs.id_master_units', '=', 'master_units.id')
             ->select(
                 'packing_list_details.*',
-                'sales_orders.so_number as change_so',
+                'packing_list_details.id_sales_orders as change_so',
                 'master_product_fgs.description'
             )
             ->where('packing_list_details.id_packing_lists', $id)
