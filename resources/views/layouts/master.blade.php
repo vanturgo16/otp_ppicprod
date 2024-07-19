@@ -212,6 +212,26 @@
                     </li>
                     @endcan
 
+                     @can('Warehouse') 
+                        <li class="{{ request()->is('ppic/*') ? 'mm-active' : '' }}">
+                        <a href="javascript: void(0);" class="has-arrow">
+								<i data-feather="folder"></i>
+                                <span data-key="t-blog">Warehouse</span>
+                            </a>
+                            <ul class="sub-menu" aria-expanded="false">
+                                @can('Warehouse_packing_list') 
+                                <li><a href="/packing-list" data-key="t-blog-grid">Good Receipt Note</a></li>
+                                @endcan
+
+                                @can('Warehouse_delivery_notes') 
+                                <li><a href="/delivery_notes" data-key="t-blog-grid">Good Lote Number</a></li>
+                                @endcan
+
+                               
+                            </ul>
+                    </li>
+                    @endcan
+
                     @can('PPIC_user_management') 
                     <li class="{{ request()->is('user/*') ? 'mm-active' : '' }}">
                         <a href="javascript: void(0);" class="has-arrow">
