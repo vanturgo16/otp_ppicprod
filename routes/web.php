@@ -184,5 +184,6 @@ Route::middleware(['auth'])->group(function () {
         Route::put('delivery_notes/{id}/update', 'update')->name('delivery_notes.update');
         Route::get('delivery_notes/{id}/print', 'print')->name('delivery_notes.print');
         Route::put('/delivery_note_details/{id}/remark', 'updateRemark')->name('delivery_note_details.updateRemark');
+        Route::get('get-customer-addresses/{customerId}', 'getCustomerAddresses')->name('get-customer-addresses');
     });
 });

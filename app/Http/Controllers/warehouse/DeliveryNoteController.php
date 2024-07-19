@@ -104,6 +104,7 @@ class DeliveryNoteController extends Controller
                 'date' => 'required|date',
                 'id_master_customer' => 'required',
                 'id_master_vehicle' => 'required',
+                'id_master_customer_addresses' => 'required',
                 'note' => 'nullable|string',
             ]);
 
@@ -113,6 +114,7 @@ class DeliveryNoteController extends Controller
                 'date' => $validatedData['date'],
                 'id_master_customers' => $validatedData['id_master_customer'],
                 'id_master_vehicles' => $validatedData['id_master_vehicle'],
+                'id_master_customer_addresses' => $validatedData['id_master_customer_addresses'],
                 'note' => $validatedData['note'] ?? null,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -214,6 +216,13 @@ class DeliveryNoteController extends Controller
         return response()->json($details);
     }
 
+    public function getCustomerAddresses($customerId)
+    {
+        $addresses = DB::table('master_customer_addresses')
+            ->where('id_master_customers', $customerId)
+            ->get();
+        return response()->json($addresses);
+    }
 
     public function show($id)
     {
