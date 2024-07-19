@@ -1074,9 +1074,19 @@ class GrnController extends Controller
     public function unposted_grn($id)
     {
         $idx=$id;
+
+        // Ambil po_number dari tabel good_receipt_notes berdasarkan id
+        $poNumber = DB::table('good_receipt_notes')
+        ->where('id', $idx)
+        ->value('id_purchase_orders');
+
+
         $validatedData = DB::update("UPDATE `good_receipt_notes` SET `status` = 'Un Posted' WHERE `id` = '$idx';");
 
-        if ($validatedData) {
+        // Perbarui status pada purchase_orders
+        $validatedData2 = DB::update("UPDATE `purchase_orders` SET `status` = 'Posted' WHERE `id` = ?", [$poNumber]);
+
+        if ($validatedData && $validatedData2) {
             //redirect dengan pesan sukses
             return Redirect::to('/good-receipt-note')->with('pesan', 'Data berhasil diunposted.');
         } else {
