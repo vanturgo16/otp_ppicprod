@@ -91,7 +91,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/external-no-lot', [GrnController::class, 'external_no_lot'])->name('external_no_lot');
     Route::put('/update_ext_lot_number', [GrnController::class, 'update_ext_lot_number'])->name('update_ext_lot_number');
     Route::get('/detail-external-no-lot/{lot_number}', [GrnController::class, 'detail_external_no_lot'])->name('detail_external_no_lot');
-    include __DIR__ . '/ppic/workOrder.php';
+    include __DIR__ . '/ppic/workOrder.php'; //include route
 
 
     Route::controller(BarcodeController::class)->group(function () {
