@@ -104,6 +104,7 @@ class DeliveryNoteController extends Controller
                 'date' => 'required|date',
                 'id_master_customer' => 'required',
                 'id_master_vehicle' => 'required',
+                'id_master_customer_addresses' => 'required',
                 'note' => 'nullable|string',
             ]);
 
@@ -113,6 +114,7 @@ class DeliveryNoteController extends Controller
                 'date' => $validatedData['date'],
                 'id_master_customers' => $validatedData['id_master_customer'],
                 'id_master_vehicles' => $validatedData['id_master_vehicle'],
+                'id_master_customer_addresses' => $validatedData['id_master_customer_addresses'],
                 'note' => $validatedData['note'] ?? null,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -214,6 +216,13 @@ class DeliveryNoteController extends Controller
         return response()->json($details);
     }
 
+    public function getCustomerAddresses($customerId)
+    {
+        $addresses = DB::table('master_customer_addresses')
+            ->where('id_master_customers', $customerId)
+            ->get();
+        return response()->json($addresses);
+    }
 
     public function show($id)
     {
@@ -240,100 +249,87 @@ class DeliveryNoteController extends Controller
     public function edit($id)
     {
         $deliveryNote = DB::table('delivery_notes')
-            ->join('packing_lists', 'delivery_notes.id_packing_lists', '=', 'packing_lists.id')
-            ->join('sales_orders', 'delivery_notes.po_number', '=', 'sales_orders.id') // Assuming po_number in delivery_notes stores sales_order_id
-            ->join('master_customers', 'sales_orders.id_master_customers', '=', 'master_customers.id')
-            ->join('master_salesmen', 'sales_orders.id_master_salesmen', '=', 'master_salesmen.id')
+            ->join('master_customers', 'delivery_notes.id_master_customers', '=', 'master_customers.id')
             ->join('master_vehicles', 'delivery_notes.id_master_vehicles', '=', 'master_vehicles.id')
             ->select(
                 'delivery_notes.*',
-                'packing_lists.packing_number',
-                'sales_orders.reference_number',
-                'sales_orders.so_number',
                 'master_customers.name as customer_name',
-                'master_salesmen.name as salesman_name',
-                'master_vehicles.vehicle_number'
+                'master_vehicles.vehicle_number as vehicle_number'
             )
             ->where('delivery_notes.id', $id)
             ->first();
 
-        $packingLists = DB::table('packing_lists')->select('id', 'packing_number')->get();
+        $packingLists = DB::table('packing_lists')
+            ->where('id_master_customers', $deliveryNote->id_master_customers)
+            ->select('id', 'packing_number')
+            ->get();
+
         $vehicles = DB::table('master_vehicles')->select('id', 'vehicle_number')->get();
 
-        return view('delivery_notes.edit', compact('deliveryNote', 'packingLists', 'vehicles'));
+        $customerAddresses = DB::table('master_customer_addresses')
+            ->where('id_master_customers', $deliveryNote->id_master_customers)
+            ->select('id', 'address')
+            ->get();
+
+        $deliveryNoteDetails = DB::table('delivery_note_details')
+            ->join('packing_lists', 'delivery_note_details.id_packing_lists', '=', 'packing_lists.id')
+            ->join('sales_orders', 'delivery_note_details.id_sales_orders', '=', 'sales_orders.id')
+            ->join('master_salesmen', 'delivery_note_details.id_master_salesman', '=', 'master_salesmen.id')
+            ->select(
+                'packing_lists.packing_number',
+                'sales_orders.reference_number as po_number',
+                'delivery_note_details.dn_type',
+                'delivery_note_details.transaction_type',
+                'master_salesmen.name as salesman_name'
+            )
+            ->where('delivery_note_details.id_delivery_notes', $id)
+            ->get();
+
+        return view('delivery_notes.edit', compact('deliveryNote', 'packingLists', 'vehicles', 'customerAddresses', 'deliveryNoteDetails'));
     }
+
+
 
     public function update(Request $request, $id)
     {
         $validatedData = $request->validate([
             'dn_number' => 'required|unique:delivery_notes,dn_number,' . $id,
-            'id_packing_lists' => 'required',
             'date' => 'required|date',
-            'po_number' => 'required',
             'id_master_customer' => 'required',
-            'customer_name' => 'required',
-            'dn_type' => 'required',
-            'transaction_type' => 'required',
             'id_master_salesman' => 'required',
-            'salesman_name' => 'required',
             'id_master_vehicle' => 'required',
-            'note' => 'required',
+            'id_master_customer_addresses' => 'required',
+            'note' => 'nullable|string',
             'status' => 'required',
         ]);
 
-        // Mengambil data quantity dan weight dari packing list details dan produksi
-        $packingListDetails = DB::table('packing_list_details')
-            ->join('barcode_detail', 'packing_list_details.barcode', '=', 'barcode_detail.barcode_number')
-            ->join('barcodes', 'barcode_detail.id_barcode', '=', 'barcodes.id')
-            ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
-            ->join('master_product_fgs', 'sales_orders.id_master_products', '=', 'master_product_fgs.id')
-            ->join('master_units', 'master_product_fgs.id_master_units', '=', 'master_units.id')
-            ->leftJoin('report_sf_production_results', 'packing_list_details.barcode', '=', 'report_sf_production_results.barcode')
-            ->leftJoin('report_blow_production_results', 'packing_list_details.barcode', '=', 'report_blow_production_results.barcode')
-            ->leftJoin('report_bag_production_results', 'packing_list_details.barcode', '=', 'report_bag_production_results.barcode')
-            ->where('packing_list_details.id_packing_lists', $validatedData['id_packing_lists'])
-            ->select(
-                DB::raw('COUNT(packing_list_details.barcode) as total_qty'),
-                DB::raw('SUM(CASE 
-                            WHEN packing_list_details.barcode LIKE "%B" THEN packing_list_details.weight
-                            ELSE COALESCE(report_sf_production_results.weight, report_blow_production_results.weight, report_bag_production_results.weight_starting)
-                        END) as total_weight'),
-                'master_units.id as id_master_unit'
-            )
-            ->groupBy('master_units.id')
-            ->first();
+        try {
+            DB::beginTransaction();
 
-        // Update data delivery_note
-        DB::table('delivery_notes')
-            ->where('id', $id)
-            ->update([
-                'dn_number' => $validatedData['dn_number'],
-                'date' => $validatedData['date'],
-                'id_packing_lists' => $validatedData['id_packing_lists'],
-                'po_number' => $validatedData['po_number'], // Store sales_order_id
-                'id_master_customers' => $validatedData['id_master_customer'],
-                'dn_type' => $validatedData['dn_type'],
-                'transaction_type' => $validatedData['transaction_type'],
-                'id_master_salesman' => $validatedData['id_master_salesman'],
-                'id_master_vehicles' => $validatedData['id_master_vehicle'],
-                'note' => $validatedData['note'] ?? null,
-                'status' => $validatedData['status'],
-                'updated_at' => now(),
-            ]);
+            // Update data delivery_note
+            DB::table('delivery_notes')
+                ->where('id', $id)
+                ->update([
+                    'dn_number' => $validatedData['dn_number'],
+                    'date' => $validatedData['date'],
+                    'id_master_customers' => $validatedData['id_master_customer'],
+                    'id_master_salesman' => $validatedData['id_master_salesman'],
+                    'id_master_vehicles' => $validatedData['id_master_vehicle'],
+                    'id_master_customer_addresses' => $validatedData['id_master_customer_addresses'],
+                    'note' => $validatedData['note'] ?? null,
+                    'status' => $validatedData['status'],
+                    'updated_at' => now(),
+                ]);
 
-        // Update data delivery_note_details
-        DB::table('delivery_note_details')
-            ->where('id_delivery_notes', $id)
-            ->update([
-                'id_sales_orders' => $validatedData['po_number'],
-                'qty' => $packingListDetails->total_qty,
-                'id_master_units' => $packingListDetails->id_master_unit,
-                'weight' => $packingListDetails->total_weight,
-                'updated_at' => now(),
-            ]);
+            DB::commit();
 
-        return redirect()->route('delivery_notes.list')->with('pesan', 'Delivery Note berhasil diperbarui.');
+            return response()->json(['success' => true, 'message' => 'Data berhasil diupdate']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()]);
+        }
     }
+
     public function print($id)
     {
         // Mengambil data delivery note

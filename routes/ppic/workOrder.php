@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Ppic\workOrderController;
+use App\Http\Controllers\ppic\workOrderController;
 
 
 Route::group(
