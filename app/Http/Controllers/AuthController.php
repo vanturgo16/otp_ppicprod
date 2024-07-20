@@ -10,7 +10,8 @@ use App\Models\User;
 
 class AuthController extends Controller
 {
-    public function login(Request $request){
+    public function login(Request $request)
+    {
         // return view('auth.login');
         if (app()->environment('production')) {
             return redirect('https://sso.olefinatifaplas.my.id/login');
@@ -21,27 +22,28 @@ class AuthController extends Controller
 
     public function postlogin(Request $request)
     {
-        $email=$request->email;
-        $password=$request->password;
+        // dd("asdf");
+        $email = $request->email;
+        $password = $request->password;
         $credentials = [
             'email' => $email,
             'password' => $password
         ];
-        $dologin=Auth::attempt($credentials);
-        if($dologin){
+        $dologin = Auth::attempt($credentials);
+        if ($dologin) {
             $checkstatus = User::where('email', $request->email)->first()->is_active;
-            if($checkstatus == 1){
-                return redirect()->route('dashboard')->with('success','Successfully Entered The Application');
+            if ($checkstatus == 1) {
+                return redirect()->route('dashboard')->with('success', 'Successfully Entered The Application');
             } else {
-                return redirect()->route('login')->with('fail','Your Account Is Innactive');
+                return redirect()->route('login')->with('fail', 'Your Account Is Innactive');
             }
-        }
-        else{
-            return redirect()->route('login')->with('fail','Wrong Email or Password');
+        } else {
+            return redirect()->route('login')->with('fail', 'Wrong Email or Password');
         }
     }
 
-    public function logout(Request $request){
+    public function logout(Request $request)
+    {
         Auth::logout();
         if (app()->environment('production')) {
             return redirect('https://sso.olefinatifaplas.my.id/login');
