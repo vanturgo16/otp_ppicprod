@@ -21,13 +21,10 @@ use App\Http\Controllers\ProductionController;
 //Route Login
 Route::get('/', [AuthController::class, 'login'])->name('login');
 Route::post('auth/login', [AuthController::class, 'postlogin'])->name('postlogin')->middleware("throttle:5,2");
-
-//Route Logout
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::middleware(['auth'])->group(function () {
-
-    Route::group(['middleware' => ['clear.permission.cache']], function () {
+Route::middleware(['auth','clear.permission.cache'])->group(function () {
+  
         //Dashboard
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -42,7 +39,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     //Dashboard
-
 
         //AccountCode
         Route::get('/accountcode', [MstAccountCodesController::class, 'index'])->name('accountcode.index');
@@ -249,4 +245,4 @@ Route::middleware(['auth'])->group(function () {
         Route::get('get-customer-addresses/{customerId}', 'getCustomerAddresses')->name('get-customer-addresses');
     });
 });
-});
+
