@@ -9,7 +9,7 @@
                     <h4 class="mb-sm-0 font-size-18">Edit Delivery Notes</h4>
                     <div class="page-title-right">
                         <ol class="breadcrumb m-0">
-                            <li class="breadcrumb-item"><a href="javascript: void(0);">Warehouse</a></li>
+                            <li class="breadcrumb-item"><a href="{{ route('delivery_notes.list') }}">Warehouse</a></li>
                             <li class="breadcrumb-item active">Edit Delivery Notes</li>
                         </ol>
                     </div>
@@ -36,44 +36,17 @@
                             @csrf
                             @method('PUT')
                             <div class="mb-3">
-                                <label for="dn_number" class="form-label">Nomor DN</label>
-                                <input type="text" class="form-control" id="dn_number" name="dn_number" value="{{ old('dn_number', $deliveryNote->dn_number) }}" required readonly>
-                            </div>
-                            <div class="mb-3">
                                 <label for="date" class="form-label">Tanggal</label>
                                 <input type="date" class="form-control" id="date" name="date" value="{{ old('date', $deliveryNote->date) }}" required>
                             </div>
                             <div class="mb-3">
-                                <label for="id_packing_lists" class="form-label">Nomor Packing</label>
-                                <select class="form-select select2" id="id_packing_lists" name="id_packing_lists" required>
-                                    <option value="" selected disabled>** Pilih Nomor Packing</option>
-                                    @foreach($packingLists as $packing_list)
-                                    <option value="{{ $packing_list->id }}" {{ old('id_packing_lists', $deliveryNote->id_packing_lists) == $packing_list->id ? 'selected' : '' }}>{{ $packing_list->packing_number }}</option>
+                                <label for="customer_address" class="form-label">Alamat Customer</label>
+                                <select class="form-select select2" id="customer_address" name="customer_address" required>
+                                    <option value="" selected disabled>** Pilih Alamat Customer</option>
+                                    @foreach($customerAddresses as $address)
+                                    <option value="{{ $address->id }}" {{ old('customer_address', $deliveryNote->id_master_customer_addresses) == $address->id ? 'selected' : '' }}>{{ $address->address }}</option>
                                     @endforeach
                                 </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="po_number" class="form-label">Nomor PO</label>
-                                <input type="hidden" id="po_number" name="po_number" value="{{ old('po_number', $deliveryNote->po_number) }}" required>
-                                <input type="text" class="form-control" id="po_number_display" name="po_number_display" value="{{ old('po_number_display', $deliveryNote->reference_number . ' - ' . $deliveryNote->so_number) }}" readonly required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="id_master_customer" class="form-label">Nama Customer</label>
-                                <input type="hidden" id="id_master_customer" name="id_master_customer" value="{{ old('id_master_customer', $deliveryNote->id_master_customers) }}" required>
-                                <input type="text" class="form-control" name="customer_name" id="customer_name" value="{{ old('customer_name', $deliveryNote->customer_name) }}" readonly required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="dn_type" class="form-label">Tipe DN</label>
-                                <input type="text" class="form-control" id="dn_type" name="dn_type" value="{{ old('dn_type', $deliveryNote->dn_type) }}" readonly required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="transaction_type" class="form-label">Tipe Transaksi</label>
-                                <input type="text" class="form-control" id="transaction_type" name="transaction_type" value="{{ old('transaction_type', $deliveryNote->transaction_type) }}" readonly required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="id_master_salesman" class="form-label">Salesman</label>
-                                <input type="hidden" id="id_master_salesman" name="id_master_salesman" value="{{ old('id_master_salesman', $deliveryNote->id_master_salesman) }}" required>
-                                <input type="text" class="form-control" name="salesman_name" id="salesman_name" value="{{ old('salesman_name', $deliveryNote->salesman_name) }}" readonly required>
                             </div>
                             <div class="mb-3">
                                 <label for="id_master_vehicle" class="form-label">Kendaraan</label>
@@ -88,26 +61,81 @@
                                 <label for="note" class="form-label">Catatan</label>
                                 <textarea class="form-control" id="note" name="note" rows="3">{{ old('note', $deliveryNote->note) }}</textarea>
                             </div>
-                            <div class="mb-3">
-                                <input type="text" class="form-control" id="status" name="status" value="Request" readonly>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Simpan</button>
+                            <button type="submit" class="btn btn-primary">Update</button>
                             <a href="{{ route('delivery_notes.list') }}" class="btn btn-secondary">Kembali</a>
                         </form>
+                    </div>
+                </div>
+                <div class="card" id="packing-list-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Tambah Packing List</h5>
+                        <form id="packing-list-form">
+                            @csrf
+                            <input type="hidden" id="delivery_note_id" name="delivery_note_id" value="{{ $deliveryNote->id }}">
+                            <div class="mb-3">
+                                <label for="packing_list" class="form-label">Packing List</label>
+                                <select class="form-control select2" id="packing_list" name="packing_list_id" required>
+                                    <option value="" selected disabled>** Pilih Packing List</option>
+                                    @foreach($packingLists as $packing_list)
+                                    <option value="{{ $packing_list->id }}">{{ $packing_list->packing_number }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="po_number" class="form-label">Nomor PO</label>
+                                <input type="text" class="form-control" id="po_number" name="po_number" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="dn_type" class="form-label">Tipe DN</label>
+                                <input type="text" class="form-control" id="dn_type" name="dn_type" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="transaction_type" class="form-label">Tipe Transaksi</label>
+                                <input type="text" class="form-control" id="transaction_type" name="transaction_type" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="salesman_name" class="form-label">Nama Salesman</label>
+                                <input type="text" class="form-control" id="salesman_name" name="salesman_name" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Tambah Packing List</button>
+                        </form>
+                        <div class="table-responsive mt-3">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Nomor Packing List</th>
+                                        <th>Nomor PO</th>
+                                        <th>Tipe DN</th>
+                                        <th>Tipe Transaksi</th>
+                                        <th>Salesman</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="packing-list-details">
+                                    @foreach($deliveryNoteDetails as $detail)
+                                    <tr>
+                                        <td>{{ $detail->packing_number }}</td>
+                                        <td>{{ $detail->po_number }}</td>
+                                        <td>{{ $detail->dn_type }}</td>
+                                        <td>{{ $detail->transaction_type }}</td>
+                                        <td>{{ $detail->salesman_name }}</td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-@endsection
 
 @push('scripts')
 <script>
     $(document).ready(function() {
         $('.select2').select2();
 
-        $('#id_packing_lists').change(function() {
+        $('#packing_list').change(function() {
             let packingListId = $(this).val();
             if (packingListId) {
                 $.ajax({
@@ -130,3 +158,4 @@
     });
 </script>
 @endpush
+@endsection
