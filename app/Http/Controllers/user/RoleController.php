@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Str;
+use Spatie\Permission\PermissionRegistrar;
 class RoleController extends Controller
 {
 
@@ -26,7 +27,7 @@ class RoleController extends Controller
     public function index()
     {
         $roles = Role::get();
-
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
         // latest()->when(request()->q, function ($roles) {
         //     $roles = $roles->where('name', 'like', '%' . request()->q . '%');
         // })->paginate(5);
