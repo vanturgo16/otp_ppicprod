@@ -24,7 +24,7 @@ Route::middleware(['auth','clear.permission.cache','permission:PPIC'])->group(fu
         //Dashboard
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::middleware('permission:PPIC_good-receipt-note')->group(function () {
+    Route::middleware('permission:PPIC_good-receipt-note|PPIC_good-lote-number|PPIC_grn-qc|PPIC_external-no-lot')->group(function () {
         Route::get('/good-receipt-note', [GrnController::class, 'index'])->name('index');
         Route::get('/grn-pr-add', [GrnController::class, 'grn_pr_add'])->name('grn_pr_add');
         Route::get('/grn-po-add', [GrnController::class, 'grn_po_add'])->name('grn_po_add');
