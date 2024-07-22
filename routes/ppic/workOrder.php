@@ -1,12 +1,12 @@
 <?php
 
 use App\Http\Controllers\ppic\workOrderController;
-
+use Illuminate\Support\Facades\Route;
 
 Route::group(
   ['prefix' => 'ppic/workOrder'],
   function () {
-    Route::controller(workOrderController::class)->group(function () {
+    Route::controller(workOrderController::class)->middleware('permission:PPIC_workOrder')->group(function () {
       Route::get('/', 'index')->name('ppic.workOrder.index');
       Route::get('/create', 'create')->name('ppic.workOrder.create');
       Route::get('/create/{encryptedSONumber}', 'createWithSO')->name('ppic.workOrder.createWithSO');
