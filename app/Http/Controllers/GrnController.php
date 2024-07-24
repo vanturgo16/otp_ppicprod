@@ -569,22 +569,43 @@ class GrnController extends Controller
     
                 // Query dasar
                 $query = DB::table('good_receipt_notes as a')
-                        ->leftJoin('good_receipt_note_details as c', 'a.id', '=', 'c.id_good_receipt_notes')
-                        ->leftJoin('master_raw_materials as b', 'b.id', '=', 'c.id_master_products')
-                        ->leftJoin('master_units as d', 'c.master_units_id', '=', 'd.id')
-                        ->select(
-                            'c.id',
-                            'c.id_good_receipt_notes',
-                            'a.receipt_number',
-                            DB::raw("CONCAT(b.rm_code, '-', b.description) as description"),
-                            'c.receipt_qty',
-                            'd.unit_code',
-                            'c.qc_passed',
-                            'c.lot_number',
-                            'c.note'
-                        )
-                        ->where('a.type', 'RM')
+                ->leftJoin('good_receipt_note_details as c', 'a.id', '=', 'c.id_good_receipt_notes')
+                ->leftJoin('master_raw_materials as b', function($join) {
+                    $join->on('b.id', '=', 'c.id_master_products')
+                         ->where('a.type', 'RM');
+                })
+                ->leftJoin('master_product_fgs as fg', function($join) {
+                    $join->on('fg.id', '=', 'c.id_master_products')
+                         ->where('a.type', 'FG');
+                })
+                ->leftJoin('master_wips as w', function($join) {
+                    $join->on('w.id', '=', 'c.id_master_products')
+                         ->where('a.type', 'WIP');
+                })
+                ->leftJoin('master_tool_auxiliaries as ta', function($join) {
+                    $join->on('ta.id', '=', 'c.id_master_products')
+                         ->where('a.type', 'TA');
+                })
+                ->leftJoin('master_units as d', 'c.master_units_id', '=', 'd.id')
+                ->select(
+                    'c.id',
+                    'c.id_good_receipt_notes',
+                    'a.receipt_number',
+                    DB::raw("CASE 
+                        WHEN a.type = 'RM' THEN CONCAT(b.rm_code, '-', b.description)
+                        WHEN a.type = 'FG' THEN CONCAT(fg.product_code, '-', fg.description)
+                        WHEN a.type = 'WIP' THEN CONCAT(w.wip_code, '-', w.description)
+                        WHEN a.type = 'TA' THEN CONCAT(ta.code, '-', ta.description)
+                    END as description"),
+                    'c.receipt_qty',
+                    'd.unit_code',
+                    'c.qc_passed',
+                    'c.lot_number',
+                    'c.note'
+                )
+                ->whereIn('a.type', ['RM', 'FG', 'WIP', 'TA'])
                 ->orderBy($columns[$orderColumn], $orderDirection);
+            
     
                 // Handle pencarian
                 if ($request->has('search') && $request->input('search')) {
