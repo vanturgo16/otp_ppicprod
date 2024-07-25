@@ -128,11 +128,15 @@
         <hr>
         <div class="row footer">
             <h6>Keterangan :</h6>
-            <div class="col-12 col-lg-6 text-center">
+            <div class="col-4 text-center">
                 <p class="mb-5">Diketahui Oleh,</p>
                 <p><b>(.............................................)</b></p>
             </div>
-            <div class="col-12 col-lg-6 text-center">
+            <div class="col-4 text-center">
+                <p class="mb-5">Diketahui Oleh,</p>
+                <p><b>(.............................................)</b></p>
+            </div>
+            <div class="col-4 text-center">
                 <p class="mb-5">Dibuat Oleh,</p>
                 <p><b>(.............................................)</b></p>
             </div>

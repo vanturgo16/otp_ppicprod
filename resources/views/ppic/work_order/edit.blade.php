@@ -22,7 +22,8 @@
                 $isDisabled = '';
             @endphp
             @if (Route::current()->getName() == 'ppic.workOrder.createWithSO' ||
-                    Route::current()->getName() == 'ppic.workOrder.edit' || Route::current()->getName() == 'ppic.workOrder.editFromList')
+                    Route::current()->getName() == 'ppic.workOrder.edit' ||
+                    Route::current()->getName() == 'ppic.workOrder.editFromList')
                 @php
                     $so_number = decrypt(Request::segment(4));
                     $isDisabled = 'disabled';
@@ -132,8 +133,9 @@
                                         <label for="typeProductSelect" class="col-sm-3 col-form-label">Type
                                             Product</label>
                                         <div class="col-sm-9">
-                                            <select class="form-control data-select2 typeProductSelect" name="type_product"
-                                                onchange="fetchProducts(this);" style="width: 100%" required>
+                                            <select class="form-control data-select2 typeProductSelect"
+                                                name="type_product" onchange="fetchProducts(this);" style="width: 100%"
+                                                required>
                                                 <option value="">** Please select a Type Product</option>
                                                 <option value="WIP"
                                                     {{ $workOrder->type_product == 'WIP' ? 'selected' : '' }}>WIP</option>
@@ -150,10 +152,13 @@
                                                 style="width: 100%" required>
                                                 <option value="">** Please select a Product</option>
                                                 @foreach ($product as $data)
+                                                    @php
+                                                        $perforasi = $data->perforasi == null ? '-' : $data->perforasi;
+                                                    @endphp
                                                     <option value="{{ $data->id }}"
                                                         {{ $data->id == $workOrder->id_master_products ? 'selected' : '' }}>
                                                         {{ $data->product_code }} -
-                                                        {{ $data->description }}</option>
+                                                        {{ $data->description }} | Perforasi: {{ $perforasi }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
@@ -235,10 +240,13 @@
                                                 onchange="fethchProductMaterialDetail(this);" style="width: 100%">
                                                 <option value="">** Please select a Product Material</option>
                                                 @foreach ($productNeeded as $data)
+                                                    @php
+                                                        $perforasi = $data->perforasi == null ? '-' : $data->perforasi;
+                                                    @endphp
                                                     <option value="{{ $data->id }}"
                                                         {{ $data->id == $workOrder->id_master_products_material ? 'selected' : '' }}>
                                                         {{ $data->product_code }} -
-                                                        {{ $data->description }}</option>
+                                                        {{ $data->description }} | Perforasi: {{ $perforasi }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
