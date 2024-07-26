@@ -151,7 +151,7 @@ class WarehouseController extends Controller
                 ->join('master_product_fgs', 'sales_orders.id_master_products', '=', 'master_product_fgs.id') // Join untuk mendapatkan nama produk
                 ->where('barcode_detail.barcode_number', $barcode)
                 ->where('sales_orders.so_number', $changeSo)
-                ->select('barcode_detail.*', 'master_product_fgs.product_name', 'master_product_fgs.id as product_id')
+                ->select('barcode_detail.*', 'master_product_fgs.description', 'master_product_fgs.id as product_id')
                 ->first();
 
             if ($barcodeRecord) {
@@ -160,7 +160,7 @@ class WarehouseController extends Controller
                 }
 
                 $exists = true;
-                $productName = $barcodeRecord->product_name; // Ambil nama produk
+                $productName = $barcodeRecord->description; // Ambil nama produk
                 $isBag = (substr($barcode, -1) === 'B');
 
                 $insertedId = DB::table('packing_list_details')->insertGetId([
