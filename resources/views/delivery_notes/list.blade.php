@@ -64,32 +64,8 @@
     </div>
 </div>
 
-<!-- Modal for Remark -->
-<div class="modal fade" id="remarkModal" tabindex="-1" aria-labelledby="remarkModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="remarkModalLabel">Remark</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="remarkForm">
-                    @csrf
-                    @method('PUT')
-                    <input type="hidden" id="remarkDetailId" name="id">
-                    <div class="mb-3">
-                        <label for="remark" class="form-label">Remark</label>
-                        <textarea class="form-control" id="remark" name="remark" rows="3" required></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Save changes</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-@endsection
-
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
         let dataTable = $('#delivery_notes_table').DataTable({
@@ -202,83 +178,103 @@
 
         function generateActionButtons(data) {
             let buttons = `<div class="btn-group" role="group" aria-label="Action Buttons">
-            <a href="/delivery_notes/${data.id}/show" class="btn btn-sm btn-primary waves-effect waves-light">
-                <i class="bx bx-show-alt"></i>
-            </a>`;
+    <a href="/delivery_notes/${data.id}/show" class="btn btn-sm btn-primary waves-effect waves-light">
+        <i class="bx bx-show-alt"></i>
+    </a>`;
 
             if (data.status == 'Request') {
                 buttons += `<form action="/delivery_notes/${data.id}/post" method="post" class="d-inline" data-id="">
-                @method('PUT')
-                @csrf
-                <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Anda yakin mau Post item ini ?')">
-                    <i class="bx bx-check-circle" title="Posted"> Posted</i>
-                </button>
-            </form>`;
+        @method('PUT')
+        @csrf
+        <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Anda yakin mau Post item ini ?')">
+            <i class="bx bx-check-circle" title="Posted"> Posted</i>
+        </button>
+    </form>`;
             } else if (data.status == 'Posted') {
                 buttons += `<form action="/delivery_notes/${data.id}/unpost" method="post" class="d-inline" data-id="">
-                @method('PUT')
-                @csrf
-                <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Anda yakin mau Un Post item ini ?')">
-                    <i class="bx bx-undo" title="Un Posted"> Un Posted</i>
-                </button>
-            </form>`;
+        @method('PUT')
+        @csrf
+        <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Anda yakin mau Un Post item ini ?')">
+            <i class="bx bx-undo" title="Un Posted"> Un Posted</i>
+        </button>
+    </form>`;
             }
 
-            buttons += `<a href="${data.id}/print" class="btn btn-sm btn-secondary">
-            <i class="bx bx-printer"></i> Print
-        </a>`;
-            buttons += `<a href="/print/${data.id_packing_lists}" class="btn btn-sm btn-info">
-            <i class="bx bx-book-open"></i> Packing List
-        </a>`;
+            buttons += `<a href="/delivery_notes/${data.id}/print" class="btn btn-sm btn-secondary">
+    <i class="bx bx-printer"></i> Print
+</a>`;
+            buttons += `<a href="/print_packing_list/${data.id}" class="btn btn-sm btn-info">
+    <i class="bx bx-book-open"></i> Packing List
+</a>`;
 
             if (data.status == 'Request') {
                 buttons += `<a href="/delivery_notes/${data.id}/edit" class="btn btn-sm btn-warning">
-                <i class="bx bx-edit"></i> Edit
-            </a>
-            <form action="/delivery_notes/${data.id}" method="post" class="d-inline" data-id="">
-                @method('DELETE')
-                @csrf
-                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Anda yakin mau menghapus item ini ?')">
-                    <i class="bx bx-trash"></i> Delete
-                </button>
-            </form>`;
+        <i class="bx bx-edit"></i> Edit
+    </a>
+    <form action="/delivery_notes/${data.id}" method="post" class="d-inline delete-delivery-note" data-id="${data.id}">
+        @method('DELETE')
+        @csrf
+        <button type="submit" class="btn btn-sm btn-danger">
+            <i class="bx bx-trash"></i> Delete
+        </button>
+    </form>`;
             }
-
-            buttons += `<button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#remarkModal" onclick="showRemark('${data.id}', '${data.remark || ''}')">
-                <i class="bx bx-comment"></i> Remark
-            </button>`;
 
             buttons += `</div>`;
 
             return buttons;
         }
 
-        window.showRemark = function(id, remark) {
-            $('#remarkDetailId').val(id);
-            $('#remark').val(remark ? remark : '');
-            $('#remarkModal').modal('show');
-        }
 
-        $('#remarkForm').on('submit', function(e) {
+        $(document).on('submit', '.delete-delivery-note', function(e) {
             e.preventDefault();
-            var id = $('#remarkDetailId').val();
-            var remark = $('#remark').val();
-            var _token = $("input[name=_token]").val();
+            var form = $(this);
+            var id = form.data('id');
 
-            $.ajax({
-                url: '/delivery_note_details/' + id + '/remark',
-                method: 'PUT',
-                data: {
-                    _token: _token,
-                    remark: remark
-                },
-                success: function(response) {
-                    $('#remarkModal').modal('hide');
-                    dataTable.ajax.reload();
-                    alert(response.success);
+            Swal.fire({
+                title: 'Apakah anda yakin?',
+                text: "Data ini akan dihapus!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, hapus!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: form.attr('action'),
+                        method: 'DELETE',
+                        data: {
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                dataTable.ajax.reload();
+                                Swal.fire(
+                                    'Terhapus!',
+                                    'Delivery Note telah dihapus.',
+                                    'success'
+                                );
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.message || 'Gagal menghapus Delivery Note',
+                                });
+                            }
+                        },
+                        error: function(xhr) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Gagal menghapus Delivery Note',
+                            });
+                        }
+                    });
                 }
             });
         });
     });
 </script>
 @endpush
+@endsection

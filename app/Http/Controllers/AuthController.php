@@ -12,7 +12,7 @@ class AuthController extends Controller
 {
     public function login(Request $request)
     {
-        // return view('auth.login');
+        return view('auth.login');
         if (app()->environment('production')) {
             return redirect('https://sso.olefinatifaplas.my.id/login');
         } else {

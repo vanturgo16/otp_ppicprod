@@ -3,6 +3,7 @@
 @section('konten')
 <div class="page-content">
     <div class="container-fluid">
+        <!-- Page Title -->
         <div class="row">
             <div class="col-12">
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
@@ -16,12 +17,11 @@
                 </div>
             </div>
         </div>
+
+        <!-- Form Edit Delivery Note -->
         <div class="row">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">Edit Delivery Notes</h5>
-                    </div>
                     <div class="card-body">
                         @if($errors->any())
                         <div class="alert alert-danger">
@@ -32,25 +32,42 @@
                             </ul>
                         </div>
                         @endif
-                        <form action="{{ route('delivery_notes.update', $deliveryNote->id) }}" method="POST">
+                        <form id="edit-delivery-note-form" action="{{ route('delivery_notes.update', $deliveryNote->id) }}" method="POST">
                             @csrf
                             @method('PUT')
+                            <div class="mb-3">
+                                <label for="dn_number" class="form-label">Nomor DN</label>
+                                <input type="text" class="form-control" id="dn_number" name="dn_number" value="{{ old('dn_number', $deliveryNote->dn_number) }}" required readonly>
+                            </div>
                             <div class="mb-3">
                                 <label for="date" class="form-label">Tanggal</label>
                                 <input type="date" class="form-control" id="date" name="date" value="{{ old('date', $deliveryNote->date) }}" required>
                             </div>
                             <div class="mb-3">
-                                <label for="customer_address" class="form-label">Alamat Customer</label>
-                                <select class="form-select select2" id="customer_address" name="customer_address" required>
-                                    <option value="" selected disabled>** Pilih Alamat Customer</option>
+                                <label for="customer_name" class="form-label">Nama Customer</label>
+                                <input type="text" class="form-control" id="customer_name" name="customer_name" value="{{ old('customer_name', $deliveryNote->customer_name) }}" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="customer_address" class="form-label">Alamat Shipping</label>
+                                <select class="form-control select2" id="customer_address" name="id_master_customer_address_shipping" required>
+                                    <option value="" selected disabled>** Pilih Alamat Shipping</option>
                                     @foreach($customerAddresses as $address)
-                                    <option value="{{ $address->id }}" {{ old('customer_address', $deliveryNote->id_master_customer_addresses) == $address->id ? 'selected' : '' }}>{{ $address->address }}</option>
+                                    <option value="{{ $address->id }}" {{ old('id_master_customer_address_shipping', $deliveryNote->id_master_customer_address_shipping) == $address->id ? 'selected' : '' }}>{{ $address->address }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="mb-3">
-                                <label for="id_master_vehicle" class="form-label">Kendaraan</label>
-                                <select class="form-select select2" id="id_master_vehicle" name="id_master_vehicle" required>
+                                <label for="invoice_address" class="form-label">Alamat Invoice</label>
+                                <select class="form-control select2" id="invoice_address" name="id_master_customer_address_invoice" required>
+                                    <option value="" selected disabled>** Pilih Alamat Invoice</option>
+                                    @foreach($customerAddresses as $address)
+                                    <option value="{{ $address->id }}" {{ old('id_master_customer_address_invoice', $deliveryNote->id_master_customer_address_invoice) == $address->id ? 'selected' : '' }}>{{ $address->address }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="vehicle" class="form-label">Kendaraan</label>
+                                <select class="form-control select2" id="vehicle" name="id_master_vehicle" required>
                                     <option value="" selected disabled>** Pilih Kendaraan</option>
                                     @foreach($vehicles as $vehicle)
                                     <option value="{{ $vehicle->id }}" {{ old('id_master_vehicle', $deliveryNote->id_master_vehicles) == $vehicle->id ? 'selected' : '' }}>{{ $vehicle->vehicle_number }}</option>
@@ -66,7 +83,9 @@
                         </form>
                     </div>
                 </div>
-                <div class="card" id="packing-list-card">
+
+                <!-- Form Tambah Packing List -->
+                <div class="card" id="packing-list-card" style="display: block;">
                     <div class="card-body">
                         <h5 class="card-title">Tambah Packing List</h5>
                         <form id="packing-list-form">
@@ -83,19 +102,19 @@
                             </div>
                             <div class="mb-3">
                                 <label for="po_number" class="form-label">Nomor PO</label>
-                                <input type="text" class="form-control" id="po_number" name="po_number" required>
+                                <input type="text" class="form-control" id="po_number" name="po_number" required readonly>
                             </div>
                             <div class="mb-3">
                                 <label for="dn_type" class="form-label">Tipe DN</label>
-                                <input type="text" class="form-control" id="dn_type" name="dn_type" required>
+                                <input type="text" class="form-control" id="dn_type" name="dn_type" required readonly>
                             </div>
                             <div class="mb-3">
                                 <label for="transaction_type" class="form-label">Tipe Transaksi</label>
-                                <input type="text" class="form-control" id="transaction_type" name="transaction_type" required>
+                                <input type="text" class="form-control" id="transaction_type" name="transaction_type" required readonly>
                             </div>
                             <div class="mb-3">
                                 <label for="salesman_name" class="form-label">Nama Salesman</label>
-                                <input type="text" class="form-control" id="salesman_name" name="salesman_name" required>
+                                <input type="text" class="form-control" id="salesman_name" name="salesman_name" required readonly>
                             </div>
                             <button type="submit" class="btn btn-primary">Tambah Packing List</button>
                         </form>
@@ -108,16 +127,20 @@
                                         <th>Tipe DN</th>
                                         <th>Tipe Transaksi</th>
                                         <th>Salesman</th>
+                                        <th>Remark</th>
+                                        <th>Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody id="packing-list-details">
                                     @foreach($deliveryNoteDetails as $detail)
-                                    <tr>
+                                    <tr data-id="{{ $detail->id_packing_lists }}">
                                         <td>{{ $detail->packing_number }}</td>
                                         <td>{{ $detail->po_number }}</td>
                                         <td>{{ $detail->dn_type }}</td>
                                         <td>{{ $detail->transaction_type }}</td>
                                         <td>{{ $detail->salesman_name }}</td>
+                                        <td><input type="text" class="form-control packing-list-remark" data-id="{{ $detail->id_packing_lists }}" value="{{ $detail->remark }}"></td>
+                                        <td><button type="button" class="btn btn-danger btn-sm remove-packing-list">Hapus</button></td>
                                     </tr>
                                     @endforeach
                                 </tbody>
@@ -131,8 +154,45 @@
 </div>
 
 @push('scripts')
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
+        $('#edit-delivery-note-form').on('submit', function(e) {
+            e.preventDefault();
+            var formData = $(this).serialize();
+
+            $.ajax({
+                url: $(this).attr('action'),
+                method: 'POST',
+                data: formData,
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: response.message,
+                        }).then(() => {
+                            window.location.href = "{{ route('delivery_notes.list') }}";
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Failed to update data',
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    console.error(xhr.responseText);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to update data',
+                    });
+                }
+            });
+        });
         $('.select2').select2();
 
         $('#packing_list').change(function() {
@@ -143,17 +203,199 @@
                     type: 'GET',
                     dataType: 'json',
                     success: function(data) {
-                        $('#po_number').val(data.sales_order_id); // Store sales_order_id in hidden input
-                        $('#po_number_display').val(data.reference_number + ' - ' + data.so_number); // Display reference number
-                        $('#id_master_customer').val(data.customer_id);
-                        $('#customer_name').val(data.customer_name);
-                        $('#dn_type').val(data.so_category);
-                        $('#transaction_type').val(data.so_type);
-                        $('#id_master_salesman').val(data.salesman_id);
+                        $('#po_number').val(data.po_number);
+                        $('#dn_type').val(data.dn_type);
+                        $('#transaction_type').val(data.transaction_type);
                         $('#salesman_name').val(data.salesman_name);
                     }
                 });
             }
+        });
+
+        $('#packing-list-form').on('submit', function(e) {
+            e.preventDefault();
+            let formData = $(this).serialize();
+            $.ajax({
+                url: '{{ url("delivery_notes") }}/' + $('#delivery_note_id').val() + '/store_packing_list',
+                method: 'POST',
+                data: formData,
+                success: function(response) {
+                    if (response.success) {
+                        let packingListId = $('#packing_list').val();
+                        let packingListNumber = $('#packing_list option:selected').text();
+                        $('#packing-list-details').append(
+                            '<tr data-id="' + packingListId + '">' +
+                            '<td>' + packingListNumber + '</td>' +
+                            '<td>' + response.po_number + '</td>' +
+                            '<td>' + response.dn_type + '</td>' +
+                            '<td>' + response.transaction_type + '</td>' +
+                            '<td>' + response.salesman_name + '</td>' +
+                            '<td><input type="text" class="form-control packing-list-remark" data-id="' + packingListId + '" placeholder="Remark"></td>' +
+                            '<td><button type="button" class="btn btn-danger btn-sm remove-packing-list">Hapus</button></td>' +
+                            '</tr>'
+                        );
+                        $('#packing_list').val('').trigger('change');
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Gagal menambahkan packing list',
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    console.error(xhr.responseText);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Gagal menambahkan packing list',
+                    });
+                }
+            });
+        });
+
+        $('#customer').change(function() {
+            var customerId = $(this).val();
+            if (customerId) {
+                loadPackingLists(customerId);
+                loadCustomerAddresses(customerId, 'Shipping');
+                loadCustomerAddresses(customerId, 'Invoice');
+            }
+        });
+
+        function loadPackingLists(customerId) {
+            $.ajax({
+                url: '{{ url("getPackingListsByCustomer") }}/' + customerId,
+                method: 'GET',
+                success: function(response) {
+                    $('#packing_list').empty().append('<option value="" selected disabled>** Pilih Packing List</option>');
+                    $.each(response, function(key, value) {
+                        $('#packing_list').append('<option value="' + value.id + '">' + value.packing_number + '</option>');
+                    });
+                },
+                error: function(xhr) {
+                    console.error(xhr.responseText);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Gagal memuat daftar Packing List',
+                    });
+                }
+            });
+        }
+
+        function loadCustomerAddresses(customerId, type) {
+            $.ajax({
+                url: '{{ url("getCustomerAddresses") }}/' + customerId + '/' + type,
+                method: 'GET',
+                success: function(response) {
+                    if (type === 'Shipping') {
+                        $('#customer_address').empty().append('<option value="" selected disabled>** Pilih Alamat Shipping</option>');
+                        $.each(response, function(key, value) {
+                            $('#customer_address').append('<option value="' + value.id + '">' + value.address + '</option>');
+                        });
+                    } else if (type === 'Invoice') {
+                        $('#invoice_address').empty().append('<option value="" selected disabled>** Pilih Alamat Invoice</option>');
+                        $.each(response, function(key, value) {
+                            $('#invoice_address').append('<option value="' + value.id + '">' + value.address + '</option>');
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    console.error(xhr.responseText);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Gagal memuat alamat customer',
+                    });
+                }
+            });
+        }
+
+        $(document).on('click', '.remove-packing-list', function() {
+            var row = $(this).closest('tr');
+            var packingListId = row.data('id');
+
+            Swal.fire({
+                title: 'Apakah anda yakin?',
+                text: "Data ini akan dihapus!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, hapus!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '{{ url("delivery_notes") }}/' + packingListId + '/delete_packing_list',
+                        method: 'DELETE',
+                        data: {
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                row.remove();
+                                Swal.fire(
+                                    'Terhapus!',
+                                    'Packing List telah dihapus.',
+                                    'success'
+                                );
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.message || 'Gagal menghapus packing list',
+                                });
+                            }
+                        },
+                        error: function(xhr) {
+                            console.error(xhr.responseText);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Gagal menghapus packing list',
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        $(document).on('change', '.packing-list-remark', function() {
+            var packingListId = $(this).data('id');
+            var remark = $(this).val();
+
+            $.ajax({
+                url: '{{ url("delivery_notes") }}/' + packingListId + '/update_remark',
+                method: 'PUT',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    remark: remark
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: 'Remark berhasil diperbarui',
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Gagal memperbarui remark',
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    console.error(xhr.responseText);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Gagal memperbarui remark',
+                    });
+                }
+            });
         });
     });
 </script>
