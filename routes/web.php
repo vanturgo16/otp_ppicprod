@@ -149,7 +149,7 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
         Route::put('packing-list/{id}/post', 'post')->name('packing-list.post');
         Route::put('packing-list/{id}/unpost', 'unpost')->name('packing-list.unpost');
         Route::delete('/packing-list/{id}', 'destroy')->name('packing-list.destroy');
-        Route::post('/adjust-stock', 'adjustStock')->name('adjust-stock');
+        // Route::post('/adjust-stock', 'adjustStock')->name('adjust-stock');
     });
 
     // Route::controller(DeliveryNoteController::class)->group(function () {

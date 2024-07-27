@@ -17,10 +17,10 @@ class DeliveryNoteController extends Controller
     {
         if ($request->ajax()) {
             $data = DB::table('delivery_notes')
-                ->join('delivery_note_details', 'delivery_notes.id', '=', 'delivery_note_details.id_delivery_notes')
-                ->join('packing_lists', 'delivery_note_details.id_packing_lists', '=', 'packing_lists.id')
+                ->leftJoin('delivery_note_details', 'delivery_notes.id', '=', 'delivery_note_details.id_delivery_notes')
+                ->leftJoin('packing_lists', 'delivery_note_details.id_packing_lists', '=', 'packing_lists.id')
                 ->join('master_vehicles', 'delivery_notes.id_master_vehicles', '=', 'master_vehicles.id')
-                ->join('sales_orders', 'delivery_note_details.id_sales_orders', '=', 'sales_orders.id')
+                ->leftJoin('sales_orders', 'delivery_note_details.id_sales_orders', '=', 'sales_orders.id')
                 ->select(
                     'delivery_notes.*',
                     'delivery_note_details.dn_type', // Pastikan kolom ini disertakan
@@ -426,6 +426,7 @@ class DeliveryNoteController extends Controller
         $packingLists = DB::table('packing_lists')
             ->join('sales_orders', 'packing_lists.id_master_customers', '=', 'sales_orders.id_master_customers')
             ->where('sales_orders.id_master_customers', $customerId)
+            ->where('packing_lists.status', 'Post')
             ->select('packing_lists.id', 'packing_lists.packing_number')
             ->get();
 
