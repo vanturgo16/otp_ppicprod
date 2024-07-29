@@ -178,52 +178,60 @@
 
         function generateActionButtons(data) {
             let buttons = `<div class="btn-group" role="group" aria-label="Action Buttons">
-    <a href="/delivery_notes/${data.id}/show" class="btn btn-sm btn-primary waves-effect waves-light">
-        <i class="bx bx-show-alt"></i>
-    </a>`;
+        <a href="/delivery_notes/${data.id}/show" class="btn btn-sm btn-primary waves-effect waves-light">
+            <i class="bx bx-show-alt"></i>
+        </a>`;
 
             if (data.status == 'Request') {
                 buttons += `<form action="/delivery_notes/${data.id}/post" method="post" class="d-inline" data-id="">
-        @method('PUT')
-        @csrf
-        <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Anda yakin mau Post item ini ?')">
-            <i class="bx bx-check-circle" title="Posted"> Posted</i>
-        </button>
-    </form>`;
+            @method('PUT')
+            @csrf
+            <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Anda yakin mau Post item ini ?')">
+                <i class="bx bx-check-circle" title="Posted"> Posted</i>
+            </button>
+        </form>`;
             } else if (data.status == 'Posted') {
                 buttons += `<form action="/delivery_notes/${data.id}/unpost" method="post" class="d-inline" data-id="">
-        @method('PUT')
-        @csrf
-        <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Anda yakin mau Un Post item ini ?')">
-            <i class="bx bx-undo" title="Un Posted"> Un Posted</i>
-        </button>
-    </form>`;
+            @method('PUT')
+            @csrf
+            <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Anda yakin mau Un Post item ini ?')">
+                <i class="bx bx-undo" title="Un Posted"> Un Posted</i>
+            </button>
+        </form>`;
             }
 
-            buttons += `<a href="/delivery_notes/${data.id}/print" class="btn btn-sm btn-secondary">
-    <i class="bx bx-printer"></i> Print
-</a>`;
+            // Print buttons for DN, Sample, and Return
+            buttons += `<a href="/delivery_notes/${data.id}/print?type=DN" class="btn btn-sm btn-secondary">
+        <i class="bx bx-printer"></i> Print DN
+    </a>`;
+            buttons += `<a href="/delivery_notes/${data.id}/print?type=DS" class="btn btn-sm btn-secondary">
+        <i class="bx bx-printer"></i> Print Sample
+    </a>`;
+            buttons += `<a href="/delivery_notes/${data.id}/print?type=DR" class="btn btn-sm btn-secondary">
+        <i class="bx bx-printer"></i> Print Return
+    </a>`;
+
             buttons += `<a href="/print_packing_list/${data.id}" class="btn btn-sm btn-info">
-    <i class="bx bx-book-open"></i> Packing List
-</a>`;
+        <i class="bx bx-book-open"></i> Packing List
+    </a>`;
 
             if (data.status == 'Request') {
                 buttons += `<a href="/delivery_notes/${data.id}/edit" class="btn btn-sm btn-warning">
-        <i class="bx bx-edit"></i> Edit
-    </a>
-    <form action="/delivery_notes/${data.id}" method="post" class="d-inline delete-delivery-note" data-id="${data.id}">
-        @method('DELETE')
-        @csrf
-        <button type="submit" class="btn btn-sm btn-danger">
-            <i class="bx bx-trash"></i> Delete
-        </button>
-    </form>`;
+            <i class="bx bx-edit"></i> Edit
+        </a>
+        <form action="/delivery_notes/${data.id}" method="post" class="d-inline delete-delivery-note" data-id="${data.id}">
+            @method('DELETE')
+            @csrf
+            <button type="submit" class="btn btn-sm btn-danger">
+                <i class="bx bx-trash"></i> Delete
+            </button>
+        </form>`;
             }
 
             buttons += `</div>`;
-
             return buttons;
         }
+
 
 
         $(document).on('submit', '.delete-delivery-note', function(e) {

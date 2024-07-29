@@ -355,11 +355,22 @@ class DeliveryNoteController extends Controller
             return response()->json(['success' => false, 'message' => $e->getMessage()]);
         }
     }
-
-
     public function print($id)
     {
-        // dd("sddsf");
+        $type = request()->query('type', 'DN');
+        $prefix = '';
+        switch ($type) {
+            case 'DS':
+                $prefix = 'DS';
+                break;
+            case 'DR':
+                $prefix = 'DR';
+                break;
+            default:
+                $prefix = 'DN';
+                break;
+        }
+
         // Mengambil data delivery note
         $deliveryNote = DB::table('delivery_notes')
             ->join('delivery_note_details', 'delivery_notes.id', '=', 'delivery_note_details.id_delivery_notes')
@@ -377,7 +388,7 @@ class DeliveryNoteController extends Controller
                 'master_salesmen.name as salesman_name'
             )
             ->first();
-        // dd($deliveryNote);
+
         // Mengambil data quantity dan weight dari delivery_note_details
         $packingListDetails = DB::table('delivery_note_details')
             ->join('sales_orders', 'delivery_note_details.id_sales_orders', '=', 'sales_orders.id')
@@ -385,30 +396,45 @@ class DeliveryNoteController extends Controller
             ->join('master_units', 'delivery_note_details.id_master_units', '=', 'master_units.id')
             ->where('delivery_note_details.id_delivery_notes', $id)
             ->select(
-                'delivery_note_details.qty as total_qty',
-                'delivery_note_details.weight as total_weight',
+                'delivery_note_details.qty as qty',
+                'delivery_note_details.weight as weight',
                 'master_units.unit_code as unit_name',
                 'master_product_fgs.product_code as product_name',
                 'master_product_fgs.description as product_description',
                 'delivery_note_details.perforasi as perforasi',
                 'delivery_note_details.remark as remark'
             )
+            ->get();
+
+        // Menghitung total weight
+        $totalWeight = $packingListDetails->sum('weight');
+
+        // Mengambil alamat shipping dan invoice dari master_customer_addresses
+        $shippingAddress = DB::table('master_customer_addresses')
+            ->where('id', $deliveryNote->id_master_customer_address_shipping)
+            ->select('address')
             ->first();
 
-        // // Jika data tidak ditemukan
-        // if (!$deliveryNote || !$packingListDetails) {
-        //     return redirect()->route('delivery_notes.list')->with('pesan', 'Data Delivery Note tidak ditemukan.');
-        // }
+        $invoiceAddress = DB::table('master_customer_addresses')
+            ->where('id', $deliveryNote->id_master_customer_address_invoice)
+            ->select('address')
+            ->first();
 
         // Data untuk dicetak
         $data = [
             'deliveryNote' => $deliveryNote,
             'packingListDetails' => $packingListDetails,
+            'totalWeight' => $totalWeight,
+            'shippingAddress' => $shippingAddress,
+            'invoiceAddress' => $invoiceAddress,
+            'prefix' => $prefix,
         ];
 
         // Menampilkan view cetak dengan data
         return view('delivery_notes.print', $data);
     }
+
+
     public function updateRemark(Request $request, $id)
     {
         $request->validate([
@@ -426,7 +452,7 @@ class DeliveryNoteController extends Controller
         $packingLists = DB::table('packing_lists')
             ->join('sales_orders', 'packing_lists.id_master_customers', '=', 'sales_orders.id_master_customers')
             ->where('sales_orders.id_master_customers', $customerId)
-            ->where('packing_lists.status', 'Post')
+            ->where('packing_lists.status', 'Posted')
             ->select('packing_lists.id', 'packing_lists.packing_number')
             ->get();
 
@@ -487,10 +513,8 @@ class DeliveryNoteController extends Controller
         // Mengambil data packing list dan detailnya
         $packingLists = DB::table('packing_lists')
             ->join('delivery_note_details', 'packing_lists.id', '=', 'delivery_note_details.id_packing_lists')
-            ->join('packing_list_details', 'packing_lists.id', '=', 'packing_list_details.id_packing_lists')
             ->select(
-                'packing_lists.*',
-                DB::raw('GROUP_CONCAT(packing_list_details.barcode SEPARATOR ", ") as barcodes')
+                'packing_lists.*'
             )
             ->where('delivery_note_details.id_delivery_notes', $id)
             ->groupBy('packing_lists.id')
