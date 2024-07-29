@@ -152,17 +152,19 @@
                         _token: '{{ csrf_token() }}'
                     },
                     success: function(response) {
+                        console.log("Response:", response.exists);
+
                         if (response.exists) {
                             var newRow = '<tr data-id="' + response.id + '">' +
                                 '<td class="row-number">' + ($('#barcode-table tbody tr').length + 1) + '</td>' +
                                 '<td>' + ($('#change_so').val() || '') + '</td>' +
                                 '<td>' + $('#barcode').val() + '</td>' +
                                 '<td>' + (response.product_name || '') + '</td>' +
+                                '<td><input type="number" class="form-control number_of_box" data-id="' + response.id + '" name="number_of_box"></td>' +
+                                '<td><input type="number" class="form-control weight" data-id="' + response.id + '" name="weight"></td>' +
                                 (response.is_bag ?
-                                    '<td><input type="number" class="form-control number_of_box" data-id="' + response.id + '" name="number_of_box"></td>' +
-                                    '<td><input type="number" class="form-control weight" data-id="' + response.id + '" name="weight"></td>' +
-                                    '<td><input type="number" class="form-control pcs" data-id="' + response.id + '" name="pcs"></td>' :
-                                    '<td></td><td></td><td></td>') +
+                                    '<td><input type="number" class="form-control pcs" data-id="' + response.id + '" name="pcs" value="0"></td>' :
+                                    '<td></td>') +
                                 '<td><button type="button" class="btn btn-danger btn-sm remove-barcode">Remove</button></td>' +
                                 '</tr>';
                             $('#barcode-table tbody').append(newRow);
@@ -204,6 +206,7 @@
             var id = $(this).data('id');
             var field = $(this).attr('name');
             var value = $(this).val();
+            var inputElement = $(this);
 
             $.ajax({
                 url: '{{ route("update-barcode-detail") }}',
@@ -216,7 +219,16 @@
                 },
                 success: function(response) {
                     if (!response.success) {
-                        Swal.fire('Error', 'Gagal memperbarui data', 'error');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.error || 'Gagal memperbarui data'
+                        }).then(() => {
+                            // Reset input pcs ke 0 jika stok tidak mencukupi
+                            if (field === 'pcs') {
+                                inputElement.val(0);
+                            }
+                        });
                     }
                 },
                 error: function(xhr, status, error) {
@@ -236,30 +248,11 @@
                 method: 'POST',
                 data: {
                     id: id,
+                    pcs: pcs,
                     _token: '{{ csrf_token() }}'
                 },
                 success: function(response) {
                     if (response.success) {
-                        var barcode = row.find('td:eq(2)').text();
-                        var isBag = barcode.slice(-1) === 'B';
-
-                        if (isBag) {
-                            $.ajax({
-                                url: '{{ route("adjust-stock") }}',
-                                method: 'POST',
-                                data: {
-                                    barcode: barcode,
-                                    pcs: pcs,
-                                    _token: '{{ csrf_token() }}'
-                                },
-                                success: function(response) {
-                                    if (!response.success) {
-                                        Swal.fire('Error', 'Gagal mengembalikan stok', 'error');
-                                    }
-                                }
-                            });
-                        }
-
                         row.remove();
                         updateRowNumbers();
                     } else {
@@ -268,6 +261,13 @@
                 }
             });
         });
+
+        function updateRowNumbers() {
+            $('#barcode-table tbody tr').each(function(index, row) {
+                $(row).find('.row-number').text(index + 1);
+            });
+        }
+
 
         function updateRowNumbers() {
             $('#barcode-table tbody tr').each(function(index, row) {

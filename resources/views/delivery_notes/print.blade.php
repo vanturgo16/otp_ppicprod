@@ -16,35 +16,56 @@
             padding: 20px;
         }
 
-        h1,
-        h2 {
+        .header {
             text-align: center;
+            margin-bottom: 20px;
         }
 
-        p {
+        .header h1 {
             margin: 0;
+        }
+
+        .header p {
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .title {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .title h2 {
+            margin: 0;
+        }
+
+        .info-table {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .info-table td {
             padding: 5px 0;
         }
 
-        table {
+        .right-align {
+            text-align: right;
+        }
+
+        .main-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
         }
 
-        table,
-        th,
-        td {
+        .main-table th,
+        .main-table td {
             border: 1px solid black;
-        }
-
-        th,
-        td {
             padding: 8px;
             text-align: left;
         }
 
-        th {
+        .main-table th {
             background-color: #f2f2f2;
         }
 
@@ -66,18 +87,23 @@
 
 <body>
     <div class="container">
-        <h1>PT OLEFINA TIFAPLAS POLIKEMINDO</h1>
-        <p>Jl. Raya Serang KM 16.8 Desa Telaga, Kec. Cikupa<br>
-            Tangerang, 15710<br>
-            Phone: 02159663657 Fax: 0</p>
-        <h2>SURAT PENGANTAR</h2>
-        <p>No. DN: {{ $deliveryNote->dn_number }}</p>
-        <p style="text-align:right;">Tanggal Cetak: {{ date('d/m/Y') }}</p>
+        <div class="header">
+            <h1>PT OLEFINA TIFAPLAS POLIKEMINDO</h1>
+            <p>Jl. Raya Serang KM 16.8 Desa Telaga, Kec. Cikupa<br>
+                Tangerang, 15710<br>
+                Phone: 02159663657 Fax: 0</p>
+        </div>
 
-        <table>
+        <div class="title">
+            <h2>SURAT PENGANTAR</h2>
+            <p>No. DN: {{ $deliveryNote->dn_number }}</p>
+        </div>
+
+        <table class="info-table">
             <tr>
                 <td>Tanggal</td>
                 <td>: {{ date('d/m/Y', strtotime($deliveryNote->date)) }}</td>
+                <td class="right-align">Tanggal Cetak: {{ date('d/m/Y') }}</td>
             </tr>
             <tr>
                 <td>No. PO</td>
@@ -91,12 +117,13 @@
                 <td>Cust. Product Code</td>
                 <td>: -</td>
             </tr>
+            <tr>
+                <td>Kepada Yth,</td>
+                <td>{{ $deliveryNote->customer_name }}</td>
+            </tr>
         </table>
 
-        <p>Kepada Yth,</p>
-        <p>{{ $deliveryNote->customer_name }}</p>
-
-        <table>
+        <table class="main-table">
             <thead>
                 <tr>
                     <th>Description</th>
