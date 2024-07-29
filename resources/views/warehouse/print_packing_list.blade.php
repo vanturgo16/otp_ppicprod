@@ -2,10 +2,96 @@
 
 @section('content')
 <style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        width: 95%;
+        margin: 0 auto;
+        padding: 20px;
+        position: relative;
+    }
+
     .header-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        width: 30%;
+    }
+
+    .header-left img {
+        margin-right: 10px;
+    }
+
+    .header-center {
+        text-align: center;
+        width: 40%;
+    }
+
+    .header-right {
+        text-align: right;
+        width: 30%;
+        font-size: 10px;
+    }
+
+    .header-left h1 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    .header-left p {
+        margin: 0;
+        line-height: 1.5;
+        font-size: 10px;
+    }
+
+    .header-center p {
+        margin: 0;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    .header-center p.title {
+        font-size: 16px;
+    }
+
+    .info-table {
+        width: 100%;
+        margin-bottom: 20px;
+        table-layout: fixed;
+    }
+
+    .info-table td {
+        padding: 5px 0;
+        font-size: 12px;
+    }
+
+    .main-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .main-table th,
+    .main-table td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: left;
+        font-size: 12px;
+    }
+
+    .main-table th {
+        background-color: #f2f2f2;
     }
 
     .signature-row {
@@ -27,36 +113,64 @@
         margin-top: 50px;
         font-weight: bold;
     }
+
+    .note {
+        margin-top: 20px;
+        font-size: 12px;
+    }
+
+    @media print {
+
+        .main-table th,
+        .main-table td {
+            border: 1px solid black;
+            -webkit-print-color-adjust: exact;
+        }
+    }
 </style>
 
 <div class="page-content">
     <div class="container-fluid">
         <div class="header-row">
-            <div>
-                <h3>PT OLEFINA TIFAPLAS POLIKEMINDO</h3>
-            </div>
-            <div>
-                <p>{{ \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }}</p>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-12 text-center">
-                <h2>PACKING LIST</h2>
-            </div>
-        </div>
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="float-left">
-                    <p><strong>Nomor:</strong> {{ $packingList->packing_number }}</p>
-                    <p><strong>Tanggal:</strong> {{ \Carbon\Carbon::parse($packingList->date)->format('d/m/Y') }}</p>
-                    <p><strong>Customer:</strong> {{ $packingList->customer_name }}</p>
+            <div class="header-left">
+                <img src="https://production.olefinatifaplas.my.id/assets/images/icon-otp.png" alt="" height="60" width="60">
+                <div>
+                    <h1>PT OLEFINA TIFAPLAS POLIKEMINDO</h1>
+                    <p>Jl. Raya Serang KM 16.8 Desa Telaga, Kec. Cikupa Tangerang, 15710<br>
+                        Phone: 02159663657 Fax: 0
+                    </p>
                 </div>
-                <div class="clear"></div>
+            </div>
+            <div class="header-center">
+                <p class="title">PACKING LIST</p>
+                <p><strong>{{ $packingList->packing_number }}</strong></p>
+            </div>
+            <div class="header-right">
+                <p>FM-SM-PPIC-09, Rev. 0, 01 September 2021</p>
+                <p>Tanggal Cetak: {{ \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }}</p>
             </div>
         </div>
+
+        <div class="info-table">
+            <table>
+                <tr>
+                    <td>Nomor</td>
+                    <td>: {{ $packingList->packing_number }}</td>
+                </tr>
+                <tr>
+                    <td>Tanggal</td>
+                    <td>: {{ \Carbon\Carbon::parse($packingList->date)->format('d/m/Y') }}</td>
+                </tr>
+                <tr>
+                    <td>Customer</td>
+                    <td>: {{ $packingList->customer_name }}</td>
+                </tr>
+            </table>
+        </div>
+
         <div class="row mt-4">
             <div class="col-12">
-                <table class="table">
+                <table class="main-table">
                     <thead>
                         <tr>
                             <th>No</th>

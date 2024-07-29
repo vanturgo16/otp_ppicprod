@@ -291,7 +291,7 @@
             });
         });
 
-        $(document).on('change', '.packing-list-remark', function() {
+        $(document).on('blur', '.packing-list-remark', function() {
             var packingListId = $(this).data('id');
             var remark = $(this).val();
 
