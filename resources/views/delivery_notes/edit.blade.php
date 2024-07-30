@@ -141,8 +141,7 @@
                                         <td>{{ $detail->salesman_name }}</td>
                                         <td><input type="text" class="form-control packing-list-remark" data-id="{{ $detail->id_packing_lists }}" value="{{ $detail->remark }}"></td>
                                         <td><button type="button" class="btn btn-danger btn-sm remove-packing-list">Hapus</button></td>
-                                    </tr>
-                                    @endforeach
+                                        @endforeach
                                 </tbody>
                             </table>
                         </div>
@@ -361,7 +360,7 @@
             });
         });
 
-        $(document).on('change', '.packing-list-remark', function() {
+        $(document).on('blur', '.packing-list-remark', function() {
             var packingListId = $(this).data('id');
             var remark = $(this).val();
 

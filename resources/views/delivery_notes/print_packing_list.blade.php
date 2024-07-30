@@ -30,7 +30,6 @@
                         <div class="mt-4">
                             <h5>Packing List: {{ $packingList->packing_number }}</h5>
                             <p>Date: {{ $packingList->date }}</p>
-                            <p>Barcodes: {{ $packingList->barcodes }}</p>
                         </div>
                         @endforeach
 
