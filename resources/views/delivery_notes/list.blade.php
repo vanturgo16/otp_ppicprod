@@ -27,6 +27,16 @@
                 <a href="{{ route('delivery_notes.create') }}" class="btn btn-primary">Tambah Data</a>
             </div>
         </div>
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="d-flex">
+                    <input type="date" id="start_date" class="form-control me-2" placeholder="Start Date">
+                    <input type="date" id="end_date" class="form-control me-2" placeholder="End Date">
+                    <button id="filter" class="btn btn-primary me-2">Filter</button>
+                    <button id="reset" class="btn btn-secondary">Reset</button>
+                </div>
+            </div>
+        </div>
         <div class="row">
             <div class="col-12">
                 <div class="card">
@@ -69,29 +79,28 @@
 <script>
     $(document).ready(function() {
         let dataTable = $('#delivery_notes_table').DataTable({
-            dom: '<"top d-flex"<"position-absolute top-0 end-0 d-flex"fl>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>><"clear:both">',
-            initComplete: function(settings, json) {
-                $('.top').prepend(
-                    `<div class='pull-left col-sm-12 col-md-5'><div class="btn-group mb-4"></div></div>`
-                );
-            },
+            dom: 'Bfrtip',
+            buttons: [
+                'copy', 'csv', 'excel', 'pdf', 'print'
+            ],
             processing: true,
             serverSide: true,
             language: {
                 lengthMenu: "_MENU_",
-                search: "",
-                searchPlaceholder: "Search",
+                search: "Search:",
+                searchPlaceholder: "Search records"
             },
             pageLength: 10,
             lengthMenu: [
-                [5, 10, 20, 25, 50, 100],
-                [5, 10, 20, 25, 50, 100]
+                [5, 10, 20, 25, 50, 100, -1],
+                [5, 10, 20, 25, 50, 100, "All"]
             ],
             aaSorting: [],
             ajax: {
                 url: '{{ route("delivery_notes.list") }}',
                 data: function(d) {
-                    d.search = $('input[type="search"]').val();
+                    d.start_date = $('#start_date').val();
+                    d.end_date = $('#end_date').val();
                 }
             },
             columns: [{
@@ -115,10 +124,7 @@
                 {
                     data: 'po_number',
                     name: 'po_number',
-                    orderable: true,
-                    render: function(data, type, row) {
-                        return data; // Menampilkan reference_number yang sudah dijoin
-                    }
+                    orderable: true
                 },
                 {
                     data: 'date',
@@ -153,7 +159,7 @@
                     render: function(data, type, row, meta) {
                         return generateActionButtons(row);
                     }
-                },
+                }
             ],
             createdRow: function(row, data, dataIndex) {
                 if (data.status === 'Posted') {
@@ -178,61 +184,48 @@
 
         function generateActionButtons(data) {
             let buttons = `<div class="btn-group" role="group" aria-label="Action Buttons">
-        <a href="/delivery_notes/${data.id}/show" class="btn btn-sm btn-primary waves-effect waves-light">
-            <i class="bx bx-show-alt"></i>
-        </a>`;
+                <a href="/delivery_notes/${data.id}" class="btn btn-sm btn-primary waves-effect waves-light">
+                    <i class="bx bx-show-alt"></i>
+                </a>`;
 
             if (data.status == 'Request') {
                 buttons += `<form action="/delivery_notes/${data.id}/post" method="post" class="d-inline" data-id="">
-            @method('PUT')
-            @csrf
-            <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Anda yakin mau Post item ini ?')">
-                <i class="bx bx-check-circle" title="Posted"> Posted</i>
-            </button>
-        </form>`;
+                    @method('PUT')
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Anda yakin mau Post item ini ?')">
+                        <i class="bx bx-check-circle" title="Posted"> Posted</i>
+                    </button>
+                </form>`;
             } else if (data.status == 'Posted') {
                 buttons += `<form action="/delivery_notes/${data.id}/unpost" method="post" class="d-inline" data-id="">
-            @method('PUT')
-            @csrf
-            <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Anda yakin mau Un Post item ini ?')">
-                <i class="bx bx-undo" title="Un Posted"> Un Posted</i>
-            </button>
-        </form>`;
+                    @method('PUT')
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Anda yakin mau Un Post item ini ?')">
+                        <i class="bx bx-undo" title="Un Posted"> Un Posted</i>
+                    </button>
+                </form>`;
             }
 
-            // Print buttons for DN, Sample, and Return
-            buttons += `<a href="/delivery_notes/${data.id}/print?type=DN" class="btn btn-sm btn-secondary">
-        <i class="bx bx-printer"></i> Print DN
-    </a>`;
-            buttons += `<a href="/delivery_notes/${data.id}/print?type=DS" class="btn btn-sm btn-secondary">
-        <i class="bx bx-printer"></i> Print Sample
-    </a>`;
-            buttons += `<a href="/delivery_notes/${data.id}/print?type=DR" class="btn btn-sm btn-secondary">
-        <i class="bx bx-printer"></i> Print Return
-    </a>`;
-
-            buttons += `<a href="/print_packing_list/${data.id}" class="btn btn-sm btn-info">
-        <i class="bx bx-book-open"></i> Packing List
-    </a>`;
+            buttons += `<a href="/print_packing_list/${data.id}" class="btn btn-sm btn-secondary">
+                <i class="bx bx-printer"></i> Print Packing List
+            </a>`;
 
             if (data.status == 'Request') {
                 buttons += `<a href="/delivery_notes/${data.id}/edit" class="btn btn-sm btn-warning">
-            <i class="bx bx-edit"></i> Edit
-        </a>
-        <form action="/delivery_notes/${data.id}" method="post" class="d-inline delete-delivery-note" data-id="${data.id}">
-            @method('DELETE')
-            @csrf
-            <button type="submit" class="btn btn-sm btn-danger">
-                <i class="bx bx-trash"></i> Delete
-            </button>
-        </form>`;
+                    <i class="bx bx-edit"></i> Edit
+                </a>
+                <form action="/delivery_notes/${data.id}" method="post" class="d-inline delete-delivery-note" data-id="${data.id}">
+                    @method('DELETE')
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-danger">
+                        <i class="bx bx-trash"></i> Delete
+                    </button>
+                </form>`;
             }
 
             buttons += `</div>`;
             return buttons;
         }
-
-
 
         $(document).on('submit', '.delete-delivery-note', function(e) {
             e.preventDefault();
@@ -281,6 +274,16 @@
                     });
                 }
             });
+        });
+
+        $('#filter').on('click', function() {
+            dataTable.draw();
+        });
+
+        $('#reset').on('click', function() {
+            $('#start_date').val('');
+            $('#end_date').val('');
+            dataTable.draw();
         });
     });
 </script>
