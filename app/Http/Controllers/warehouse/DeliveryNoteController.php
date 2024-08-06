@@ -16,7 +16,10 @@ class DeliveryNoteController extends Controller
     public function list(Request $request)
     {
         if ($request->ajax()) {
-            $data = DB::table('delivery_notes')
+            $start_date = $request->input('start_date');
+            $end_date = $request->input('end_date');
+
+            $query = DB::table('delivery_notes')
                 ->leftJoin('delivery_note_details', 'delivery_notes.id', '=', 'delivery_note_details.id_delivery_notes')
                 ->leftJoin('packing_lists', 'delivery_note_details.id_packing_lists', '=', 'packing_lists.id')
                 ->join('master_vehicles', 'delivery_notes.id_master_vehicles', '=', 'master_vehicles.id')
@@ -30,8 +33,13 @@ class DeliveryNoteController extends Controller
                     'sales_orders.reference_number as po_number'
                 )
                 ->groupBy('delivery_notes.id')
-                ->orderBy('delivery_notes.created_at', 'desc')
-                ->get();
+                ->orderBy('delivery_notes.created_at', 'desc');
+
+            if ($start_date && $end_date) {
+                $query->whereBetween('delivery_notes.date', [$start_date, $end_date]);
+            }
+
+            $data = $query->get();
 
             return datatables()->of($data)
                 ->addIndexColumn()
@@ -44,6 +52,7 @@ class DeliveryNoteController extends Controller
 
         return view('delivery_notes.list');
     }
+
 
     private function generateActionButtons($data)
     {

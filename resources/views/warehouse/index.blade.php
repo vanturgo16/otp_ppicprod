@@ -27,6 +27,18 @@
                 <a href="{{ route('packing_list.create') }}" class="btn btn-primary">Tambah Data</a>
             </div>
         </div>
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <input type="date" id="start_date" class="form-control" placeholder="Start Date">
+            </div>
+            <div class="col-md-3">
+                <input type="date" id="end_date" class="form-control" placeholder="End Date">
+            </div>
+            <div class="col-md-3">
+                <button id="filter" class="btn btn-secondary">Filter</button>
+                <button id="reset" class="btn btn-outline-secondary">Reset</button>
+            </div>
+        </div>
         <div class="row">
             <div class="col-12">
                 <div class="card">
@@ -49,7 +61,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <!-- Data akan diisi oleh DataTables -->
+                                    <!-- Data will be populated by DataTables -->
                                 </tbody>
                             </table>
                         </div>
@@ -65,23 +77,51 @@
 <script>
     $(document).ready(function() {
         let dataTable = $('#packing_list_table').DataTable({
-            dom: '<"top d-flex"<"position-absolute top-0 end-0 d-flex"fl>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>><"clear:both">',
-            initComplete: function(settings, json) {
-                $('.top').prepend(
-                    `<div class='pull-left col-sm-12 col-md-5'><div class="btn-group mb-4"></div></div>`
-                );
-            },
+            dom: '<"row"<"col-sm-12 col-md-6"B><"col-sm-12 col-md-6"f>>' +
+                '<"row"<"col-sm-12"l>>' +
+                'rt' +
+                '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+            buttons: [
+                'copy',
+                {
+                    extend: 'csv',
+                    exportOptions: {
+                        columns: ':visible:not(:last-child)'
+                    }
+                },
+                {
+                    extend: 'excel',
+                    exportOptions: {
+                        columns: ':visible:not(:last-child)'
+                    }
+                },
+                {
+                    extend: 'pdf',
+                    exportOptions: {
+                        columns: ':visible:not(:last-child)'
+                    }
+                },
+                {
+                    extend: 'print',
+                    exportOptions: {
+                        columns: ':visible:not(:last-child)'
+                    },
+                    customize: function(win) {
+                        $(win.document.body).find('th:last-child, td:last-child').hide();
+                    }
+                }
+            ],
             processing: true,
             serverSide: true,
             language: {
-                lengthMenu: "_MENU_",
-                search: "",
-                searchPlaceholder: "Search",
+                lengthMenu: "Display _MENU_ records per page",
+                search: "Search:",
+                searchPlaceholder: "Search records",
             },
             pageLength: 10,
             lengthMenu: [
-                [5, 10, 20, 25, 50, 100],
-                [5, 10, 20, 25, 50, 100]
+                [5, 10, 20, 25, 50, 100, -1],
+                [5, 10, 20, 25, 50, 100, "All"]
             ],
             aaSorting: [
                 [1, 'desc']
@@ -90,6 +130,8 @@
                 url: '{{ route("packing-list") }}',
                 data: function(d) {
                     d.search = $('input[type="search"]').val();
+                    d.start_date = $('#start_date').val();
+                    d.end_date = $('#end_date').val();
                 }
             },
             columns: [{
@@ -196,6 +238,16 @@
 
             return buttons;
         }
+
+        $('#filter').click(function() {
+            dataTable.draw();
+        });
+
+        $('#reset').click(function() {
+            $('#start_date').val('');
+            $('#end_date').val('');
+            dataTable.draw();
+        });
     });
 </script>
 @endpush

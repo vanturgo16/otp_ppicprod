@@ -14,12 +14,11 @@ class WarehouseController extends Controller
 {
     public function index(Request $request)
     {
-        if (request()->ajax()) {
+        if ($request->ajax()) {
             $orderColumn = $request->input('order')[0]['column'];
             $orderDirection = $request->input('order')[0]['dir'];
             $columns = ['id', 'packing_number', 'date', 'customer', 'status', ''];
 
-            // Query dasar
             $query = DB::table('packing_lists as pl')
                 ->leftJoin('master_customers as mc', 'pl.id_master_customers', '=', 'mc.id')
                 ->select(
@@ -31,7 +30,7 @@ class WarehouseController extends Controller
                 )
                 ->orderBy($columns[$orderColumn], $orderDirection);
 
-            // Handle pencarian
+            // Handle search
             if ($request->has('search') && $request->input('search')) {
                 $searchValue = $request->input('search');
                 $query->where(function ($query) use ($searchValue) {
@@ -39,6 +38,15 @@ class WarehouseController extends Controller
                         ->orWhere('mc.name', 'like', '%' . $searchValue . '%')
                         ->orWhere('pl.status', 'like', '%' . $searchValue . '%');
                 });
+            }
+
+            // Handle date range filtering
+            if ($request->has('start_date') && $request->has('end_date')) {
+                $startDate = $request->input('start_date');
+                $endDate = $request->input('end_date');
+                if ($startDate && $endDate) {
+                    $query->whereBetween('pl.date', [$startDate, $endDate]);
+                }
             }
 
             return DataTables::of($query)
@@ -51,6 +59,7 @@ class WarehouseController extends Controller
 
         return view('warehouse.index');
     }
+
     public function getCustomers(Request $request)
     {
         $search = $request->search;
