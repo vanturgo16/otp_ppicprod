@@ -19,10 +19,10 @@ Route::get('/', [AuthController::class, 'login'])->name('login');
 Route::post('auth/login', [AuthController::class, 'postlogin'])->name('postlogin')->middleware("throttle:5,2");
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::middleware(['auth','clear.permission.cache','permission:PPIC'])->group(function () {
-  
-        //Dashboard
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(function () {
+
+    //Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::middleware('permission:PPIC_good-receipt-note|PPIC_good-lote-number|PPIC_grn-qc|PPIC_external-no-lot')->group(function () {
         Route::get('/good-receipt-note', [GrnController::class, 'index'])->name('index');
@@ -57,126 +57,90 @@ Route::middleware(['auth','clear.permission.cache','permission:PPIC'])->group(fu
         Route::get('/external-no-lot', [GrnController::class, 'external_no_lot'])->name('external_no_lot');
         Route::put('/update_ext_lot_number', [GrnController::class, 'update_ext_lot_number'])->name('update_ext_lot_number');
         Route::get('/detail-external-no-lot/{lot_number}', [GrnController::class, 'detail_external_no_lot'])->name('detail_external_no_lot');
+
         
-      // Route::get('/detail-external-no-lot/{lot_number}', [GrnController::class, 'detail_external_no_lot'])->name('detail_external_no_lot');
+     
     }); 
 
     include __DIR__ . '/ppic/workOrder.php';
 
 
-        Route::controller(BarcodeController::class)->middleware('permission:PPIC_Barcode')->group(function () {
-            Route::get('/barcode', 'index')->name('barcode');
-            Route::get('/create-barcode', 'create')->name('barcode.create');
-            Route::post('/store-barcode', 'store')->name('post.create');
-            Route::get('/cange-barcode-so/{id}', 'cange')->name('barcode.cange');
-            Route::get('/show-barcode/{id}', 'show')->name('show_barcode');
-            Route::get('/print-satuan-standar-barcode/{id}', 'print_satuan_standar')->name('print_satuan_standar');
-            Route::get('/print-standar-barcode/{id}', 'print_standar')->name('print_standar');
-            Route::get('/print-broker-barcode/{id}', 'print_broker')->name('print_broker');
-            Route::get('/print-cbc-barcode/{id}', 'print_cbc')->name('print_cbc');
-            Route::get('/table', 'table_print')->name('table_print');
-        });
+    Route::controller(BarcodeController::class)->middleware('permission:PPIC_Barcode')->group(function () {
+        Route::get('/barcode', 'index')->name('barcode');
+        Route::get('/create-barcode', 'create')->name('barcode.create');
+        Route::post('/store-barcode', 'store')->name('post.create');
+        Route::get('/cange-barcode-so/{id}', 'cange')->name('barcode.cange');
+        Route::get('/show-barcode/{id}', 'show')->name('show_barcode');
+        Route::get('/print-satuan-standar-barcode/{id}', 'print_satuan_standar')->name('print_satuan_standar');
+        Route::get('/print-standar-barcode/{id}', 'print_standar')->name('print_standar');
+        Route::get('/print-broker-barcode/{id}', 'print_broker')->name('print_broker');
+        Route::get('/print-cbc-barcode/{id}', 'print_cbc')->name('print_cbc');
+        Route::get('/table', 'table_print')->name('table_print');
+    });
 
-        // Permissions route group
-        Route::controller(PermissionController::class)->middleware('permission:PPIC_permission.index')->group(function () {
-            Route::get('/permission', 'index')->name('permission.index');
-            Route::get('/permission/json', 'jsonpermission')->name('permission.json');
-            Route::get('/permission/create', 'create')->name('permission.create');
-            Route::post('/permission', 'store')->name('permission.store');
-        });
+    // Permissions route group
+    Route::controller(PermissionController::class)->middleware('permission:PPIC_permission.index')->group(function () {
+        Route::get('/permission', 'index')->name('permission.index');
+        Route::get('/permission/json', 'jsonpermission')->name('permission.json');
+        Route::get('/permission/create', 'create')->name('permission.create');
+        Route::post('/permission', 'store')->name('permission.store');
+    });
 
-        // Role access management route group
-        Route::controller(RoleController::class)->middleware('permission:PPIC_role.index')->group(function () {
-            Route::get('/role', 'index')->name('role.index');
-            Route::get('/role/create', 'create')->name('role.create');
-            Route::post('/role', 'store')->name('role.store');
-            Route::get('/role/edit/{role}', 'edit')->name('role.edit');
-            Route::patch('/role/update/{role}', 'update')->name('role.update');
-        });
+    // Role access management route group
+    Route::controller(RoleController::class)->middleware('permission:PPIC_role.index')->group(function () {
+        Route::get('/role', 'index')->name('role.index');
+        Route::get('/role/create', 'create')->name('role.create');
+        Route::post('/role', 'store')->name('role.store');
+        Route::get('/role/edit/{role}', 'edit')->name('role.edit');
+        Route::patch('/role/update/{role}', 'update')->name('role.update');
+    });
 
-        Route::controller(UserController::class)->middleware('permission:PPIC_user.index')->group(function () {
-            Route::get('/user', 'index')->name('user.index');
-            Route::get('/user/edit/{user}', 'edit')->name('user.edit');
-            Route::patch('/user/update/{user}', 'update');
-            Route::delete('/hapus-user/{user}', 'destroy');
-        });
+    Route::controller(UserController::class)->middleware('permission:PPIC_user.index')->group(function () {
+        Route::get('/user', 'index')->name('user.index');
+        Route::get('/user/edit/{user}', 'edit')->name('user.edit');
+        Route::patch('/user/update/{user}', 'update');
+        Route::delete('/hapus-user/{user}', 'destroy');
+    });
 
-        Route::controller(WarehouseController::class)->middleware('permission:Warehouse_packing_list')->group(function () {
-            Route::get('/packing-list', 'index')->name('packing-list');
-            Route::get('/create-pl', 'create')->name('packing_list.create');
-            // Route::post('/store-pl', 'create')->name('packing_list.store');
-            Route::get('/get-customers', 'getCustomers')->name('get-customers');
-            Route::post('/check-barcode', 'checkBarcode')->name('check-barcode');
-            Route::post('/packing-list-store', 'store')->name('packing_list.store');
-            Route::post('/remove-barcode', 'removeBarcode')->name('remove-barcode');
-            Route::get('/packing-list/{id}/edit', 'edit')->name('packing_list.edit');
-            Route::put('/packing-list/{id}/update', 'update')->name('packing_list.update');
-            Route::post('/packing-list/remove-barcode', 'removeBarcode')->name('packing_list.remove_barcode');
-            Route::post('update-barcode-detail', 'updateBarcodeDetail')->name('update-barcode-detail');
-            Route::get('print/{id}', 'printPackingList')->name('packing_list.print');
-            Route::get('packing-list/{id}', 'show')->name('packing-list.show');
-            Route::put('packing-list/{id}/post', 'post')->name('packing-list.post');
-            Route::put('packing-list/{id}/unpost', 'unpost')->name('packing-list.unpost');
-            Route::delete('/packing-list/{id}', 'destroy')->name('packing-list.destroy');
-            Route::post('/adjust-stock', 'adjustStock')->name('adjust-stock');
-        });
+    Route::controller(WarehouseController::class)->group(function () {
+        Route::get('/packing-list', 'index')->name('packing-list');
+        Route::get('/create-pl', 'create')->name('packing_list.create');
+        // Route::post('/store-pl', 'create')->name('packing_list.store');
+        Route::get('/get-customers', 'getCustomers')->name('get-customers');
+        Route::post('/check-barcode', 'checkBarcode')->name('check-barcode');
+        Route::post('/packing-list-store', 'store')->name('packing_list.store');
+        Route::post('/remove-barcode', 'removeBarcode')->name('remove-barcode');
+        Route::get('/packing-list/{id}/edit', 'edit')->name('packing_list.edit');
+        Route::put('/packing-list/{id}/update', 'update')->name('packing_list.update');
+        Route::post('/packing-list/remove-barcode', 'removeBarcode')->name('packing_list.remove_barcode');
+        Route::post('update-barcode-detail', 'updateBarcodeDetail')->name('update-barcode-detail');
+        Route::get('print/{id}', 'printPackingList')->name('packing_list.print');
+        Route::get('packing-list/{id}', 'show')->name('packing-list.show');
+        Route::put('packing-list/{id}/post', 'post')->name('packing-list.post');
+        Route::put('packing-list/{id}/unpost', 'unpost')->name('packing-list.unpost');
+        Route::delete('/packing-list/{id}', 'destroy')->name('packing-list.destroy');
+        // Route::post('/adjust-stock', 'adjustStock')->name('adjust-stock');
+    });
 
-        Route::controller(DeliveryNoteController::class)->middleware('permission:Warehouse_delivery_notes')->group(function () {
-            Route::get('delivery_notes', 'list')->name('delivery_notes.list');
-            Route::get('delivery_notes/create', 'create')->name('delivery_notes.create');
-            Route::post('delivery_notes', 'store')->name('delivery_notes.store');
-            Route::get('delivery_notes/{id}/add_packing_list', 'addPackingList')->name('delivery_notes.add_packing_list');
-            Route::post('delivery_notes/{id}/store_packing_list', 'storePackingList')->name('delivery_notes.store_packing_list');
-            Route::get('getPackingListDetails/{id}', 'getPackingListDetails')->name('delivery_notes.getPackingListDetails');
-            Route::get('getPackingListsByCustomer/{customerId}', 'getPackingListsByCustomer')->name('getPackingListsByCustomer');
-            Route::put('delivery_notes/{id}/post', 'post')->name('delivery_notes.post');
-            Route::put('delivery_notes/{id}/unpost', 'unpost')->name('delivery_notes.unpost');
-            Route::delete('delivery_notes/{id}', 'destroy')->name('delivery_notes.destroy');
-            Route::get('delivery_notes/{id}/show', 'show')->name('delivery_notes.show');
-            Route::get('delivery_notes/{id}/edit', 'edit')->name('delivery_notes.edit');
-            Route::put('delivery_notes/{id}/update', 'update')->name('delivery_notes.update');
-            Route::get('delivery_notes/{id}/print', 'print')->name('delivery_notes.print');
-            Route::put('/delivery_note_details/{id}/remark', 'updateRemark')->name('delivery_note_details.updateRemark');
-        });
-
-    //     Route::controller(DeliveryNoteController::class)->group(function () {
-    //         Route::get('delivery_notes/list', 'list')->name('delivery_notes.list');
-    //         Route::put('delivery_notes/{id}/post', 'post')->name('delivery_notes.post');
-    //         Route::put('delivery_notes/{id}/unpost', 'unpost')->name('delivery_notes.unpost');
-    //         Route::delete('delivery_notes/{id}', 'destroy')->name('delivery_notes.destroy');
-    //         Route::get('delivery_notes/{id}/show', 'show')->name('delivery_notes.show');
-    //         Route::get('delivery_notes/{id}/edit', 'edit')->name('delivery_notes.edit');
-    //         Route::put('delivery_notes/{id}/update', 'update')->name('delivery_notes.update');
-    //         Route::get('delivery_notes/create', 'create')->name('delivery_notes.create');
-    //         Route::post('delivery_notes', 'store')->name('delivery_notes.store');
-    //         Route::get('delivery_notes/{id}/print', 'print')->name('delivery_notes.print');
-    //         Route::get('getPackingListDetails/{id}', 'getPackingListDetails')->name('delivery_notes.getPackingListDetails');
-    //         Route::put('/delivery_note_details/{id}/remark', 'updateRemark')->name('delivery_note_details.updateRemark');
-
-    //         Route::get('delivery_notes/{id}/add_packing_list', 'addPackingList')->name('delivery_notes.add_packing_list');
-    //         Route::post('delivery_notes/{id}/store_packing_list', 'storePackingList')->name('delivery_notes.store_packing_list');
-    //     });
-
-    //     Route::get('delivery_notes/{id}/add_packing_list', 'addPackingList')->name('delivery_notes.add_packing_list');
-    //     Route::post('delivery_notes/{id}/store_packing_list', 'storePackingList')->name('delivery_notes.store_packing_list');
-    // });
-    // Route::controller(DeliveryNoteController::class)->group(function () {
-    //     Route::get('delivery_notes', 'list')->name('delivery_notes.list');
-    //     Route::get('delivery_notes/create', 'create')->name('delivery_notes.create');
-    //     Route::post('delivery_notes', 'store')->name('delivery_notes.store');
-    //     Route::get('delivery_notes/{id}/add_packing_list', 'addPackingList')->name('delivery_notes.add_packing_list');
-    //     Route::post('delivery_notes/{id}/store_packing_list', 'storePackingList')->name('delivery_notes.store_packing_list');
-    //     Route::get('getPackingListDetails/{id}', 'getPackingListDetails')->name('delivery_notes.getPackingListDetails');
-    //     Route::get('getPackingListsByCustomer/{customerId}', 'getPackingListsByCustomer')->name('getPackingListsByCustomer');
-    //     Route::put('delivery_notes/{id}/post', 'post')->name('delivery_notes.post');
-    //     Route::put('delivery_notes/{id}/unpost', 'unpost')->name('delivery_notes.unpost');
-    //     Route::delete('delivery_notes/{id}', 'destroy')->name('delivery_notes.destroy');
-    //     Route::get('delivery_notes/{id}/show', 'show')->name('delivery_notes.show');
-    //     Route::get('delivery_notes/{id}/edit', 'edit')->name('delivery_notes.edit');
-    //     Route::put('delivery_notes/{id}/update', 'update')->name('delivery_notes.update');
-    //     Route::get('delivery_notes/{id}/print', 'print')->name('delivery_notes.print');
-    //     Route::put('/delivery_note_details/{id}/remark', 'updateRemark')->name('delivery_note_details.updateRemark');
-    //     Route::get('get-customer-addresses/{customerId}', 'getCustomerAddresses')->name('get-customer-addresses');
-    // });
-});
-
+   
+    Route::controller(DeliveryNoteController::class)->group(function () {
+        Route::get('delivery_notes', 'list')->name('delivery_notes.list');
+        Route::get('delivery_notes/create', 'create')->name('delivery_notes.create');
+        Route::post('delivery_notes', 'store')->name('delivery_notes.store');
+        Route::get('delivery_notes/{id}/add_packing_list', 'addPackingList')->name('delivery_notes.add_packing_list');
+        Route::post('delivery_notes/{id}/store_packing_list', 'storePackingList')->name('delivery_notes.store_packing_list');
+        Route::get('getPackingListDetails/{id}', 'getPackingListDetails')->name('delivery_notes.getPackingListDetails');
+        Route::get('getPackingListsByCustomer/{customerId}', 'getPackingListsByCustomer')->name('getPackingListsByCustomer');
+        Route::put('delivery_notes/{id}/post', 'post')->name('delivery_notes.post');
+        Route::put('delivery_notes/{id}/unpost', 'unpost')->name('delivery_notes.unpost');
+        Route::delete('delivery_notes/{id}', 'destroy')->name('delivery_notes.destroy');
+        Route::get('delivery_notes/{id}/show', 'show')->name('delivery_notes.show');
+        Route::get('delivery_notes/{id}/edit', 'edit')->name('delivery_notes.edit');
+        Route::put('delivery_notes/{id}/update', 'update')->name('delivery_notes.update');
+        Route::get('delivery_notes/{id}/print', 'print')->name('delivery_notes.print');
+        Route::put('delivery_notes/{packingListId}/update_remark', 'updateRemark')->name('delivery_note_details.updateRemark');
+        Route::get('get-customer-addresses/{customerId}/{type}', 'getCustomerAddresses')->name('get-customer-addresses');
+        Route::delete('delivery_notes/{id}/delete_packing_list', 'deletePackingList');
+        Route::get('print_packing_list/{id}', 'printPackingList')->name('print_packing_list');
+    });
+}); 

@@ -40,11 +40,18 @@
                                 </select>
                             </div>
                             <div class="mb-3">
-                                <label for="customer_address" class="form-label">Alamat Customer</label>
-                                <select class="form-control select2" id="customer_address" name="id_master_customer_addresses" required>
-                                    <option value="" selected disabled>** Pilih Alamat Customer</option>
+                                <label for="customer_address" class="form-label">Alamat Shipping</label>
+                                <select class="form-control select2" id="customer_address" name="id_master_customer_address_shipping" required>
+                                    <option value="" selected disabled>** Pilih Alamat Shipping</option>
                                 </select>
                             </div>
+                            <div class="mb-3">
+                                <label for="invoice_address" class="form-label">Alamat Invoice</label>
+                                <select class="form-control select2" id="invoice_address" name="id_master_customer_address_invoice" required>
+                                    <option value="" selected disabled>** Pilih Alamat Invoice</option>
+                                </select>
+                            </div>
+
                             <div class="mb-3">
                                 <label for="vehicle" class="form-label">Kendaraan</label>
                                 <select class="form-control select2" id="vehicle" name="id_master_vehicle" required>
@@ -59,6 +66,7 @@
                                 <textarea class="form-control" id="note" name="note" rows="3"></textarea>
                             </div>
                             <button type="submit" class="btn btn-primary">Simpan</button>
+                            <button type="button" class="btn btn-secondary" id="kembali-btn" style="display: none;">Kembali</button>
                         </form>
                     </div>
                 </div>
@@ -77,19 +85,19 @@
                             </div>
                             <div class="mb-3">
                                 <label for="po_number" class="form-label">Nomor PO</label>
-                                <input type="text" class="form-control" id="po_number" name="po_number" required>
+                                <input type="text" class="form-control" id="po_number" name="po_number" required readonly>
                             </div>
                             <div class="mb-3">
                                 <label for="dn_type" class="form-label">Tipe DN</label>
-                                <input type="text" class="form-control" id="dn_type" name="dn_type" required>
+                                <input type="text" class="form-control" id="dn_type" name="dn_type" required readonly>
                             </div>
                             <div class="mb-3">
                                 <label for="transaction_type" class="form-label">Tipe Transaksi</label>
-                                <input type="text" class="form-control" id="transaction_type" name="transaction_type" required>
+                                <input type="text" class="form-control" id="transaction_type" name="transaction_type" required readonly>
                             </div>
                             <div class="mb-3">
                                 <label for="salesman_name" class="form-label">Nama Salesman</label>
-                                <input type="text" class="form-control" id="salesman_name" name="salesman_name" required>
+                                <input type="text" class="form-control" id="salesman_name" name="salesman_name" required readonly>
                             </div>
                             <button type="submit" class="btn btn-primary">Tambah Packing List</button>
                         </form>
@@ -102,6 +110,8 @@
                                         <th>Tipe DN</th>
                                         <th>Tipe Transaksi</th>
                                         <th>Salesman</th>
+                                        <th>Remark</th>
+                                        <th>Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody id="packing-list-details"></tbody>
@@ -115,13 +125,16 @@
 </div>
 
 @push('scripts')
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
+        var today = new Date().toISOString().split('T')[0];
+        $('#date').val(today);
         $('.select2').select2();
 
         $('#delivery-note-form').on('submit', function(e) {
             e.preventDefault();
-            console.log("Form Delivery Note disubmit!"); // Debug statement
             var formData = $(this).serialize();
 
             $.ajax({
@@ -129,25 +142,36 @@
                 method: 'POST',
                 data: formData,
                 success: function(response) {
-                    console.log("Respon Form Delivery Note: ", response); // Debug statement
                     if (response.success) {
                         $('#delivery_note_id').val(response.delivery_note_id);
                         $('#packing-list-card').show();
-                        $('#delivery-note-form button[type="submit"]').text('Kembali').removeClass('btn-primary').addClass('btn-secondary');
+                        $('#delivery-note-form button[type="submit"]').hide();
+                        $('#kembali-btn').show();
                     } else {
-                        alert(response.message || 'Gagal menyimpan data');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Gagal menyimpan data',
+                        });
                     }
                 },
                 error: function(xhr) {
                     console.error(xhr.responseText);
-                    alert('Gagal menyimpan data');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Gagal menyimpan data',
+                    });
                 }
             });
         });
 
+        $('#kembali-btn').on('click', function() {
+            window.location.href = "{{ route('delivery_notes.list') }}";
+        });
+
         $('#packing_list').change(function() {
             var packingListId = $(this).val();
-            console.log("Packing List dipilih: ", packingListId); // Debug statement
 
             if (packingListId) {
                 loadPackingListDetails(packingListId);
@@ -159,7 +183,6 @@
                 url: '{{ url("getPackingListDetails") }}/' + packingListId,
                 method: 'GET',
                 success: function(response) {
-                    console.log("Detail Packing List dimuat: ", response); // Debug statement
                     $('#po_number').val(response.po_number);
                     $('#dn_type').val(response.dn_type);
                     $('#transaction_type').val(response.transaction_type);
@@ -167,55 +190,150 @@
                 },
                 error: function(xhr) {
                     console.error(xhr.responseText);
-                    alert('Gagal memuat detail Packing List');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Gagal memuat detail Packing List',
+                    });
                 }
             });
         }
 
         $('#packing-list-form').on('submit', function(e) {
             e.preventDefault();
-            console.log("Form Packing List disubmit!"); // Debug statement
             var formData = $(this).serialize();
-
-            console.log("Data Form: ", formData); // Debug statement
 
             $.ajax({
                 url: '{{ url("delivery_notes") }}/' + $('#delivery_note_id').val() + '/store_packing_list',
                 method: 'POST',
                 data: formData,
                 success: function(response) {
-                    console.log("Respon Form Packing List: ", response); // Debug statement
                     if (response.success) {
                         var packingListId = $('#packing_list').val();
                         var packingListNumber = $('#packing_list option:selected').text();
                         $('#packing-list-details').append(
-                            '<tr>' +
+                            '<tr data-id="' + packingListId + '">' +
                             '<td>' + packingListNumber + '</td>' +
                             '<td>' + response.po_number + '</td>' +
                             '<td>' + response.dn_type + '</td>' +
                             '<td>' + response.transaction_type + '</td>' +
                             '<td>' + response.salesman_name + '</td>' +
+                            '<td><input type="text" class="form-control packing-list-remark" data-id="' + packingListId + '" placeholder="Remark"></td>' +
+                            '<td><button type="button" class="btn btn-danger btn-sm remove-packing-list">Hapus</button></td>' +
                             '</tr>'
                         );
                         $('#packing_list').val('').trigger('change');
-                        $('#delivery-note-form button[type="submit"]').text('Simpan').removeClass('btn-secondary').addClass('btn-primary');
                     } else {
-                        alert(response.message || 'Gagal menambahkan packing list');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Gagal menambahkan packing list',
+                        });
                     }
                 },
                 error: function(xhr) {
                     console.error(xhr.responseText);
-                    alert('Gagal menambahkan packing list');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Gagal menambahkan packing list',
+                    });
+                }
+            });
+        });
+
+        $(document).on('click', '.remove-packing-list', function() {
+            var row = $(this).closest('tr');
+            var packingListId = row.data('id');
+
+            Swal.fire({
+                title: 'Apakah anda yakin?',
+                text: "Data ini akan dihapus!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, hapus!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '{{ url("delivery_notes") }}/' + packingListId + '/delete_packing_list',
+                        method: 'DELETE',
+                        data: {
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                row.remove();
+                                Swal.fire(
+                                    'Terhapus!',
+                                    'Packing List telah dihapus.',
+                                    'success'
+                                );
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: response.message || 'Gagal menghapus packing list',
+                                });
+                            }
+                        },
+                        error: function(xhr) {
+                            console.error(xhr.responseText);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Gagal menghapus packing list',
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        $(document).on('blur', '.packing-list-remark', function() {
+            var packingListId = $(this).data('id');
+            var remark = $(this).val();
+
+            $.ajax({
+                url: '{{ url("delivery_notes") }}/' + packingListId + '/update_remark',
+                method: 'PUT',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    remark: remark
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: 'Remark berhasil diperbarui',
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Gagal memperbarui remark',
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    console.error(xhr.responseText);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Gagal memperbarui remark',
+                    });
                 }
             });
         });
 
         $('#customer').change(function() {
             var customerId = $(this).val();
-            console.log("Customer berubah: ", customerId); // Debug statement
             if (customerId) {
                 loadPackingLists(customerId);
-                loadCustomerAddresses(customerId); // Panggil fungsi untuk memuat alamat customer
+                loadCustomerAddresses(customerId, 'Shipping');
+                loadCustomerAddresses(customerId, 'Invoice');
             }
         });
 
@@ -224,7 +342,6 @@
                 url: '{{ url("getPackingListsByCustomer") }}/' + customerId,
                 method: 'GET',
                 success: function(response) {
-                    console.log("Packing List dimuat: ", response); // Debug statement
                     $('#packing_list').empty().append('<option value="" selected disabled>** Pilih Packing List</option>');
                     $.each(response, function(key, value) {
                         $('#packing_list').append('<option value="' + value.id + '">' + value.packing_number + '</option>');
@@ -232,25 +349,39 @@
                 },
                 error: function(xhr) {
                     console.error(xhr.responseText);
-                    alert('Gagal memuat daftar Packing List');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Gagal memuat daftar Packing List',
+                    });
                 }
             });
         }
 
-        function loadCustomerAddresses(customerId) {
+        function loadCustomerAddresses(customerId, type) {
             $.ajax({
-                url: '{{ url("get-customer-addresses") }}/' + customerId,
+                url: '{{ url("get-customer-addresses") }}/' + customerId + '/' + type,
                 method: 'GET',
                 success: function(response) {
-                    console.log("Alamat Customer dimuat: ", response); // Debug statement
-                    $('#customer_address').empty().append('<option value="" selected disabled>** Pilih Alamat Customer</option>');
-                    $.each(response, function(key, value) {
-                        $('#customer_address').append('<option value="' + value.id + '">' + value.address + '</option>');
-                    });
+                    if (type === 'Shipping') {
+                        $('#customer_address').empty().append('<option value="" selected disabled>** Pilih Alamat Shipping</option>');
+                        $.each(response, function(key, value) {
+                            $('#customer_address').append('<option value="' + value.id + '">' + value.address + '</option>');
+                        });
+                    } else if (type === 'Invoice') {
+                        $('#invoice_address').empty().append('<option value="" selected disabled>** Pilih Alamat Invoice</option>');
+                        $.each(response, function(key, value) {
+                            $('#invoice_address').append('<option value="' + value.id + '">' + value.address + '</option>');
+                        });
+                    }
                 },
                 error: function(xhr) {
                     console.error(xhr.responseText);
-                    alert('Gagal memuat alamat customer');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Gagal memuat alamat customer',
+                    });
                 }
             });
         }

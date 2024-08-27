@@ -49,7 +49,7 @@ class workOrderController extends Controller
                 ->join('sales_orders as d', 'a.id_sales_orders', '=', 'd.id')
                 ->join(
                     \DB::raw(
-                        '(SELECT id, product_code, description, id_master_units, \'FG\' as type_product FROM master_product_fgs WHERE status = \'Active\' UNION ALL SELECT id, wip_code as product_code, description, id_master_units, \'WIP\' as type_product FROM master_wips WHERE status = \'Active\') e'
+                        '(SELECT id, product_code, description, id_master_units, \'FG\' as type_product, perforasi FROM master_product_fgs WHERE status = \'Active\' UNION ALL SELECT id, wip_code as product_code, description, id_master_units, \'WIP\' as type_product, perforasi FROM master_wips WHERE status = \'Active\') e'
                     ),
                     function ($join) {
                         $join->on('a.id_master_products', '=', 'e.id');
@@ -60,14 +60,14 @@ class workOrderController extends Controller
                 ->leftJoin('master_units as g', 'a.id_master_units_needed', '=', 'g.id')
                 ->leftJoin(
                     \DB::raw(
-                        '(SELECT id, product_code as pc_needed, description as dsc, id_master_units, \'FG\' as type_product FROM master_product_fgs WHERE status = \'Active\' UNION ALL SELECT id, wip_code as pc_needed, description as dsc, id_master_units, \'WIP\' as type_product FROM master_wips WHERE status = \'Active\') h'
+                        '(SELECT id, product_code as pc_needed, description as dsc, id_master_units, \'FG\' as type_product, perforasi as perforasi_needed FROM master_product_fgs WHERE status = \'Active\' UNION ALL SELECT id, wip_code as pc_needed, description as dsc, id_master_units, \'WIP\' as type_product, perforasi FROM master_wips WHERE status = \'Active\') h'
                     ),
                     function ($join) {
                         $join->on('a.id_master_products_material', '=', 'h.id');
                         $join->on('a.type_product_material', '=', 'h.type_product');
                     }
                 )
-                ->select('a.id', 'a.wo_number', 'd.so_number', 'a.type_product', 'a.id_master_products', 'a.id_master_process_productions', 'b.process', 'c.work_center', 'a.qty', 'a.id_master_units', 'a.type_product_material', 'a.id_master_products_material', 'a.qty_needed', 'a.id_master_units_needed', 'a.note', 'a.status', 'e.product_code', 'e.description', 'f.unit_code as unit', 'g.unit_code as unit_needed', 'h.pc_needed', 'h.dsc')
+                ->select('a.id', 'a.wo_number', 'd.so_number', 'a.type_product', 'a.id_master_products', 'a.id_master_process_productions', 'b.process', 'c.work_center', 'a.qty', 'a.id_master_units', 'a.type_product_material', 'a.id_master_products_material', 'a.qty_needed', 'a.id_master_units_needed', 'a.note', 'a.status', 'e.product_code', 'e.description', 'f.unit_code as unit', 'g.unit_code as unit_needed', 'h.pc_needed', 'h.dsc', 'e.perforasi', 'h.perforasi_needed')
                 ->orderBy($columns[$orderColumn], $orderDirection);
 
             // Filter berdasarkan status
@@ -112,10 +112,12 @@ class workOrderController extends Controller
                     return $checkBox;
                 })
                 ->addColumn('description', function ($data) {
-                    return $data->product_code . ' - ' . $data->description;
+                    $perforasi = $data->perforasi == null ? '-' : $data->perforasi;
+                    return $data->product_code . ' - ' . $data->description . ' | Perforasi: ' . $perforasi;
                 })
                 ->addColumn('description_needed', function ($data) {
-                    return $data->pc_needed . ' - ' . $data->dsc;
+                    $perforasi_needed = $data->pc_needed == null ? '' : ($data->perforasi_needed == null ? '-' : ' | Perforasi: ' . $data->perforasi_needed);
+                    return $data->pc_needed . ' - ' . $data->dsc . $perforasi_needed;
                 })
                 ->addColumn('status', function ($data) {
                     $badgeColor = $data->status == 'Request' ? 'secondary' : ($data->status == 'Un Posted' ? 'warning' : ($data->status == 'Closed' ? 'info' : ($data->status == 'Finish' ? 'primary' : 'success')));
@@ -509,12 +511,12 @@ class workOrderController extends Controller
         if ($typeProduct == 'WIP') {
             $products = DB::table('master_wips as a')
                 ->where('a.status', 'Active')
-                ->select('a.id', 'a.wip_code', 'a.description')
+                ->select('a.id', 'a.wip_code', 'a.description', 'a.perforasi')
                 ->get();
         } else if ($typeProduct == 'FG') {
             $products = DB::table('master_product_fgs as a')
                 ->where('a.status', 'Active')
-                ->select('a.id', 'a.product_code', 'a.description')
+                ->select('a.id', 'a.product_code', 'a.description', 'a.perforasi')
                 ->get();
         }
         return response()->json(['products' => $products]);
@@ -569,11 +571,11 @@ class workOrderController extends Controller
             ->first();
 
         $combinedDataProducts = DB::table('master_product_fgs')
-            ->select('id', 'product_code', 'description', 'id_master_units', DB::raw("'FG' as type_product"))
+            ->select('id', 'product_code', 'description', 'id_master_units', DB::raw("'FG' as type_product"), 'perforasi')
             ->where('status', 'Active')
             ->unionAll(
                 DB::table('master_wips')
-                    ->select('id', 'wip_code as product_code', 'description', 'id_master_units', DB::raw("'WIP' as type_product"))
+                    ->select('id', 'wip_code as product_code', 'description', 'id_master_units', DB::raw("'WIP' as type_product"), 'perforasi')
                     ->where('status', 'Active')
             )
             ->get();
