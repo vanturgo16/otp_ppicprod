@@ -58,38 +58,7 @@ Route::middleware(['auth','clear.permission.cache','permission:PPIC'])->group(fu
         Route::put('/update_ext_lot_number', [GrnController::class, 'update_ext_lot_number'])->name('update_ext_lot_number');
         Route::get('/detail-external-no-lot/{lot_number}', [GrnController::class, 'detail_external_no_lot'])->name('detail_external_no_lot');
         
-
-        // Route::get('/good-receipt-note', [GrnController::class, 'index'])->name('index');
-        // Route::get('/grn-pr-add', [GrnController::class, 'grn_pr_add'])->name('grn_pr_add');
-        // Route::get('/grn-po-add', [GrnController::class, 'grn_po_add'])->name('grn_po_add');
-        // Route::get('/get-data', [GrnController::class, 'get_data'])->name('get_data');
-        // Route::post('/simpan_pr_grn', [GrnController::class, 'simpan_pr_grn'])->name('simpan_pr_grn');
-        // Route::post('/simpan_po_grn', [GrnController::class, 'simpan_po_grn'])->name('simpan_po_grn');
-        // Route::get('/detail-grn-po/{id}', [GrnController::class, 'detail_grn_po'])->name('detail_grn_po');
-        // Route::get('/detail-grn-pr/{id}', [GrnController::class, 'detail_grn_pr'])->name('detail_grn_pr');
-        // Route::delete('/hapus_grn_detail/{id}/{idx}', [GrnController::class, 'hapus_grn_detail'])->name('hapus_grn_detail');
-        // Route::delete('/hapus_grn_detail_po/{id}/{idx}', [GrnController::class, 'hapus_grn_detail_po'])->name('hapus_grn_detail_po');
-        // Route::delete('/hapus_grn/{id}', [GrnController::class, 'hapus_grn'])->name('hapus_grn');
-        // Route::post('/simpan_detail_grn/{id}', [GrnController::class, 'simpan_detail_grn'])->name('simpan_detail_grn');
-        // Route::post('/simpan_detail_grn_po/{id}', [GrnController::class, 'simpan_detail_grn_po'])->name('simpan_detail_grn_po');
-        // Route::get('/get-edit-grn-pr/{id}', [GrnController::class, 'get_edit_grn_pr'])->name('get_edit_grn_pr');
-        // Route::get('/print-grn/{receipt_number}', [GrnController::class, 'print_grn'])->name('print_grn');
-        // Route::put('/posted_grn/{id}', [GrnController::class, 'posted_grn'])->name('posted_grn');
-        // Route::put('/unposted_grn/{id}', [GrnController::class, 'unposted_grn'])->name('unposted_grn');
-        // Route::get('/edit-grn/{id}', [GrnController::class, 'edit_grn'])->name('edit_grn');
-        // Route::post('/simpan_detail_po_fix', [GrnController::class, 'simpan_detail_po_fix'])->name('simpan_detail_po_fix');
-
-        // Route::get('/good-lote-number', [GrnController::class, 'good_lote_number'])->name('good_lote_number');
-        // Route::get('/generate-code', [GrnController::class, 'generateCode'])->name('generateCode');
-        // Route::put('/update_lot_number', [GrnController::class, 'update_lot_number'])->name('update_lot_number');
-        // Route::get('/good-lote-number-detail/{id}', [GrnController::class, 'good_lote_number_detail'])->name('good_lote_number_detail');
-        // Route::get('/generateBarcode/{lot_number}', [GrnController::class, 'generateBarcode'])->name('generateBarcode');
-        // Route::get('/grn-qc', [GrnController::class, 'grn_qc'])->name('grn_qc');
-        // Route::put('/qc_passed/{id}', [GrnController::class, 'qc_passed'])->name('qc_passed');
-        // Route::put('/un_qc_passed/{id}', [GrnController::class, 'un_qc_passed'])->name('un_qc_passed');
-        // Route::get('/external-no-lot', [GrnController::class, 'external_no_lot'])->name('external_no_lot');
-        // Route::put('/update_ext_lot_number', [GrnController::class, 'update_ext_lot_number'])->name('update_ext_lot_number');
-        // Route::get('/detail-external-no-lot/{lot_number}', [GrnController::class, 'detail_external_no_lot'])->name('detail_external_no_lot');
+      // Route::get('/detail-external-no-lot/{lot_number}', [GrnController::class, 'detail_external_no_lot'])->name('detail_external_no_lot');
     }); 
 
     include __DIR__ . '/ppic/workOrder.php';
