@@ -498,14 +498,14 @@
             $('body').attr('data-sidebar-size', 'sm');
         });
     </script>
-    @if (request()->is('ppic/*'))
+    {{-- @if (request()->is('ppic/*')) --}}
     <script>
         let baseRoute = '{{ url('') }}';
     </script>
     @if (request()->is('ppic/workOrder') || request()->is('ppic/workOrder/*'))
     <script src="{{ asset('assets/js/ppic/work_order.js') }}"></script>
     @endif
-    @endif
+    {{-- @endif --}}
 
     <script>
         // Hapus pesan flash setelah 5 detik
