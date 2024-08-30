@@ -338,7 +338,7 @@ class workOrderController extends Controller
             $productNeeded = null;
         }
 
-        // echo json_encode($work_order);
+        // echo json_encode($productNeeded);
         // exit;
 
         return view('ppic.work_order.show', compact('work_order', 'product', 'productNeeded'));
@@ -417,7 +417,7 @@ class workOrderController extends Controller
                 'qty' => $request->qty,
                 'id_master_units' => $request->id_master_units,
                 // 'qty_results' => $request->id,
-                'qty_needed' => $request->id,
+                'qty_needed' => $request->qty_needed,
                 'id_master_units_needed' => $request->id_master_units_needed,
                 'start_date' => $request->start_date,
                 'finish_date' => $request->finish_date,
