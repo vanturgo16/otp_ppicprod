@@ -500,8 +500,7 @@
     </script>
     @if (request()->is('ppic/*'))
     <script>
-        let baseRoute = '{{ url('
-        ') }}';
+        let baseRoute = '{{ url('') }}';
     </script>
     @if (request()->is('ppic/workOrder') || request()->is('ppic/workOrder/*'))
     <script src="{{ asset('assets/js/ppic/work_order.js') }}"></script>
@@ -544,10 +543,6 @@
             width: 'resolve', // need to override the changed default
             theme: "classic"
         });
-    </script>
-    <script>
-        let baseRoute = '{{ url('
-        ') }}';
     </script>
     @stack('scripts')
 
