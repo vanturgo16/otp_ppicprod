@@ -17,7 +17,7 @@ class WarehouseController extends Controller
         if ($request->ajax()) {
             $orderColumn = $request->input('order')[0]['column'];
             $orderDirection = $request->input('order')[0]['dir'];
-            $columns = ['id', 'packing_number', 'date', 'customer', 'status', ''];
+            $columns = ['id', 'packing_number', 'date', 'customer', 'status'];
 
             $query = DB::table('packing_lists as pl')
                 ->leftJoin('master_customers as mc', 'pl.id_master_customers', '=', 'mc.id')
@@ -26,7 +26,8 @@ class WarehouseController extends Controller
                     'pl.packing_number',
                     'pl.date',
                     'mc.name as customer',
-                    'pl.status'
+                    'pl.status',
+                    DB::raw('"" as action') // Menambahkan kolom action sebagai kolom kosong
                 )
                 ->orderBy($columns[$orderColumn], $orderDirection);
 
@@ -51,7 +52,9 @@ class WarehouseController extends Controller
 
             return DataTables::of($query)
                 ->addColumn('action', function ($data) {
-                    return view('warehouse.action_buttons', compact('data'));
+                    // Generate action buttons here
+                    $buttons = view('warehouse.action_buttons', compact('data'))->render();
+                    return $buttons;
                 })
                 ->rawColumns(['action'])
                 ->make(true);
@@ -59,6 +62,7 @@ class WarehouseController extends Controller
 
         return view('warehouse.index');
     }
+
 
     public function getCustomers(Request $request)
     {

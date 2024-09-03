@@ -53,7 +53,6 @@ class DeliveryNoteController extends Controller
         return view('delivery_notes.list');
     }
 
-
     private function generateActionButtons($data)
     {
         $buttons = '<div class="btn-group" role="group" aria-label="Action Buttons">';
