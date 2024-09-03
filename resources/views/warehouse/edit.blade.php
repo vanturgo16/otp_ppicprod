@@ -41,7 +41,8 @@
                                 <input type="text" class="form-control" id="all_barcodes" name="all_barcodes" value="{{ $packingList->all_barcodes }}" readonly>
                             </div>
                             <button type="submit" class="btn btn-primary" id="save-button">Update</button>
-                            <a href="{{ route('packing-list') }}" class="btn btn-secondary">Kembali</a>
+                            <a href="{{ route('packing-list', ['page' => request()->query('page', 1)]) }}" class="btn btn-secondary">Kembali</a>
+
                         </form>
                     </div>
                 </div>
@@ -101,11 +102,9 @@
 </div>
 <input type="hidden" id="packing_list_id" value="{{ $packingList->id }}">
 @endsection
-
 @push('styles')
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 @endpush
-
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

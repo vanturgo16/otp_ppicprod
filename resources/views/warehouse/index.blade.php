@@ -76,6 +76,10 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
+        // Ambil halaman awal dari query string
+        let initialPage = new URLSearchParams(window.location.search).get('page') || 1;
+        initialPage = parseInt(initialPage) - 1; // Karena DataTables menghitung halaman dari 0
+
         let dataTable = $('#packing_list_table').DataTable({
             dom: '<"row"<"col-sm-12 col-md-6"B><"col-sm-12 col-md-6"f>>' +
                 '<"row"<"col-sm-12"l>>' +
@@ -86,7 +90,7 @@
                 {
                     extend: 'csv',
                     exportOptions: {
-                        columns: ':visible:not(:last-child)'
+                        columns: ':visible:not(:last-child)' // Mengecualikan kolom aksi (tombol)
                     }
                 },
                 {
@@ -113,19 +117,8 @@
             ],
             processing: true,
             serverSide: true,
-            language: {
-                lengthMenu: "Display _MENU_ records per page",
-                search: "Search:",
-                searchPlaceholder: "Search records",
-            },
             pageLength: 10,
-            lengthMenu: [
-                [5, 10, 20, 25, 50, 100, -1],
-                [5, 10, 20, 25, 50, 100, "All"]
-            ],
-            aaSorting: [
-                [1, 'desc']
-            ],
+            displayStart: initialPage * 10, // Menyesuaikan dengan halaman awal
             ajax: {
                 url: '{{ route("packing-list") }}',
                 data: function(d) {
@@ -145,22 +138,22 @@
                 {
                     data: 'packing_number',
                     name: 'packing_number',
-                    orderable: true,
+                    orderable: true
                 },
                 {
                     data: 'date',
                     name: 'date',
-                    orderable: true,
+                    orderable: true
                 },
                 {
                     data: 'customer',
                     name: 'customer',
-                    orderable: true,
+                    orderable: true
                 },
                 {
                     data: 'status',
                     name: 'status',
-                    orderable: true,
+                    orderable: true
                 },
                 {
                     data: 'action',
@@ -168,86 +161,104 @@
                     orderable: false,
                     searchable: false,
                     render: function(data, type, row, meta) {
-                        return generateActionButtons(row);
+                        return generateActionButtons(row, dataTable.page.info().page + 1);
                     }
-                },
+                }
             ],
-            createdRow: function(row, data, dataIndex) {
-                if (data.status === 'Posted') {
-                    $(row).addClass('table-success');
+            order: [
+                [1, 'desc']
+            ], // Urutkan berdasarkan kolom 'packing_number' secara descending
+            lengthMenu: [
+                [5, 10, 20, 25, 50, 100, -1],
+                [5, 10, 20, 25, 50, 100, "All"]
+            ],
+            language: {
+                lengthMenu: "Display _MENU_ records per page",
+                search: "Search:",
+                searchPlaceholder: "Search records",
+                info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                paginate: {
+                    previous: "Previous",
+                    next: "Next"
                 }
             },
-            bAutoWidth: false,
+            createdRow: function(row, data, dataIndex) {
+                if (data.status === 'Posted') {
+                    $(row).addClass('table-success'); // Menambahkan class pada baris dengan status 'Posted'
+                }
+            },
             columnDefs: [{
                     width: '10%',
                     targets: [3]
-                },
+                }, // Atur lebar kolom ke 10% untuk kolom 'customer'
                 {
                     width: '100px',
-                    targets: [5],
-                },
+                    targets: [5]
+                }, // Atur lebar kolom aksi
                 {
                     orderable: false,
                     targets: [0]
-                }
-            ],
+                } // Nonaktifkan pengurutan pada kolom pertama (nomor urut)
+            ]
         });
 
-        function generateActionButtons(data) {
+        // Filter button
+        $('#filter').click(function() {
+            dataTable.draw();
+        });
+
+        // Reset button
+        $('#reset').click(function() {
+            $('#start_date').val('');
+            $('#end_date').val('');
+            dataTable.draw();
+        });
+
+        function generateActionButtons(data, currentPage) {
             let buttons = `<div class="btn-group" role="group" aria-label="Action Buttons">
-                <a href="/packing-list/${data.id}" class="btn btn-sm btn-primary waves-effect waves-light">
-                    <i class="bx bx-show-alt"></i>
-                </a>`;
-
-            if (data.status == 'Request') {
-                buttons += `<form action="/packing-list/${data.id}/post" method="post" class="d-inline" data-id="">
-                    @method('PUT')
-                    @csrf
-                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Anda yakin mau Post item ini ?')">
-                        <i class="bx bx-check-circle" title="Posted"> Posted</i>
-                    </button>
-                </form>`;
-            } else if (data.status == 'Posted') {
-                buttons += `<form action="/packing-list/${data.id}/unpost" method="post" class="d-inline" data-id="">
-                    @method('PUT')
-                    @csrf
-                    <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Anda yakin mau Un Post item ini ?')">
-                        <i class="bx bx-undo" title="Un Posted"> Un Posted</i>
-                    </button>
-                </form>`;
-            }
-
-            buttons += `<a href="/print/${data.id}" class="btn btn-sm btn-secondary">
-                <i class="bx bx-printer"></i> Print
+            <a href="/packing-list/${data.id}?page=${currentPage}" class="btn btn-sm btn-primary waves-effect waves-light">
+                <i class="bx bx-show-alt"></i>
             </a>`;
 
             if (data.status == 'Request') {
-                buttons += `<a href="/packing-list/${data.id}/edit" class="btn btn-sm btn-warning">
-                    <i class="bx bx-edit"></i> Edit
-                </a>
-                <form action="/packing-list/${data.id}" method="post" class="d-inline" data-id="">
-                    @method('DELETE')
-                    @csrf
-                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Anda yakin mau menghapus item ini ?')">
-                        <i class="bx bx-trash"></i> Delete
-                    </button>
-                </form>`;
+                buttons += `<form action="/packing-list/${data.id}/post" method="post" class="d-inline" data-id="">
+            @method('PUT')
+            @csrf
+            <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Anda yakin mau Post item ini ?')">
+                <i class="bx bx-check-circle" title="Posted"> Posted</i>
+            </button>
+        </form>`;
+            } else if (data.status == 'Posted') {
+                buttons += `<form action="/packing-list/${data.id}/unpost" method="post" class="d-inline" data-id="">
+            @method('PUT')
+            @csrf
+            <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Anda yakin mau Un Post item ini ?')">
+                <i class="bx bx-undo" title="Un Posted"> Un Posted</i>
+            </button>
+        </form>`;
+            }
+
+            // Tombol Print dengan target _blank untuk membuka di tab baru
+            buttons += `<a href="/print/${data.id}" target="_blank" class="btn btn-sm btn-secondary">
+            <i class="bx bx-printer"></i> Print
+        </a>`;
+
+            if (data.status == 'Request') {
+                buttons += `<a href="/packing-list/${data.id}/edit?page=${currentPage}" class="btn btn-sm btn-warning">Edit</a>
+
+            <form action="/packing-list/${data.id}" method="post" class="d-inline" data-id="">
+                @method('DELETE')
+                @csrf
+                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Anda yakin mau menghapus item ini ?')">
+                    <i class="bx bx-trash"></i> Delete
+                </button>
+            </form>`;
             }
 
             buttons += `</div>`;
 
             return buttons;
         }
-
-        $('#filter').click(function() {
-            dataTable.draw();
-        });
-
-        $('#reset').click(function() {
-            $('#start_date').val('');
-            $('#end_date').val('');
-            dataTable.draw();
-        });
     });
 </script>
 @endpush

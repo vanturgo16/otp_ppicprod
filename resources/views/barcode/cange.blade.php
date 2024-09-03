@@ -13,58 +13,58 @@
 
             <table id="datatable" class="table table-bordered table-striped dt-responsive  nowrap w-100">
                 <thead>
-                <tr>
-                    <th>No</th>
-                    <th>Sales Orders</th>
-                    <th>Customers </th>
+                    <tr>
+                        <th>No</th>
+                        <th>Sales Orders</th>
+                        <th>Customers </th>
 
-                    <th>Work Orders</th>
-                    <th>Work Centers</th>
-                    <th>Group</th>
-                    <th>staff</th>
-                    <th>Creted_at</th>
-                    <th>Action</th>
-                </tr>
+                        <th>Work Orders</th>
+                        <th>Work Centers</th>
+                        <th>Group</th>
+                        <th>staff</th>
+                        <th>Creted_at</th>
+                        <th>Action</th>
+                    </tr>
                 </thead>
 
 
                 <tbody>
                     @foreach ($results as $data)
-                        
-                    
-                <tr>
-                    <td>{{ $loop->iteration }}</td>
-                    <td>{{ $data->so_number }}</td>
-                    <td>{{ $data->name_cust ?? 'N/A'}}</td>
 
-                    <td>{{ $data->wo_number }}</td>
-                    <td>{{ $data->work_center }}</td>
-                    <td>{{ $data->shift }}</td>
-                    <td>{{ $data->staff }}</td>
-                    <td>{{ $data->created_at }}</td>
-                    <td>
-                        <div class="btn-group">
-                            <button type="button" class="btn btn-success">Print</button>
-                            <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="mdi mdi-chevron-down"></i>
-                            </button>
-                            <div class="dropdown-menu">
-                                <a class="dropdown-item" href="{{ route('print_standar', $data->id) }}">Print Standar</a>
-                                <a class="dropdown-item" href="{{ route('print_broker', $data->id) }}">Print Broker</a>
-                                <a class="dropdown-item" href="{{ route('print_cbc', $data->id) }}">Print CBC</a>
-                                <hr>
-                            
-                                <a class="dropdown-item" href="{{ route('table_print') }}">Traceability</a>
 
+                    <tr>
+                        <td>{{ $loop->iteration }}</td>
+                        <td>{{ $data->so_number }}</td>
+                        <td>{{ $data->name_cust ?? 'N/A'}}</td>
+
+                        <td>{{ $data->wo_number }}</td>
+                        <td>{{ $data->work_center }}</td>
+                        <td>{{ $data->shift }}</td>
+                        <td>{{ $data->staff }}</td>
+                        <td>{{ $data->created_at }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-success">Print</button>
+                                <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="mdi mdi-chevron-down"></i>
+                                </button>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item" href="{{ route('print_standar', $data->id) }}">Print Standar</a>
+                                    <a class="dropdown-item" href="{{ route('print_broker', $data->id) }}">Print Broker</a>
+                                    <a class="dropdown-item" href="{{ route('print_cbc', $data->id) }}">Print CBC</a>
+                                    <hr>
+
+                                    <a class="dropdown-item" href="{{ route('table_print') }}">Traceability</a>
+
+                                </div>
                             </div>
-                        </div>
-                       
-                    </td>
-                </tr>
-                @endforeach
-                
-                <!-- Tambahkan data lainnya di sini -->
-                
+
+                        </td>
+                    </tr>
+                    @endforeach
+
+                    <!-- Tambahkan data lainnya di sini -->
+
                 </tbody>
             </table>
 
@@ -94,8 +94,8 @@
                             <div class="col-sm-12">
                                 <div class="mt-4 mt-lg-0">
 
-                                    
-                                      
+
+
                                     <div class="row mb-4 field-wrapper">
                                         <label for="horizontal-password-input" class="col-sm-3 col-form-label">Work Center</label>
                                         <div class="col-sm-9">
@@ -108,7 +108,7 @@
                                         </div>
                                     </div>
 
-                                    
+
                                     <div class="row left-content-end">
                                         <div class="col-sm-9">
                                             <div>
