@@ -402,8 +402,7 @@
                         <div class="col-sm-9">
                             <div>
                                 <a href="/good-receipt-note" class="btn btn-info w-md">Back</a>
-                                <form action="/simpan_detail_po_fix/" method="post"
-                                    class="d-inline">
+                                <form action="/simpan_detail_po_fix" method="post" class="d-inline">
                                     @csrf
                                     <button type="submit" class="btn btn-success w-md"
                                     onclick="return confirm('Anda yakin mau simpan Purchase Requisition Detail ?')">Simpan Detail
