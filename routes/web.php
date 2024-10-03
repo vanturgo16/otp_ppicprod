@@ -25,6 +25,7 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::middleware('permission:PPIC_good-receipt-note|PPIC_good-lote-number|PPIC_grn-qc|PPIC_external-no-lot')->group(function () {
+        Route::post('/simpan_detail_po_fix', [GrnController::class, 'simpan_detail_po_fix'])->name('simpan_detail_po_fix');
         Route::get('/good-receipt-note', [GrnController::class, 'index'])->name('index');
         Route::get('/grn-pr-add', [GrnController::class, 'grn_pr_add'])->name('grn_pr_add');
         Route::get('/grn-po-add', [GrnController::class, 'grn_po_add'])->name('grn_po_add');
@@ -43,7 +44,6 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
         Route::put('/posted_grn/{id}', [GrnController::class, 'posted_grn'])->name('posted_grn');
         Route::put('/unposted_grn/{id}', [GrnController::class, 'unposted_grn'])->name('unposted_grn');
         Route::get('/edit-grn/{id}', [GrnController::class, 'edit_grn'])->name('edit_grn');
-        Route::post('/simpan_detail_po_fix', [GrnController::class, 'simpan_detail_po_fix'])->name('simpan_detail_po_fix');
 
 
         Route::get('/good-lote-number', [GrnController::class, 'good_lote_number'])->name('good_lote_number');
