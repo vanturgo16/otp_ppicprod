@@ -166,8 +166,8 @@
                                     <div class="row mb-4 field-wrapper required-field">
                                         <label for="qty" class="col-sm-3 col-form-label">Qty Proccess</label>
                                         <div class="col-sm-9">
-                                            <input type="number" class="form-control qty" name="qty"
-                                                value="{{ $workOrder->qty }}" required>
+                                            <input type="text" class="form-control qty" name="qty"
+                                                value="{{ $workOrder->qty }}" oninput="this.value = this.value.replace(/[^0-9.]/g, '')" required>
                                         </div>
                                     </div>
                                     <div class="row mb-4 field-wrapper required-field">
@@ -254,8 +254,8 @@
                                     <div class="row mb-4 field-wrapper">
                                         <label for="qtyNeeded" class="col-sm-3 col-form-label">Qty Needed</label>
                                         <div class="col-sm-9">
-                                            <input type="number" class="form-control qtyNeeded" name="qty_needed"
-                                                value="{{ $workOrder->qty_needed }}">
+                                            <input type="text" class="form-control qtyNeeded" name="qty_needed"
+                                                value="{{ $workOrder->qty_needed }}" oninput="this.value = this.value.replace(/[^0-9.]/g, '')">
                                         </div>
                                     </div>
                                     <div class="row mb-4 field-wrapper">

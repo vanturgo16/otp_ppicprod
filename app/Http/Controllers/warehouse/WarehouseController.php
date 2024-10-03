@@ -14,12 +14,11 @@ class WarehouseController extends Controller
 {
     public function index(Request $request)
     {
-        if (request()->ajax()) {
+        if ($request->ajax()) {
             $orderColumn = $request->input('order')[0]['column'];
             $orderDirection = $request->input('order')[0]['dir'];
-            $columns = ['id', 'packing_number', 'date', 'customer', 'status', ''];
+            $columns = ['id', 'packing_number', 'date', 'customer', 'status'];
 
-            // Query dasar
             $query = DB::table('packing_lists as pl')
                 ->leftJoin('master_customers as mc', 'pl.id_master_customers', '=', 'mc.id')
                 ->select(
@@ -27,11 +26,12 @@ class WarehouseController extends Controller
                     'pl.packing_number',
                     'pl.date',
                     'mc.name as customer',
-                    'pl.status'
+                    'pl.status',
+                    DB::raw('"" as action') // Menambahkan kolom action sebagai kolom kosong
                 )
                 ->orderBy($columns[$orderColumn], $orderDirection);
 
-            // Handle pencarian
+            // Handle search
             if ($request->has('search') && $request->input('search')) {
                 $searchValue = $request->input('search');
                 $query->where(function ($query) use ($searchValue) {
@@ -41,9 +41,20 @@ class WarehouseController extends Controller
                 });
             }
 
+            // Handle date range filtering
+            if ($request->has('start_date') && $request->has('end_date')) {
+                $startDate = $request->input('start_date');
+                $endDate = $request->input('end_date');
+                if ($startDate && $endDate) {
+                    $query->whereBetween('pl.date', [$startDate, $endDate]);
+                }
+            }
+
             return DataTables::of($query)
                 ->addColumn('action', function ($data) {
-                    return view('warehouse.action_buttons', compact('data'));
+                    // Generate action buttons here
+                    $buttons = view('warehouse.action_buttons', compact('data'))->render();
+                    return $buttons;
                 })
                 ->rawColumns(['action'])
                 ->make(true);
@@ -51,6 +62,8 @@ class WarehouseController extends Controller
 
         return view('warehouse.index');
     }
+
+
     public function getCustomers(Request $request)
     {
         $search = $request->search;

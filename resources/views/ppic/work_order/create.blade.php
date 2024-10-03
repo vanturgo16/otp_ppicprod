@@ -151,7 +151,7 @@
                                     <div class="row mb-4 field-wrapper required-field">
                                         <label for="qty" class="col-sm-3 col-form-label">Qty Proccess</label>
                                         <div class="col-sm-9">
-                                            <input type="number" class="form-control qty" name="qty" required>
+                                            <input type="text" class="form-control qty" name="qty" oninput="this.value = this.value.replace(/[^0-9.]/g, '')" required>
                                         </div>
                                     </div>
                                     <div class="row mb-4 field-wrapper required-field">

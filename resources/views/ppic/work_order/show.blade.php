@@ -111,15 +111,20 @@
 
                                         <dt class="col-sm-3 mb-2"><label>Type Product Material</label></dt>
                                         <dd class="col-sm-9 mb-2">
-                                            {{ $productNeeded == null ? '' : $work_order->type_product_material }}
+                                            {{ $productNeeded == null ? '-' : $work_order->type_product_material }}
                                         </dd>
 
                                         <dt class="col-sm-3 mb-2"><label>Product Material</label></dt>
                                         @php
-                                            $perforasiNeeded = $productNeeded->perforasi == null ? '-' : $productNeeded->perforasi;
+                                            $perforasiNeeded =
+                                                $productNeeded == null
+                                                    ? '-'
+                                                    : ($productNeeded->perforasi == null
+                                                        ? '-'
+                                                        : $productNeeded->perforasi);
                                         @endphp
                                         <dd class="col-sm-9 mb-2">
-                                            {{ $productNeeded == null ? '' : $productNeeded->description . ' | Perforasi: ' . $perforasiNeeded}}
+                                            {{ $productNeeded == null ? '-' : $productNeeded->description . ' | Perforasi: ' . $perforasiNeeded }}
                                         </dd>
 
                                         <dt class="col-sm-3 mb-2"><label>Qty Needed</label></dt>
