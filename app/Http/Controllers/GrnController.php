@@ -560,7 +560,7 @@ class GrnController extends Controller
         //         ->get();
 
             // Menggunakan DB::raw untuk menggabungkan nilai kolom b.rm_code dan b.description dengan CONCAT dalam SQL
-            // Hasilnya disimpan dalam alias product_description
+            // Hasilnya disimpan dalam alias product_desc
 
             if (request()->ajax()) {
                 $orderColumn = $request->input('order')[0]['column'];
