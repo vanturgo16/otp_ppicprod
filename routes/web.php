@@ -44,6 +44,8 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
         Route::put('/posted_grn/{id}', [GrnController::class, 'posted_grn'])->name('posted_grn');
         Route::put('/unposted_grn/{id}', [GrnController::class, 'unposted_grn'])->name('unposted_grn');
         Route::get('/edit-grn/{id}', [GrnController::class, 'edit_grn'])->name('edit_grn');
+        Route::get('/edit-detail-ext-no-lot/{id}', [GrnController::class, 'edit_detail_ext_no_lot'])->name('edit_detail_ext_no_lot');
+        Route::put('/update_detail_ext_nolot', [GrnController::class, 'update_detail_ext_nolot'])->name('update_detail_ext_nolot');
 
 
         Route::get('/good-lote-number', [GrnController::class, 'good_lote_number'])->name('good_lote_number');
