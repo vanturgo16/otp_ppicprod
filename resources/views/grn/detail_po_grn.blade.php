@@ -374,7 +374,7 @@
                         <div class="col-sm-9">
                             <div>
                                 <a href="/purchase-order" class="btn btn-info w-md">Back</a>
-                                <form action="/simpan_detail_po_fix/" method="post"
+                                <form action="/simpan_detail_po_fix" method="post"
                                     class="d-inline">
                                     @csrf
                                     <button type="submit" class="btn btn-success w-md"
