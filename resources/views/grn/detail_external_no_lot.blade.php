@@ -65,6 +65,9 @@
                                                 @if($data->ext_lot_number!='')   
                                                
                                                <a href="/generateBarcode/{{ $data->lot_number }}" class="btn btn-sm btn-info"><i class=" bx bx-barcode" >Print Barcode</i></a>
+                                               <a href="/edit-detail-ext-no-lot/{{ $data->id }}" class="btn btn-sm btn-primary waves-effect waves-light">
+                                                        <i class="bx bx-edit-alt" title="Edit data"></i>
+                                                </a>
                                                
                                                @else
                                                <button type="submit" class="btn btn-sm btn-danger" >

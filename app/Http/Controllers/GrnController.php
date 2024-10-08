@@ -677,6 +677,18 @@ class GrnController extends Controller
     {
         // dd($request->lot_number);
         // die;
+        $receiptQty = DB::table('good_receipt_note_details')
+                    ->where('id', $request->id)
+                    ->value('receipt_qty'); // Mengambil nilai receipt_qty
+
+        // dd($receiptQty);
+        // die;
+
+        if ($receiptQty >= $request->qty_generate_barcode) {
+            // Jika total qty sudah mencapai atau melebihi batas, proses insert dan update tidak boleh dilanjutkan
+            return redirect()->back()->with('error', 'Total qty sudah mencapai batas, tidak bisa melakukan update atau insert.');
+        }
+
         $validatedData = DB::update("UPDATE `good_receipt_note_details` SET `lot_number` = '$request->lot_number',qty_generate_barcode='$request->qty_generate_barcode' WHERE `id` = '$request->id';");
 
         $validatedData = DB::table('detail_good_receipt_note_details')->insert([
@@ -1175,6 +1187,49 @@ class GrnController extends Controller
         // dd('test');
         // die;
         return Redirect::to('/good-receipt-note')->with('pesan', 'Data berhasil disimpan.');
+    }
+    public function edit_detail_ext_no_lot($id)
+    {
+        $detail_ext_nolot = DB::table('detail_good_receipt_note_details')
+                        ->where('id', $id)  // Sesuaikan dengan kolom id yang ada
+                        ->first();  // Ambil hanya satu baris
+
+        return view('grn.edit_detail_ext_nolot',compact('id','detail_ext_nolot'));
+    }
+    public function update_detail_ext_nolot(Request $request)
+    {
+        // Validasi input jika diperlukan
+        $validatedData = $request->validate([
+            'id' => 'required',
+            'id_grn_detail' => 'required',
+            'lot_number' => 'required|string',
+            'ext_lot_number' => 'required|string',
+            'qty' => 'required|numeric'
+        ]);
+
+        // Lakukan update ke database
+        $affected = DB::update(
+            "UPDATE `detail_good_receipt_note_details` 
+            SET `id_grn_detail` = ?, 
+                `lot_number` = ?, 
+                `ext_lot_number` = ?, 
+                `qty` = ? 
+            WHERE `id` = ?",
+            [
+                $request->id_grn_detail,
+                $request->lot_number,
+                $request->ext_lot_number,
+                $request->qty,
+                $request->id
+            ]
+        );
+
+        // Cek apakah ada baris yang ter-update
+        if ($affected) {
+            return redirect('/detail-external-no-lot/' . $request->lot_number)->with('pesan', 'Data berhasil diperbarui');
+        } else {
+            return redirect()->back()->with('error', 'ID tidak ditemukan atau tidak ada perubahan');
+        }
     }
     
     

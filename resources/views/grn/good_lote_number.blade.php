@@ -9,6 +9,11 @@
                 <i class="mdi mdi-check-all label-icon"></i><strong>Success</strong> - {{ session('pesan') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
+        @elseif (session('error'))
+            <div class="alert alert-danger alert-dismissible alert-label-icon label-arrow fade show" role="alert">
+                <i class="mdi mdi-check-all label-icon"></i><strong>Error</strong> - {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
          @endif
             <div class="row">
                 <div class="col-12">
@@ -28,7 +33,7 @@
                     <div class="card">
                         <div class="card-header">
                             <div class="d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">Good Receipt Note</h5>
+                                <h5 class="mb-0">Good Lote Number</h5>
                                 <div>
                                     <!-- Include modal content -->
                                     
