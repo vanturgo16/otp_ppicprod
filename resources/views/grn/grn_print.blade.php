@@ -37,13 +37,13 @@
             <div class="col-8">Receipt Date : {{ $type[0]->date }} </div>
         </div>
         <div class="row d-flex justify-content-between">
-            <div class="col-8">Supplier &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: </div>
+            <div class="col-8">Supplier &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: {{ $type[0]->name }}</div>
         </div>
         <div class="row d-flex justify-content-between">
             <div class="col-8">Ext. Doc No &nbsp;&nbsp;: {{ $type[0]->external_doc_number }}</div>
         </div>
         <div class="row d-flex justify-content-between pb-3">
-            <div class="col-8">PO No. &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</div>
+            <div class="col-8">PO No. &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: {{ $type[0]->po_number }}  </div>
         </div>
 
         <div class="row">
