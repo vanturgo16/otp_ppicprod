@@ -63,11 +63,22 @@
                                                 
                                                 <td>
                                                 @if($data->ext_lot_number!='')   
+                                                <div class="input-group" style="max-width: 200px;">
+                                                    <div class="input-group-append">
+                                                        <form action="{{ route('generateBarcode', ['lot_number' => $data->lot_number]) }}" method="GET">
+                                                            <input type="number" class="form-control" name="qty" placeholder="Jumlah Barcode" required>
+                                                            <button type="submit" class="btn btn-info">Generate Barcode</button>
+                                                        </form>
+                                                                                                       
+                                                        <a href="/edit-detail-ext-no-lot/{{ $data->id }}" class="btn btn-sm btn-primary waves-effect waves-light">
+                                                            <i class="bx bx-edit-alt" title="Edit data"></i>
+                                                    </a>
+                                                    </div>
+                                                </div>
+                                                
+                                                
+                                               {{--  <a href="/generateBarcode/{{ $data->lot_number }}" class="btn btn-sm btn-info"><i class=" bx bx-barcode" >Print Barcode</i></a> --}}
                                                
-                                               <a href="/generateBarcode/{{ $data->lot_number }}" class="btn btn-sm btn-info"><i class=" bx bx-barcode" >Print Barcode</i></a>
-                                               <a href="/edit-detail-ext-no-lot/{{ $data->id }}" class="btn btn-sm btn-primary waves-effect waves-light">
-                                                        <i class="bx bx-edit-alt" title="Edit data"></i>
-                                                </a>
                                                
                                                @else
                                                <button type="submit" class="btn btn-sm btn-danger" >

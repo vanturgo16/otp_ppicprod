@@ -1,7 +1,7 @@
 @extends('layouts.master')
 
 @section('konten')
-
+{{-- tes --}}
 <div class="page-content">
     <div class="container-fluid">
     @if (session('pesan'))

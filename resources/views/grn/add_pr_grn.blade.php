@@ -51,7 +51,7 @@
                                         <label for="horizontal-password-input" class="col-sm-3 col-form-label">Reference Number (PR) </label>
                                         <div class="col-sm-9">
                                             <select class="form-select request_number data-select2" name="reference_number" id="choices-single-default" onchange="get_data_pr()">
-                                                <option>Pilih Reference Number (PR) </option>
+                                                <option>Pilih Rsdsdeference Number (PR) </option>
                                                 @foreach ($pr as $data)
                                                     <option value="{{ $data->id }}" data-id="{{ $data->id }}">{{ $data->request_number }}</option>
                                                 @endforeach
