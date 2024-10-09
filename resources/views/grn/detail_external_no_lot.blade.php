@@ -77,7 +77,7 @@
                                                 </div>
                                                 
                                                 
-                                               {{-- <a href="/generateBarcode/{{ $data->lot_number }}" class="btn btn-sm btn-info"><i class=" bx bx-barcode" >Print Barcode</i></a> --}}
+                                               {{--  <a href="/generateBarcode/{{ $data->lot_number }}" class="btn btn-sm btn-info"><i class=" bx bx-barcode" >Print Barcode</i></a> --}}
                                                
                                                
                                                @else

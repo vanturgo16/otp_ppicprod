@@ -154,7 +154,7 @@ class GrnController extends Controller
     }
     public function simpan_pr_grn(Request $request)
     {
-        // dd($request);
+        // dd($request);z
         // die;
         $pesan = [
             'receipt_number.required' => 'receipt number masih kosong',

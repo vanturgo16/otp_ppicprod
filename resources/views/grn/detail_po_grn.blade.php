@@ -344,6 +344,7 @@
                                             <td>{{ $data->unit }}</td>
                                             <td>{{ $data->note }}</td>
                                             <td>
+                                                
                                     
                                                     <form action="/hapus_grn_detail/{{ $data->id }}/{{ $id }}" method="post"
                                                         class="d-inline">

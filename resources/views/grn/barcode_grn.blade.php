@@ -25,7 +25,7 @@
             <p>{!! $lot_number !!} - {{ $counter }}</p>
         </div>
         @php
-        $counter++;
+        $counter++; 
     @endphp
 @endwhile
 </div> --}}
