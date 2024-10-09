@@ -1046,7 +1046,7 @@ public function external_no_lot (Request $request)
     {
         // dd('tets');
         // die;
-
+ 
         $type = DB::table('good_receipt_notes as a')
             ->leftJoin('master_suppliers as b', 'a.id_master_suppliers', '=', 'b.id')
             ->select('a.*', 'b.name')
