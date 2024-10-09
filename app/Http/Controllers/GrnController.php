@@ -681,13 +681,23 @@ class GrnController extends Controller
                     ->where('id', $request->id)
                     ->value('receipt_qty'); // Mengambil nilai receipt_qty
 
-        // dd($receiptQty);
+        $jumlah = DB::table('detail_good_receipt_note_details')
+                    ->where('lot_number', $request->lot_number)
+                    ->sum('qty');
+
+        $totaljumlah = $jumlah+$request->qty_generate_barcode;
+
+        // dd($totaljumlah);
         // die;
 
-        if ($receiptQty >= $request->qty_generate_barcode) {
+        if ($request->qty_generate_barcode > $receiptQty) {
+            // Jika total qty sudah mencapai atau melebihi batas, proses insert dan update tidak boleh dilanjutkan
+            return redirect()->back()->with('error', 'Total qty sudah mencapai batas, tidak bisa melakukan update atau insert.');
+        }elseif ($totaljumlah > $receiptQty) {
             // Jika total qty sudah mencapai atau melebihi batas, proses insert dan update tidak boleh dilanjutkan
             return redirect()->back()->with('error', 'Total qty sudah mencapai batas, tidak bisa melakukan update atau insert.');
         }
+
 
         $validatedData = DB::update("UPDATE `good_receipt_note_details` SET `lot_number` = '$request->lot_number',qty_generate_barcode='$request->qty_generate_barcode' WHERE `id` = '$request->id';");
 
