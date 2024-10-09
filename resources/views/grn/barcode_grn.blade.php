@@ -15,7 +15,7 @@
 </head>
 <body>
 
-<div class="barcode-container">
+{{-- <div class="barcode-container">
 @php
     $counter = 1;
 @endphp
@@ -28,7 +28,22 @@
         $counter++;
     @endphp
 @endwhile
-</div>
+</div> --}}
+<div class="barcode-container">
+    @php
+        $counter = 1;
+    @endphp
+    @while ($counter <= $qty)   
+        <div>
+            {!! $barcode !!}
+            <p>{!! $lot_number !!} - {{ $counter }}</p>
+        </div>
+        @php
+        $counter++;
+        @endphp
+    @endwhile
+    </div>
+    
 
 </body>
 </html>

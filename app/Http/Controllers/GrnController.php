@@ -86,6 +86,7 @@ class GrnController extends Controller
     public function grn_pr_add(){
 
         $pr = PurchaseRequisitions::where('status', 'Posted')->get();
+ 
 
         // Ambil nomor urut terakhir dari database
         $lastCode = GoodReceiptNote::orderBy('created_at', 'desc')
@@ -142,10 +143,11 @@ class GrnController extends Controller
                         ->where('purchase_requisitions.id', $id)
                         ->get();
 
+                        // return response()->json($data_lengkap_pr->isEmpty());
     
-        if(($data_lengkap->isEmpty()) or ($data_lengkap_pr->isEmpty())) {
-            return response()->json(['message' => 'Data not found for the given ID'], 404);
-        }
+                        if($data_lengkap_pr->isEmpty()==true) {
+                            return response()->json(['message' => 'Data not found for the given ID'], 500);
+                        }
     
         return response()->json(['data' => $data, 'data_lengkap' => $data_lengkap,'data_pr' => $data_pr,
         'data_sp' => $data_sp, 'data_lengkap_pr' => $data_lengkap_pr]);
@@ -743,32 +745,40 @@ class GrnController extends Controller
 
     //     return view('grn.barcode_grn', compact('barcode','lot_number','qtyGenerateBarcode'));
     // }
-    public function generateBarcode($lot_number)
-    {
-        // dd('test');
-        // die;
-        $generator = new BarcodeGeneratorHTML();
-        $barcode = $generator->getBarcode($lot_number, $generator::TYPE_CODE_128);
+    // public function generateBarcode($lot_number)
+    // {
+    //     // dd('test');
+    //     // die;
+    //     $generator = new BarcodeGeneratorHTML();
+    //     $barcode = $generator->getBarcode($lot_number, $generator::TYPE_CODE_128);
 
-        $qtyGenerateBarcode = DetailGoodReceiptNoteDetail::select('ext_lot_number')
-        ->where('lot_number', $lot_number)
-        ->first();
+    //     $qtyGenerateBarcode = DetailGoodReceiptNoteDetail::select('ext_lot_number')
+    //     ->where('lot_number', $lot_number)
+    //     ->first();
 
-        $data = DB::select("SELECT
-        COUNT(ext_lot_number) AS total_ext_lot_number
-        FROM
-            `detail_good_receipt_note_details`
-        WHERE
-            `lot_number` = '$lot_number'");
+    //     $data = DB::select("SELECT
+    //     COUNT(ext_lot_number) AS total_ext_lot_number
+    //     FROM
+    //         `detail_good_receipt_note_details`
+    //     WHERE
+    //         `lot_number` = '$lot_number'");
 
+    //     $qty=$data[0]->total_ext_lot_number;
+    //     // dd($qty);
+    //     // die;
 
+    //     return view('grn.barcode_grn', compact('barcode','lot_number','qtyGenerateBarcode','qty'));
+    // }
 
-        $qty=$data[0]->total_ext_lot_number;
-        // dd($qty);
-        // die;
+    public function generateBarcode(Request $request, $lot_number)
+{
+    $generator = new BarcodeGeneratorHTML();
+    $barcode = $generator->getBarcode($lot_number, $generator::TYPE_CODE_128);
 
-        return view('grn.barcode_grn', compact('barcode','lot_number','qtyGenerateBarcode','qty'));
-    }
+    $qty = $request->input('qty', 1); // Jika tidak ada input, default adalah 1
+
+    return view('grn.barcode_grn', compact('barcode','lot_number','qty'));
+}
     public function grn_qc(Request $request)
     {
         // dd('test');
@@ -876,52 +886,41 @@ class GrnController extends Controller
             return Redirect::to('/grn-qc')->with('pesan', 'Data gagal berhasil di un QC.');
         }
     }
-    public function external_no_lot (Request $request)
-    {
-        // dd('tes');
-        // die;
+public function external_no_lot (Request $request)
+{
+    if ($request->ajax()) {
+        $orderColumn = $request->input('order')[0]['column'];
+        $orderDirection = $request->input('order')[0]['dir'];
+        $columns = ['id', 'id_grn_detail', 'lot_number', 'ext_lot_number', 'qty'];
 
-        // $details = DB::select("SELECT * FROM `detail_good_receipt_note_details` group by lot_number");
-
-        if (request()->ajax()) {
-            $orderColumn = $request->input('order')[0]['column'];
-            $orderDirection = $request->input('order')[0]['dir'];
-            $columns = ['id', 'id_grn_detail', 'lot_number', 'ext_lot_number', 'qty', '', ''];
-
-            // Query dasar
-            $query = DB::table('detail_good_receipt_note_details')
-            ->groupBy('lot_number')
+        $query = DB::table('detail_good_receipt_note_details')
+            ->select('id', 'id_grn_detail', 'lot_number', 'ext_lot_number', 'qty')
+            ->distinct()
             ->orderBy($columns[$orderColumn], $orderDirection);
 
-            // Handle pencarian
-            if ($request->has('search') && $request->input('search')) {
-                $searchValue = $request->input('search');
-                $query->where(function ($query) use ($searchValue) {
-                    $query->where('id_grn_detail', 'like', '%' . $searchValue . '%')
-                        ->orWhere('lot_number', 'like', '%' . $searchValue . '%')
-                        ->orWhere('ext_lot_number', 'like', '%' . $searchValue . '%')
-                        ->orWhere('qty', 'like', '%' . $searchValue . '%');
-                });
-            }
-
-            return DataTables::of($query)
-                ->addColumn('action', function ($data) {
-                    return view('grn.action_external_nolot', compact('data'));
-                    // return "ACTION";
-                })
-                ->addColumn('action_generate', function ($data) {
-                    return view('grn.action_generate_ext_lot', compact('data'));
-                    // return "ACTION";
-                })
-                
-                ->rawColumns(['action'])
-                ->make(true);
+        if ($searchValue = $request->input('search.value')) {
+            $query->where(function ($query) use ($searchValue) {
+                $query->where('id_grn_detail', 'like', '%' . $searchValue)
+                      ->orWhere('lot_number', 'like', '%' . $searchValue)
+                      ->orWhere('ext_lot_number', 'like', '%' . $searchValue)
+                      ->orWhere('qty', 'like', '%' . $searchValue);
+            });
         }
 
-
-
-        return view('grn.external_no_lot');
+        return DataTables::of($query)
+            ->addColumn('action', function ($data) {
+                return view('grn.action_external_nolot', compact('data'));
+            })
+            ->addColumn('action_generate', function ($data) {
+                return view('grn.action_generate_ext_lot', compact('data'));
+            })
+            ->rawColumns(['action'])
+            ->make(true);
     }
+
+    return view('grn.external_no_lot');
+}
+
     public function update_ext_lot_number(Request $request)
     {
         // Validasi data input

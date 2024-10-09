@@ -83,7 +83,7 @@
                     search: "",
                     searchPlaceholder: "Search",
                 },
-                pageLength: 5,
+                pageLength: 10,
                 lengthMenu: [
                     [5, 10, 20, 25, 50, 100],
                     [5, 10, 20, 25, 50, 100]
