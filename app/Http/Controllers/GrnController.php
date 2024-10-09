@@ -1047,9 +1047,13 @@ class GrnController extends Controller
     {
         // dd('tets');
         // die;
-        $type = DB::table('good_receipt_notes')
-        ->where('receipt_number', $receipt_number)
-        ->get();
+
+        $type = DB::table('good_receipt_notes as a')
+            ->leftJoin('master_suppliers as b', 'a.id_master_suppliers', '=', 'b.id')
+            ->select('a.*', 'b.name')
+            ->where('a.receipt_number', $receipt_number)
+            ->get();
+
 
         // dd($type[0]->type);
         // die;
