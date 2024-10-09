@@ -88,7 +88,7 @@ function get_data() {
   request_number = $('.request_number option:selected').attr('data-id');
   // alert(request_number);
   $.ajax({
-    url: '/get-data/',
+    url: '/get-data',
     method: 'GET',
     data: {id : request_number},
     success: function (response) {
@@ -130,7 +130,7 @@ function get_data_pr() {
   request_number = $('.request_number option:selected').attr('data-id');
   // alert(request_number);
   $.ajax({
-    url: '/get-data/',
+    url: '/get-data',
     method: 'GET',
     data: {id : request_number},
     success: function (response) {
