@@ -1047,11 +1047,14 @@ public function external_no_lot (Request $request)
         // dd('tets');
         // die;
  
+
         $type = DB::table('good_receipt_notes as a')
             ->leftJoin('master_suppliers as b', 'a.id_master_suppliers', '=', 'b.id')
-            ->select('a.*', 'b.name')
+            ->leftJoin('purchase_orders as c', 'a.id_purchase_orders', '=', 'c.id')
+            ->select('a.*', 'b.name', 'c.po_number')
             ->where('a.receipt_number', $receipt_number)
             ->get();
+
 
 
         // dd($type[0]->type);
