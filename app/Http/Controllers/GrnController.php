@@ -646,7 +646,7 @@ class GrnController extends Controller
 
         // Ambil nomor urut terakhir dari database
         $lastCode = GoodReceiptNoteDetail::whereNotNull('lot_number')
-            ->orderBy('id', 'desc')
+            ->orderBy('lot_number', 'desc')
             ->value(DB::raw('MID(lot_number, 5, 5)'));
             
         // Jika tidak ada nomor urut sebelumnya, atur ke 0
@@ -906,6 +906,7 @@ public function external_no_lot (Request $request)
         $query = DB::table('detail_good_receipt_note_details')
             ->select('id', 'id_grn_detail', 'lot_number', 'ext_lot_number', 'qty')
             ->distinct()
+            ->groupBy('lot_number')
             ->orderBy($columns[$orderColumn], $orderDirection);
 
         if ($searchValue = $request->input('search.value')) {
@@ -1246,6 +1247,70 @@ public function external_no_lot (Request $request)
         } else {
             return redirect()->back()->with('error', 'ID tidak ditemukan atau tidak ada perubahan');
         }
+    }public function edit_grn_item($id)
+    {
+        // dd('tes');
+        // die;
+        $goodReceiptNote = GoodReceiptNoteDetail::where('id', $id)->first();
+
+        $rawMaterials = DB::table('master_raw_materials')
+                        ->select('description','id')
+                        ->get();
+        $ta = DB::table('master_tool_auxiliaries')
+                        ->select('description')
+                        ->get();
+        $fg = DB::table('master_product_fgs')
+                        ->select('description','id','perforasi')
+                        ->get();
+        $wip = DB::table('master_wips')
+                        ->select('description','id')
+                        ->get();
+
+        $other = DB::table('master_tool_auxiliaries')
+                        ->select('description', 'id')
+                        ->where('type', 'Other') // Ganti 'column_name' dengan nama kolom dan 'value' dengan nilai yang ingin dicari
+                        ->get();
+
+        $units = DB::table('master_units')
+                        ->select('unit_code','id','unit')
+                        ->get();
+
+        return view('grn.edit_grn_item',compact('goodReceiptNote','rawMaterials','ta','fg','wip','other',
+    'units'));
+    }
+    public function update_grn_item(Request $request, $id)
+    {
+        // dd($id);
+        // die;
+        $id_good_receipt_notes = $request->input('id_good_receipt_notes');
+
+        $pesan = [
+            'id_master_products.required' => 'id_master_products masih kosong',
+            'receipt_qty.required' => 'receipt_qty masih kosong',
+            'outstanding_qty.required' => 'outstanding_qty masih kosong',
+            'master_units_id.required' => 'master_units_id masih kosong',
+            'note.required' => 'note masih kosong',
+            
+            
+        ];
+
+        $validatedData = $request->validate([
+            'id_master_products' => 'required',
+            'receipt_qty' => 'required',
+            'outstanding_qty' => 'nullable',
+            'master_units_id' => 'required',
+            'note' => 'nullable',
+            
+        ], $pesan);
+
+        // dd($validatedData);
+        // die;
+
+        GoodReceiptNoteDetail::where('id', $id)
+            ->update($validatedData);
+
+        return Redirect::to('/edit-grn/'.$id_good_receipt_notes)->with('pesan', 'Data berhasil diupdate.');
+
     }
     
     

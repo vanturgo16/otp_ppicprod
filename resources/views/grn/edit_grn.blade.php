@@ -289,12 +289,10 @@
                                                             <i class="bx bx-trash-alt" title="Hapus data" ></i>
                                                         </button>
                                                     </form>
-                                                    <button type="button" class="btn btn-sm btn-info " id=""
-                                                        data-bs-toggle="modal"
-                                                        onclick="edit_pr_smt('')"
-                                                        data-bs-target="#edit-pr-smt" data-id="">
-                                                        <i class="bx bx-edit-alt" title="edit data"></i>
-                                                    </button></center></td>
+                                                    <a href="/edit-grn-item/{{ $data->id; }}">
+                                                        <button type="button" class="btn btn-sm btn-info"><i class="bx bx-edit-alt" title="edit data"></i></button>
+                                                    </a>
+                                            </td>
                                                    
                                             
                                         </tr>
@@ -402,12 +400,7 @@
                         <div class="col-sm-9">
                             <div>
                                 <a href="/good-receipt-note" class="btn btn-info w-md">Back</a>
-                                <form action="/simpan_detail_po_fix" method="post" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="btn btn-success w-md"
-                                    onclick="return confirm('Anda yakin mau simpan Purchase Requisition Detail ?')">Simpan Detail
-                                    </button>
-                                </form>
+                                
                             </div>
                         </div>
                     </div>
