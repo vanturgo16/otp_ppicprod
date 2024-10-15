@@ -175,7 +175,7 @@ class GrnController extends Controller
             'date' => 'required',
             'external_doc_number' => 'required',
             'id_master_suppliers' => 'required',
-            'note' => 'required',
+            'note' => 'nullable',
             'qc_status' => 'required',
             'non_invoiceable' => 'required',
             'status' => 'required',
@@ -317,6 +317,14 @@ class GrnController extends Controller
                         ->select('a.id','a.type_product','a.receipt_qty','a.outstanding_qty', 'b.description', 'c.unit','a.note')
                         ->where('a.id_good_receipt_notes', $id)
                         ->get();
+                        
+        $data_detail_Other = DB::table('good_receipt_note_details as a')
+                        ->leftJoin('master_tool_auxiliaries as b', 'a.id_master_products', '=', 'b.id')
+                        ->leftJoin('master_units as c', 'a.master_units_id', '=', 'c.id')
+                        ->select('a.id','a.type_product','a.receipt_qty','a.outstanding_qty', 'b.description', 'c.unit','a.note')
+                        ->where('a.id_good_receipt_notes', $id)
+                        ->where('b.type', 'Other')
+                        ->get();
 
         $data_detail_rm = DB::table('good_receipt_note_details as a')
                         ->leftJoin('master_raw_materials as b', 'a.id_master_products', '=', 'b.id')
@@ -352,8 +360,14 @@ class GrnController extends Controller
                         ->select('description','id')
                         ->get();
 
+        $Other = DB::table('master_tool_auxiliaries')
+                        ->select('description', 'id')
+                        ->where('type', 'Other') // Ganti 'column_name' dengan nama kolom dan 'value' dengan nilai yang ingin dicari
+                        ->get();
+
+
         return view('grn.detail_pr_grn',compact('grn_po','unit','data_detail_ta','data_detail_rm','data_detail_fg'
-                        ,'data_detail_wip','rm','ta','fg','wip','typex','id'));
+                        ,'data_detail_wip','rm','ta','fg','wip','typex','id','Other','data_detail_Other'));
     }
     public function detail_grn_po($id)
     {
@@ -492,7 +506,7 @@ class GrnController extends Controller
             'receipt_qty' => 'required',
             'outstanding_qty' => 'required',
             'master_units_id' => 'required',
-            'note' => 'required',
+            'note' => 'nullable',
 
         ], $pesan);
 
@@ -821,23 +835,34 @@ class GrnController extends Controller
 
             // Query dasar
             $query = DB::table('good_receipt_notes as a')
-                    ->leftJoin('good_receipt_note_details as c', 'a.id', '=', 'c.id_good_receipt_notes')
-                    ->leftJoin('master_raw_materials as b', 'b.id', '=', 'c.id_master_products')
-                    ->leftJoin('master_units as d', 'c.master_units_id', '=', 'd.id')
-                    ->leftJoin('cms_users as e', 'e.id', '=', 'c.qc_check_by')
-                    ->select(
-                        'c.id',
-                        'a.receipt_number',
-                        DB::raw("CONCAT(b.rm_code, '-', b.description) as description"),
-                        'c.receipt_qty',
-                        'd.unit_code',
-                        'c.qc_passed',
-                        'c.lot_number',
-                        'c.note',
-                        'e.name'
-                    )
-                    ->where('a.type', 'RM')
-                    ->where('a.qc_status', 'Y')
+            ->leftJoin('good_receipt_note_details as c', 'a.id', '=', 'c.id_good_receipt_notes')
+            ->leftJoin('master_raw_materials as b', 'b.id', '=', 'c.id_master_products')
+            ->leftJoin('master_units as d', 'c.master_units_id', '=', 'd.id')
+            ->leftJoin('cms_users as e', 'e.id', '=', 'c.qc_check_by')
+            ->leftJoin('master_tool_auxiliaries as f', 'f.id', '=', 'c.id_master_products')
+            ->leftJoin('master_wips as w', 'w.id', '=', 'c.id_master_products')
+            ->leftJoin('master_product_fgs as pfg', 'pfg.id', '=', 'c.id_master_products')
+            ->select(
+                'c.id',
+                'a.receipt_number',
+                DB::raw("
+                    CASE 
+                        WHEN a.type = 'RM' THEN CONCAT(b.rm_code, '-', b.description)
+                        WHEN a.type = 'TA' THEN CONCAT(f.code, '-', f.description)
+                        WHEN a.type = 'WIP' THEN CONCAT(w.wip_code, '-', w.description)
+                        WHEN a.type = 'FG' THEN CONCAT(pfg.product_code, '-', pfg.description)
+                        WHEN a.type = 'Other' THEN CONCAT(f.code, '-', f.description)
+                        ELSE 'Unknown Code-Unknown Description'
+                    END as description
+                "),
+                'c.receipt_qty',
+                'd.unit_code',
+                'c.qc_passed',
+                'c.lot_number',
+                'c.note',
+                'e.name'
+            )
+            ->where('a.qc_status', 'Y')
             ->orderBy($columns[$orderColumn], $orderDirection);
 
             // Handle pencarian
@@ -1310,6 +1335,69 @@ public function external_no_lot (Request $request)
             ->update($validatedData);
 
         return Redirect::to('/edit-grn/'.$id_good_receipt_notes)->with('pesan', 'Data berhasil diupdate.');
+
+    }public function edit_grn_item_smt($id)
+    {
+        // dd('tes');
+        // die;
+        $goodReceiptNote = GoodReceiptNoteDetail::where('id', $id)->first();
+
+        $rawMaterials = DB::table('master_raw_materials')
+                        ->select('description','id')
+                        ->get();
+        $ta = DB::table('master_tool_auxiliaries')
+                        ->select('description')
+                        ->get();
+        $fg = DB::table('master_product_fgs')
+                        ->select('description','id','perforasi')
+                        ->get();
+        $wip = DB::table('master_wips')
+                        ->select('description','id')
+                        ->get();
+
+        $other = DB::table('master_tool_auxiliaries')
+                        ->select('description', 'id')
+                        ->where('type', 'Other') // Ganti 'column_name' dengan nama kolom dan 'value' dengan nilai yang ingin dicari
+                        ->get();
+
+        $units = DB::table('master_units')
+                        ->select('unit_code','id','unit')
+                        ->get();
+
+        return view('grn.edit_grn_item_smt',compact('goodReceiptNote','rawMaterials','ta','fg','wip','other',
+    'units'));
+    }public function update_grn_item_smt(Request $request, $id)
+    {
+        // dd($id);
+        // die;
+        $id_good_receipt_notes = $request->input('id_good_receipt_notes');
+
+        $pesan = [
+            'id_master_products.required' => 'id_master_products masih kosong',
+            'receipt_qty.required' => 'receipt_qty masih kosong',
+            'outstanding_qty.required' => 'outstanding_qty masih kosong',
+            'master_units_id.required' => 'master_units_id masih kosong',
+            'note.required' => 'note masih kosong',
+            
+            
+        ];
+
+        $validatedData = $request->validate([
+            'id_master_products' => 'required',
+            'receipt_qty' => 'required',
+            'outstanding_qty' => 'nullable',
+            'master_units_id' => 'required',
+            'note' => 'nullable',
+            
+        ], $pesan);
+
+        // dd($validatedData);
+        // die;
+
+        GoodReceiptNoteDetail::where('id', $id)
+            ->update($validatedData);
+
+        return Redirect::to('/detail-grn-pr/'.$id_good_receipt_notes)->with('pesan', 'Data berhasil diupdate.');
 
     }
     
