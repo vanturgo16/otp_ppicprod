@@ -161,6 +161,13 @@
                                                 <option value="{{ $data->id }}">{{ $data->description }}</option>
                                                 @endforeach
                                             </select>
+                                            @elseif($typex=='Other')
+                                            <select class="form-select data-select2" name="id_master_products">
+                                                <option>Pilih Produk</option>
+                                                @foreach ($Other as $data)
+                                                <option value="{{ $data->id }}">{{ $data->description }}</option>
+                                                @endforeach
+                                            </select>
                                             @endif
                                         </div>
                                     </div>
@@ -257,12 +264,9 @@
                                                             <i class="bx bx-trash-alt" title="Hapus data" ></i>
                                                         </button>
                                                     </form>
-                                                    <button type="button" class="btn btn-sm btn-info " id=""
-                                                        data-bs-toggle="modal"
-                                                        onclick="edit_pr_smt('{{ $data->id }}')"
-                                                        data-bs-target="#edit-pr-smt" data-id="">
-                                                        <i class="bx bx-edit-alt" title="edit data"></i>
-                                                    </button></center></td>
+                                                    <a href="/edit-grn-item-smt/{{ $data->id; }}">
+                                                        <button type="button" class="btn btn-sm btn-info"><i class="bx bx-edit-alt" title="edit data"></i></button>
+                                                    </a></td>
                                                    
                                             
                                         </tr>
@@ -332,6 +336,37 @@
                                 @endforeach
                                 @elseif($typex=='FG')
                                 @foreach ($data_detail_fg as $data)
+                                        <tr>
+                                            <td>{{ $data->type_product }}</td>
+                                            <td>{{ $data->description }}</td>
+                                            <td>{{ $data->receipt_qty }}</td>
+                                            <td>{{ $data->outstanding_qty }}</td>
+                                            <td>{{ $data->unit }}</td>
+                                            <td>{{ $data->note }}</td>
+                                            <td>
+                                    
+                                                    <form action="/hapus_grn_detail/{{ $data->id }}/{{ $id }}" method="post"
+                                                        class="d-inline">
+                                                        @method('delete')
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm btn-danger"
+                                                        onclick="return confirm('Anda yakin mau menghapus item ini ?')">
+                                                            <i class="bx bx-trash-alt" title="Hapus data" ></i>
+                                                        </button>
+                                                    </form>
+                                                    <button type="button" class="btn btn-sm btn-info " id=""
+                                                        data-bs-toggle="modal"
+                                                        onclick="edit_pr_smt('{{ $data->id }}')"
+                                                        data-bs-target="#edit-pr-smt" data-id="">
+                                                        <i class="bx bx-edit-alt" title="edit data"></i>
+                                                    </button></center></td>
+                                                   
+                                            
+                                        </tr>
+                                    <!-- Add more rows as needed -->
+                                    @endforeach
+                                @elseif($typex=='Other')
+                                @foreach ($data_detail_Other as $data)
                                         <tr>
                                             <td>{{ $data->type_product }}</td>
                                             <td>{{ $data->description }}</td>
