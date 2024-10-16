@@ -182,12 +182,12 @@ class workOrderController extends Controller
                 ->get();
 
             // $data['type_product_material'] = 'WIP';
-            $data['type_product_material'] = $product_ref->id_master_wips_material == '0' ? null : 'WIP';
+            $data['type_product_material'] = ($product_ref == null || $product_ref->id_master_wips_material == '0') ? null : 'WIP';
             // $data['id_master_products_material'] = $product_ref->id_master_wips_material;
-            $data['id_master_products_material'] = $product_ref->id_master_wips_material == '0' ? null : $product_ref->id_master_wips_material;
+            $data['id_master_products_material'] = ($product_ref == null || $product_ref->id_master_wips_material == '0') ? null : $product_ref->id_master_wips_material;
             // $data['qty_needed'] = $product_ref->id_master_wips_material;
-            $data['id_master_units_needed'] = $product_ref->master_units_id;
-            $data['qty_results'] = $product_ref->qty_results;
+            $data['id_master_units_needed'] = $product_ref == null ? null : $product_ref->master_units_id;
+            $data['qty_results'] = $product_ref == null ? null : $product_ref->qty_results;
         } else if ($typeProduct == 'FG') {
             $product = DB::table('master_product_fgs as a')
                 ->select('a.*', 'b.group_sub_code', 'b.name')
@@ -200,20 +200,22 @@ class workOrderController extends Controller
                 ->where('a.id_master_product_fgs', $idProduct)
                 ->first();
 
-            $data['type_product_material'] = $product_ref->type_ref;
+            $data['type_product_material'] = $product_ref == null ? null : $product_ref->type_ref;
             // $data['qty_needed'] = $product_ref->id_master_wips_material;
-            $data['id_master_units_needed'] = $product_ref->master_units_id;
-            if ($product_ref->type_ref == 'WIP') {
+            $data['id_master_units_needed'] = $product_ref == null ? null : $product_ref->master_units_id;
+            if ($product_ref == null){
+                $data['id_master_products_material'] = null;
+            } else if ($product_ref->type_ref == 'WIP') {
                 $data['id_master_products_material'] = $product_ref->id_master_wips;
             } else if ($product_ref->type_ref == 'FG') {
                 $data['id_master_products_material'] = $product_ref->id_master_fgs;
             } else {
                 $data['id_master_products_material'] = null;
             }
-            $data['qty_results'] = $product_ref->qty_results;
+            $data['qty_results'] = $product_ref == null ? null : $product_ref->qty_results;
         }
 
-        if ($data['qty_results'] <> null) {
+        if ($data['qty_results'] != null) {
             $qty_needed = $request->qty / $data['qty_results'];
         } else {
             $qty_needed = null;
