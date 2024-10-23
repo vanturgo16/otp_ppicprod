@@ -244,7 +244,7 @@ class GrnController extends Controller
             'date' => 'required',
             'external_doc_number' => 'required',
             'id_master_suppliers' => 'required',
-            'note' => 'required',
+            'note' => 'nullable',
             'qc_status' => 'required',
             'non_invoiceable' => 'required',
             'status' => 'required',
@@ -254,8 +254,75 @@ class GrnController extends Controller
 
         // dd($validatedData);
         // die;
-
         GoodReceiptNote::create($validatedData);
+
+        // Pengecekan apakah id_purchase_orders sudah ada di database
+        $cekidpo = GoodReceiptNote::where('id_purchase_orders', $request->id_purchase_orders)->exists();
+        if ($cekidpo) {
+            
+            // Ambil id_good_receipt_notes dari tabel GoodReceiptNote
+            $id_pr_grn = GoodReceiptNote::where('id_purchase_orders', $request->id_purchase_orders)->first();
+            // Mengambil nilai id_good_receipt_notes
+            $id_pr_grn_ok = $id_pr_grn->id;
+
+             // Ambil outstanding_qty dan receipt_qty dari tabel good_receipt_note_details
+            $hasil = DB::table('good_receipt_note_details')
+                    ->select('outstanding_qty', 'receipt_qty')
+                    ->where('id_good_receipt_notes', $id_pr_grn_ok)
+                    ->first();
+
+            if ($hasil) {
+                if ($hasil->receipt_qty <= $hasil->outstanding_qty) {
+                    $receipt_number = $request->input('receipt_number');
+
+                    $idValue = DB::table('good_receipt_notes')
+                            ->select('id')
+                            ->where('receipt_number', $receipt_number)
+                            ->first();
+
+                    $id = $idValue->id;
+
+                    $updated = DB::table('good_receipt_note_details')
+                                ->where('id_good_receipt_notes', $id_pr_grn_ok)
+                                ->where('status', 'Close')
+                                ->update(['status' => 'Ok']);
+
+                    $details = GoodReceiptNoteDetail::select( 'type_product', 'id_master_products', 'outstanding_qty', 'receipt_qty', 'master_units_id','status')
+                                ->where('id_good_receipt_notes', $id_pr_grn_ok)
+                                ->get();
+                    
+                    
+
+                    foreach ($details as $result) {
+                                    DB::table('good_receipt_note_details')->insert([
+                                        'id_good_receipt_notes' => $id,
+                                        'type_product' => $result->type_product,
+                                        'id_master_products' => $result->id_master_products,
+                                        'note' => '',
+                                        'outstanding_qty' => $result->receipt_qty,
+                                        'receipt_qty' => 0,
+                                        'master_units_id' => $result->master_units_id,
+                                        'status' => $result->status,
+                                    ]);
+                                }
+
+                    $updated = DB::table('good_receipt_note_details')
+                                ->where('id_good_receipt_notes', $id_pr_grn_ok)
+                                ->where('status', 'Ok')
+                                ->update(['status' => 'Close']);
+
+                    if ($idValue) {
+
+                        return redirect('/detail-grn-po/'.$id);
+                    } else {
+                        // Penanganan jika $id tidak ditemukan
+                        return redirect()->back()->with('error', 'ID tidak ditemukan');
+                    }
+
+                }
+
+            }
+        }
 
         $receipt_number = $request->input('receipt_number');
 
@@ -277,12 +344,13 @@ class GrnController extends Controller
                 'type_product' => $result->type_product,
                 'id_master_products' => $result->master_products_id,
                 'note' => '',
-                'outstanding_qty' => $result->outstanding_qty,
-                'receipt_qty' => $result->qty,
+                'outstanding_qty' => $result->qty,
+                'receipt_qty' => 0,
                 'master_units_id' => $result->master_units_id,
+                'status' => 'Open'
             ]);
         }
-        
+            
 
         if ($idValue) {
             
@@ -390,13 +458,24 @@ class GrnController extends Controller
                         ->leftJoin('master_tool_auxiliaries as b', 'a.id_master_products', '=', 'b.id')
                         ->leftJoin('master_units as c', 'a.master_units_id', '=', 'c.id')
                         ->select('a.id','a.type_product','a.receipt_qty','a.outstanding_qty', 'b.description', 'c.unit','a.note')
+                        ->where('a.status', '<>', 'Ok')
                         ->where('a.id_good_receipt_notes', $id)
                         ->get();
 
-                        $data_detail_rm = DB::table('good_receipt_note_details as a')
+        $data_detail_other = DB::table('good_receipt_note_details as a')
+                        ->leftJoin('master_tool_auxiliaries as b', 'a.id_master_products', '=', 'b.id')
+                        ->leftJoin('master_units as c', 'a.master_units_id', '=', 'c.id')
+                        ->select('a.id','a.type_product','a.receipt_qty','a.outstanding_qty', 'b.description', 'c.unit','a.note')
+                        ->where('a.status', '<>', 'Ok')
+                        ->where('a.id_good_receipt_notes', $id)
+                        ->where('b.type', 'Other')
+                        ->get();
+
+        $data_detail_rm = DB::table('good_receipt_note_details as a')
                         ->leftJoin('master_raw_materials as b', 'a.id_master_products', '=', 'b.id')
                         ->leftJoin('master_units as c', 'a.master_units_id', '=', 'c.id')
                         ->select('a.id','a.type_product','a.receipt_qty','a.outstanding_qty', 'b.description', 'c.unit','a.note')
+                        ->where('a.status', '<>', 'Ok')
                         ->where('a.id_good_receipt_notes', $id)
                         ->get();
 
@@ -404,6 +483,7 @@ class GrnController extends Controller
                         ->leftJoin('master_product_fgs as b', 'a.id_master_products', '=', 'b.id')
                         ->leftJoin('master_units as c', 'a.master_units_id', '=', 'c.id')
                         ->select('a.id','a.type_product','a.receipt_qty','a.outstanding_qty', 'b.description', 'c.unit','a.note')
+                        ->where('a.status', '<>', 'Ok')
                         ->where('a.id_good_receipt_notes', $id)
                         ->get();
 
@@ -411,6 +491,7 @@ class GrnController extends Controller
                         ->leftJoin('master_wips as b', 'a.id_master_products', '=', 'b.id')
                         ->leftJoin('master_units as c', 'a.master_units_id', '=', 'c.id')
                         ->select('a.id','a.type_product','a.receipt_qty','a.outstanding_qty', 'b.description', 'c.unit','a.note')
+                        ->where('a.status', '<>', 'Ok')
                         ->where('a.id_good_receipt_notes', $id)
                         ->get();
 
@@ -433,7 +514,7 @@ class GrnController extends Controller
         // die;
 
         return view('grn.detail_po_grn',compact('grn_po','unit','data_detail_ta','data_detail_rm','data_detail_fg'
-        ,'data_detail_wip','rm','ta','fg','wip','typex','id'));
+        ,'data_detail_wip','rm','ta','fg','wip','typex','id','data_detail_other'));
     }
     public function hapus_grn_detail(Request $request, $id, $idx)
     {
@@ -543,7 +624,7 @@ class GrnController extends Controller
             'receipt_qty' => 'required',
             'outstanding_qty' => 'required',
             'master_units_id' => 'required',
-            'note' => 'required',
+            'note' => 'nullable',
 
         ], $pesan);
 
@@ -1100,6 +1181,7 @@ public function external_no_lot (Request $request)
                 ->leftJoin('master_units as c', 'a.master_units_id', '=', 'c.id')
                 ->leftJoin('good_receipt_notes as d', 'a.id_good_receipt_notes', '=', 'd.id')
                 ->where('d.receipt_number', '=', $receipt_number)
+                ->where('a.status','<>', 'Ok')
                 ->get();
 
         $data_wip = DB::table('good_receipt_note_details as a')
@@ -1108,6 +1190,7 @@ public function external_no_lot (Request $request)
                 ->leftJoin('master_units as c', 'a.master_units_id', '=', 'c.id')
                 ->leftJoin('good_receipt_notes as d', 'a.id_good_receipt_notes', '=', 'd.id')
                 ->where('d.receipt_number', '=', $receipt_number)
+                ->where('a.status','<>', 'Ok')
                 ->get();
 
         $data_fg = DB::table('good_receipt_note_details as a')
@@ -1116,6 +1199,7 @@ public function external_no_lot (Request $request)
                 ->leftJoin('master_units as c', 'a.master_units_id', '=', 'c.id')
                 ->leftJoin('good_receipt_notes as d', 'a.id_good_receipt_notes', '=', 'd.id')
                 ->where('d.receipt_number', '=', $receipt_number)
+                ->where('a.status','<>', 'Ok')
                 ->get();
 
         // echo json_encode($data_ta);
@@ -1205,6 +1289,7 @@ public function external_no_lot (Request $request)
                         ->leftJoin('master_units as c', 'a.master_units_id', '=', 'c.id')
                         ->select('a.id','a.type_product','a.receipt_qty','a.outstanding_qty', 'b.description', 'c.unit','a.note')
                         ->where('a.id_good_receipt_notes', $id)
+                        ->where('a.status','<>', 'Ok')
                         ->get();
 
         $data_detail_fg = DB::table('good_receipt_note_details as a')
@@ -1366,6 +1451,36 @@ public function external_no_lot (Request $request)
 
         return view('grn.edit_grn_item_smt',compact('goodReceiptNote','rawMaterials','ta','fg','wip','other',
     'units'));
+    }public function edit_grn_item_smt_po($id)
+    {
+        // dd('tes');
+        // die;
+        $goodReceiptNote = GoodReceiptNoteDetail::where('id', $id)->first();
+
+        $rawMaterials = DB::table('master_raw_materials')
+                        ->select('description','id')
+                        ->get();
+        $ta = DB::table('master_tool_auxiliaries')
+                        ->select('description')
+                        ->get();
+        $fg = DB::table('master_product_fgs')
+                        ->select('description','id','perforasi')
+                        ->get();
+        $wip = DB::table('master_wips')
+                        ->select('description','id')
+                        ->get();
+
+        $other = DB::table('master_tool_auxiliaries')
+                        ->select('description', 'id')
+                        ->where('type', 'Other') // Ganti 'column_name' dengan nama kolom dan 'value' dengan nilai yang ingin dicari
+                        ->get();
+
+        $units = DB::table('master_units')
+                        ->select('unit_code','id','unit')
+                        ->get();
+
+        return view('grn.edit_grn_item_smt_po',compact('goodReceiptNote','rawMaterials','ta','fg','wip','other',
+    'units'));
     }public function update_grn_item_smt(Request $request, $id)
     {
         // dd($id);
@@ -1378,6 +1493,7 @@ public function external_no_lot (Request $request)
             'outstanding_qty.required' => 'outstanding_qty masih kosong',
             'master_units_id.required' => 'master_units_id masih kosong',
             'note.required' => 'note masih kosong',
+            'status.required' => 'status masih kosong',
             
             
         ];
@@ -1388,6 +1504,7 @@ public function external_no_lot (Request $request)
             'outstanding_qty' => 'nullable',
             'master_units_id' => 'required',
             'note' => 'nullable',
+            'status' => 'required',
             
         ], $pesan);
 
@@ -1398,6 +1515,41 @@ public function external_no_lot (Request $request)
             ->update($validatedData);
 
         return Redirect::to('/detail-grn-pr/'.$id_good_receipt_notes)->with('pesan', 'Data berhasil diupdate.');
+
+    }public function update_grn_item_smt_po(Request $request, $id)
+    {
+        // dd($id);
+        // die;
+        $id_good_receipt_notes = $request->input('id_good_receipt_notes');
+
+        $pesan = [
+            'id_master_products.required' => 'id_master_products masih kosong',
+            'receipt_qty.required' => 'receipt_qty masih kosong',
+            'outstanding_qty.required' => 'outstanding_qty masih kosong',
+            'master_units_id.required' => 'master_units_id masih kosong',
+            'note.required' => 'note masih kosong',
+            'status.required' => 'status masih kosong',
+            
+            
+        ];
+
+        $validatedData = $request->validate([
+            'id_master_products' => 'required',
+            'receipt_qty' => 'required',
+            'outstanding_qty' => 'nullable',
+            'master_units_id' => 'required',
+            'note' => 'nullable',
+            'status' => 'required',
+            
+        ], $pesan);
+
+        // dd($validatedData);
+        // die;
+
+        GoodReceiptNoteDetail::where('id', $id)
+            ->update($validatedData);
+
+        return Redirect::to('/detail-grn-po/'.$id_good_receipt_notes)->with('pesan', 'Data berhasil diupdate.');
 
     }
     
