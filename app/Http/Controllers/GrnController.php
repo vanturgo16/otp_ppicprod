@@ -185,6 +185,76 @@ class GrnController extends Controller
 
         GoodReceiptNote::create($validatedData);
 
+        $cekidpr = GoodReceiptNote::where('reference_number', $request->reference_number)->exists();
+        if ($cekidpr) {
+
+            // Ambil id_good_receipt_notes dari tabel GoodReceiptNote
+            $id_pr_grn = GoodReceiptNote::where('reference_number', $request->reference_number)->first();
+            // Mengambil nilai id_good_receipt_notes
+            $id_pr_grn_ok = $id_pr_grn->id;
+
+             // Ambil outstanding_qty dan receipt_qty dari tabel good_receipt_note_details
+            $hasil = DB::table('good_receipt_note_details')
+                    ->select('outstanding_qty', 'receipt_qty')
+                    ->where('id_good_receipt_notes', $id_pr_grn_ok)
+                    ->first();
+
+            if ($hasil) {
+                
+                    $receipt_number = $request->input('receipt_number');
+
+                    $idValue = DB::table('good_receipt_notes')
+                            ->select('id')
+                            ->where('receipt_number', $receipt_number)
+                            ->first();
+
+                    $id = $idValue->id;
+
+                    $updated = DB::table('good_receipt_note_details')
+                                ->where('id_good_receipt_notes', $id_pr_grn_ok)
+                                ->where('status', 'Close')
+                                ->update(['status' => 'Ok']);
+
+                    $details = GoodReceiptNoteDetail::select( 'type_product', 'id_master_products', 'outstanding_qty', 'receipt_qty', 'master_units_id','status')
+                                ->where('id_good_receipt_notes', $id_pr_grn_ok)
+                                ->get();
+                    
+                    
+
+                    foreach ($details as $result) {
+                                    DB::table('good_receipt_note_details')->insert([
+                                        'id_good_receipt_notes' => $id,
+                                        'type_product' => $result->type_product,
+                                        'id_master_products' => $result->id_master_products,
+                                        'note' => '',
+                                        'outstanding_qty' => $result->receipt_qty,
+                                        'receipt_qty' => 0,
+                                        'master_units_id' => $result->master_units_id,
+                                        'status' => $result->status,
+                                    ]);
+                                }
+
+                    $updated = DB::table('good_receipt_note_details')
+                                ->where('id_good_receipt_notes', $id_pr_grn_ok)
+                                ->where('status', 'Ok')
+                                ->update(['status' => 'Close']);
+
+                    if ($idValue) {
+
+                        return redirect('/detail-grn-po/'.$id);
+                    } else {
+                        // Penanganan jika $id tidak ditemukan
+                        return redirect()->back()->with('error', 'ID tidak ditemukan');
+                    }
+
+              
+
+            }
+
+
+
+        }
+
         $receipt_number = $request->input('receipt_number');
        
         $idValue = DB::table('good_receipt_notes')
@@ -204,8 +274,8 @@ class GrnController extends Controller
                 'type_product' => $result->type_product,
                 'id_master_products' => $result->master_products_id,
                 'note' => '',
-                'outstanding_qty' => $result->outstanding_qty,
-                'receipt_qty' => $result->qty,
+                'outstanding_qty' => $result->qty,
+                'receipt_qty' => 0,
                 'master_units_id' => $result->master_units_id,
             ]);
         }
@@ -272,7 +342,7 @@ class GrnController extends Controller
                     ->first();
 
             if ($hasil) {
-                if ($hasil->receipt_qty <= $hasil->outstanding_qty) {
+                
                     $receipt_number = $request->input('receipt_number');
 
                     $idValue = DB::table('good_receipt_notes')
@@ -319,7 +389,7 @@ class GrnController extends Controller
                         return redirect()->back()->with('error', 'ID tidak ditemukan');
                     }
 
-                }
+              
 
             }
         }
@@ -701,6 +771,7 @@ class GrnController extends Controller
                     'c.note'
                 )
                 ->whereIn('a.type', ['RM', 'FG', 'WIP', 'TA'])
+                ->where('c.status','<>', 'Ok')
                 ->orderBy($columns[$orderColumn], $orderDirection);
             
     
@@ -944,6 +1015,7 @@ class GrnController extends Controller
                 'e.name'
             )
             ->where('a.qc_status', 'Y')
+            ->where('c.status','<>','Ok')
             ->orderBy($columns[$orderColumn], $orderDirection);
 
             // Handle pencarian
