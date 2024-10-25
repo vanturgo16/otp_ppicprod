@@ -265,7 +265,7 @@
                                                         </button>
                                                     </form>
                                                     <a href="/edit-grn-item-smt/{{ $data->id; }}">
-                                                        <button type="button" class="btn btn-sm btn-info"><i class="bx bx-edit-alt" title="edit data"></i></button>
+                                                        <button type="button" class="btn btn-sm btn-info">confirm qty<i class="bx bx-edit-alt" title="edit data"></i></button>
                                                     </a></td>
                                                    
                                             
@@ -292,12 +292,9 @@
                                                             <i class="bx bx-trash-alt" title="Hapus data" ></i>
                                                         </button>
                                                     </form>
-                                                    <button type="button" class="btn btn-sm btn-info " id=""
-                                                        data-bs-toggle="modal"
-                                                        onclick="edit_grn_detail('{{ $data->id }}')"
-                                                        data-bs-target="#edit-pr-detail" data-id="">
-                                                        <i class="bx bx-edit-alt" title="edit data"></i>
-                                                    </button></center></td>
+                                                    <a href="/edit-grn-item-smt/{{ $data->id; }}">
+                                                        <button type="button" class="btn btn-sm btn-info">confirm qty<i class="bx bx-edit-alt" title="edit data"></i></button>
+                                                    </a></td>
                                             
                                             
                                         </tr>
@@ -323,12 +320,9 @@
                                                             <i class="bx bx-trash-alt" title="Hapus data" ></i>
                                                         </button>
                                                     </form>
-                                                    <button type="button" class="btn btn-sm btn-info " id=""
-                                                        data-bs-toggle="modal"
-                                                        onclick="edit_pr_smt('{{ $data->id }}')"
-                                                        data-bs-target="#edit-pr-smt" data-id="">
-                                                        <i class="bx bx-edit-alt" title="edit data"></i>
-                                                    </button></center></td>
+                                                    <a href="/edit-grn-item-smt/{{ $data->id; }}">
+                                                        <button type="button" class="btn btn-sm btn-info">confirm qty<i class="bx bx-edit-alt" title="edit data"></i></button>
+                                                    </a></td>
                                                  
                                             
                                         </tr>
@@ -354,12 +348,9 @@
                                                             <i class="bx bx-trash-alt" title="Hapus data" ></i>
                                                         </button>
                                                     </form>
-                                                    <button type="button" class="btn btn-sm btn-info " id=""
-                                                        data-bs-toggle="modal"
-                                                        onclick="edit_pr_smt('{{ $data->id }}')"
-                                                        data-bs-target="#edit-pr-smt" data-id="">
-                                                        <i class="bx bx-edit-alt" title="edit data"></i>
-                                                    </button></center></td>
+                                                    <a href="/edit-grn-item-smt/{{ $data->id; }}">
+                                                        <button type="button" class="btn btn-sm btn-info">confirm qty<i class="bx bx-edit-alt" title="edit data"></i></button>
+                                                    </a></td>
                                                    
                                             
                                         </tr>
@@ -385,12 +376,9 @@
                                                             <i class="bx bx-trash-alt" title="Hapus data" ></i>
                                                         </button>
                                                     </form>
-                                                    <button type="button" class="btn btn-sm btn-info " id=""
-                                                        data-bs-toggle="modal"
-                                                        onclick="edit_pr_smt('{{ $data->id }}')"
-                                                        data-bs-target="#edit-pr-smt" data-id="">
-                                                        <i class="bx bx-edit-alt" title="edit data"></i>
-                                                    </button></center></td>
+                                                    <a href="/edit-grn-item-smt/{{ $data->id; }}">
+                                                        <button type="button" class="btn btn-sm btn-info">confirm qty<i class="bx bx-edit-alt" title="edit data"></i></button>
+                                                    </a></td>
                                                    
                                             
                                         </tr>
