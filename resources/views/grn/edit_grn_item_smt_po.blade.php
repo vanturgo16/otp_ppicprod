@@ -72,7 +72,7 @@
                                             </select>
                                             @elseif($goodReceiptNote->type_product=='FG')
                                             <select class="form-select data-select2" name="id_master_products">
-                                                <option>Pilih Produk TA</option>
+                                                <option>Pilih Produk FG</option>
                                                 @foreach ($fg as $data)
                                                     <option value="{{ $data->id }}" data-id="{{ $data->id }}" 
                                                         @if($goodReceiptNote->id_master_products == $data->id) selected @endif>
