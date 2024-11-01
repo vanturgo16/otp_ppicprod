@@ -227,7 +227,7 @@ class GrnController extends Controller
                                         'type_product' => $result->type_product,
                                         'id_master_products' => $result->id_master_products,
                                         'note' => '',
-                                        'outstanding_qty' => $result->receipt_qty,
+                                        'outstanding_qty' => $result->outstanding_qty,
                                         'receipt_qty' => 0,
                                         'master_units_id' => $result->master_units_id,
                                         'status' => $result->status,
@@ -369,7 +369,7 @@ class GrnController extends Controller
                                         'type_product' => $result->type_product,
                                         'id_master_products' => $result->id_master_products,
                                         'note' => '',
-                                        'outstanding_qty' => $result->receipt_qty,
+                                        'outstanding_qty' => $result->outstanding_qty,
                                         'receipt_qty' => 0,
                                         'master_units_id' => $result->master_units_id,
                                         'status' => $result->status,
@@ -1439,7 +1439,7 @@ public function external_no_lot (Request $request)
                         ->select('description','id')
                         ->get();
         $ta = DB::table('master_tool_auxiliaries')
-                        ->select('description')
+                        ->select('description','id')
                         ->get();
         $fg = DB::table('master_product_fgs')
                         ->select('description','id','perforasi')
@@ -1503,7 +1503,7 @@ public function external_no_lot (Request $request)
                         ->select('description','id')
                         ->get();
         $ta = DB::table('master_tool_auxiliaries')
-                        ->select('description')
+                        ->select('description','id')
                         ->get();
         $fg = DB::table('master_product_fgs')
                         ->select('description','id','perforasi')
@@ -1533,7 +1533,7 @@ public function external_no_lot (Request $request)
                         ->select('description','id')
                         ->get();
         $ta = DB::table('master_tool_auxiliaries')
-                        ->select('description')
+                        ->select('description','id')
                         ->get();
         $fg = DB::table('master_product_fgs')
                         ->select('description','id','perforasi')
