@@ -100,7 +100,7 @@
                                     <div class="row mb-4 field-wrapper required-field">
                                         <label for="horizontal-password-input" class="col-sm-3 col-form-label">Receipt Qty</label>
                                         <div class="col-sm-9">
-                                            <input type="number" class="form-control" name="receipt_qty" value="{{ $goodReceiptNote->receipt_qty }}">
+                                            <input type="number" class="form-control" id="receipt_qty" name="receipt_qty" value="{{ $goodReceiptNote->receipt_qty }}">
                                             <input type="hidden" class="form-control" name="id_good_receipt_notes" value="{{ $goodReceiptNote->id_good_receipt_notes }}">
                                         </div>
                                     </div>
@@ -108,7 +108,7 @@
                                     <div class="row mb-4 field-wrapper required-field">
                                         <label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Outstanding Qty </label>
                                         <div class="col-sm-9">
-                                            <input type="number" class="form-control" name="outstanding_qty" value="{{ $goodReceiptNote->outstanding_qty }}">
+                                            <input type="number" class="form-control" id="outstanding_qty" name="outstanding_qty" value="{{ $goodReceiptNote->outstanding_qty }}">
                                         </div>
                                     </div>
                                     <div class="row mb-4 field-wrapper required-field">
@@ -129,6 +129,16 @@
                                         <label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Note </label>
                                         <div class="col-sm-9">
                                             <textarea name="note" rows="4" cols="50" class="form-control">{{ $goodReceiptNote->note }}</textarea>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-4 field-wrapper required-field">
+                                        <label for="horizontal-firstname-input" class="col-sm-3 col-form-label">Status</label>
+                                        <div class="col-sm-9">
+                                            <select class="form-select data-select2" name="status" id="status">
+                                                <option>Pilih Status</option>
+                                                <option value="Open" {{ $goodReceiptNote->status == 'Open' ? 'selected' : '' }}>Open</option>
+                                                <option value="Close" {{ $goodReceiptNote->status == 'Close' ? 'selected' : '' }}>Close</option>
+                                            </select>
                                         </div>
                                     </div>
 
@@ -152,4 +162,15 @@
                     <!-- end row -->
     </div>
 </div>
+<script>
+    document.getElementById('receipt_qty').addEventListener('input', function() {
+        var receiptQty = parseFloat(this.value) || 0;
+        var originalOutstandingQty = parseFloat({{ $goodReceiptNote->outstanding_qty }}) || 0;
+        
+        var newOutstandingQty = originalOutstandingQty - receiptQty;
+        
+        // Update nilai di field outstanding_qty
+        document.getElementById('outstanding_qty').value = newOutstandingQty >= 0 ? newOutstandingQty : 0; // Pastikan tidak negatif
+    });
+</script>
 @endsection
