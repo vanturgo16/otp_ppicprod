@@ -1,7 +1,7 @@
 @extends('layouts.master')
 
 @section('konten')
-<div class="kotak-tebal">
+
 <div class="page-content">
     <div class="container-fluid">
         <button onclick="window.print()" class="btn btn-primary no-print">Print</button>
@@ -107,7 +107,7 @@
         </div>
     </div>
 </div>
-</div>
+
 
 <style>
 .page-content {
@@ -217,7 +217,7 @@
 
 
 </style>
-<style>
+{{-- <style>
     .kotak-tebal {
         width: 500px; /* Lebar kotak */
         height: 420px; /* Tinggi kotak */
@@ -231,5 +231,5 @@
         margin-top: 50px; 
     
     }
-</style>
+</style> --}}
 @endsection
