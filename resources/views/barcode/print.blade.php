@@ -118,7 +118,9 @@
     }
     
     .barcode-item {
-        margin-bottom: 10px;
+        margin-bottom: 15px;
+        margin-top: 10px;
+        /* margin-bottom: 10px; */
         page-break-inside: avoid; /* Menghindari pemutusan halaman di dalam satu item barcode */
     }
     
