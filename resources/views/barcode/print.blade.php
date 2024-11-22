@@ -7,7 +7,7 @@
         <button onclick="window.print()" class="btn btn-primary no-print">Print</button>
         <div class="barcode-print">
             @foreach ($barcodeDetails as $barcode)
-            <div class="kotak-tebal">
+            {{-- <div class="kotak-tebal"> --}}
             <div class="barcode-item">
               
                 <table class="barcode-table">
@@ -104,7 +104,7 @@
                 </table>
 
             </div>
-        </div>
+        {{-- </div> --}}
             @endforeach
         </div>
     </div>
@@ -219,7 +219,7 @@
     
     
     </style>
-<style>
+{{-- <style>
     .kotak-tebal {
         width: 500px; /* Lebar kotak */
         height: 380px; /* Tinggi kotak */
@@ -233,5 +233,5 @@
         margin-bottom: 10px; 
     
     }
-</style>
+</style> --}}
 @endsection
