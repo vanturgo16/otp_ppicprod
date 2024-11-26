@@ -1066,6 +1066,20 @@ class GrnController extends Controller
 
         $validatedData = DB::update("UPDATE `good_receipt_note_details` SET `qc_passed` = 'N', qc_check_by = '51' WHERE `id` = '$id';");
 
+        $data = DB::table('good_receipt_note_details as a')
+        ->where('a.id', $id)
+        ->select('a.receipt_qty', 'a.outstanding_qty', 'a.status')
+        ->first();
+
+        // Update data berdasarkan ID dengan nilai yang didapat dari $data
+        DB::table('good_receipt_note_details as a')
+        ->where('a.id', $id)
+        ->update([
+            'a.receipt_qty' => $data->outstanding_qty,        // Nilai baru untuk 'receipt_qty' dari $data
+            'a.outstanding_qty' => $data->receipt_qty, // Nilai baru untuk 'outstanding_qty' dari $data
+            'a.status' => 'Open'                    // Nilai baru untuk 'STATUS' dari $data
+        ]);
+
         if ($validatedData) {
             //redirect dengan pesan sukses
             return Redirect::to('/grn-qc')->with('pesan', 'Data berhasil di un QC .');
@@ -1240,7 +1254,7 @@ public function external_no_lot (Request $request)
         // die;
 
         $data_ta = DB::table('good_receipt_note_details as a')
-                ->select('b.code', 'b.description', 'a.receipt_qty', 'c.unit')
+                ->select('b.code', 'b.description', 'a.receipt_qty', 'c.unit','a.qc_passed')
                 ->leftJoin('master_tool_auxiliaries as b', 'a.id_master_products', '=', 'b.id')
                 ->leftJoin('master_units as c', 'a.master_units_id', '=', 'c.id')
                 ->leftJoin('good_receipt_notes as d', 'a.id_good_receipt_notes', '=', 'd.id')
@@ -1248,7 +1262,7 @@ public function external_no_lot (Request $request)
                 ->get();
 
         $data_rm = DB::table('good_receipt_note_details as a')
-                ->select('b.rm_code', 'b.description', 'a.receipt_qty', 'c.unit')
+                ->select('b.rm_code', 'b.description', 'a.receipt_qty', 'c.unit','a.qc_passed')
                 ->leftJoin('master_raw_materials as b', 'a.id_master_products', '=', 'b.id')
                 ->leftJoin('master_units as c', 'a.master_units_id', '=', 'c.id')
                 ->leftJoin('good_receipt_notes as d', 'a.id_good_receipt_notes', '=', 'd.id')
@@ -1257,7 +1271,7 @@ public function external_no_lot (Request $request)
                 ->get();
 
         $data_wip = DB::table('good_receipt_note_details as a')
-                ->select('b.wip_code', 'b.description', 'a.receipt_qty', 'c.unit')
+                ->select('b.wip_code', 'b.description', 'a.receipt_qty', 'c.unit','a.qc_passed')
                 ->leftJoin('master_wips as b', 'a.id_master_products', '=', 'b.id')
                 ->leftJoin('master_units as c', 'a.master_units_id', '=', 'c.id')
                 ->leftJoin('good_receipt_notes as d', 'a.id_good_receipt_notes', '=', 'd.id')
@@ -1266,7 +1280,7 @@ public function external_no_lot (Request $request)
                 ->get();
 
         $data_fg = DB::table('good_receipt_note_details as a')
-                ->select('b.product_code', 'b.description', 'a.receipt_qty', 'c.unit')
+                ->select('b.product_code', 'b.description', 'a.receipt_qty', 'c.unit','a.qc_passed')
                 ->leftJoin('master_product_fgs as b', 'a.id_master_products', '=', 'b.id')
                 ->leftJoin('master_units as c', 'a.master_units_id', '=', 'c.id')
                 ->leftJoin('good_receipt_notes as d', 'a.id_good_receipt_notes', '=', 'd.id')
@@ -1472,6 +1486,7 @@ public function external_no_lot (Request $request)
             'outstanding_qty.required' => 'outstanding_qty masih kosong',
             'master_units_id.required' => 'master_units_id masih kosong',
             'note.required' => 'note masih kosong',
+            'status.required' => 'status masih kosong'
             
             
         ];
@@ -1482,6 +1497,7 @@ public function external_no_lot (Request $request)
             'outstanding_qty' => 'nullable',
             'master_units_id' => 'required',
             'note' => 'nullable',
+            'status' => 'required'
             
         ], $pesan);
 
