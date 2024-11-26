@@ -8,10 +8,68 @@
     <title>PRINT GOOD RECEIPT NOTE</title>
     <!-- Bootstrap Css -->
     <link href="{{ asset('assets/css/bootstrap.min.css') }}" id="bootstrap-style" rel="stylesheet" type="text/css" />
+    <style>
+    /* CSS untuk watermark */
+    .watermark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 5rem;
+        color: rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        pointer-events: none;
+        user-select: none;
+    }
+
+    /* CSS khusus untuk cetak */
+    @media print {
+        body {
+            position: relative;
+        }
+
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            color: rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            pointer-events: none;
+            user-select: none;
+            page-break-inside: avoid;
+        }
+    }
+</style>
 </head>
 
 <body>
-                    
+@if($type[0]->type=="RM")
+    @foreach ($data_rm as $item)
+        @if ($item->qc_passed != 'Y')
+            <div class="watermark">DRAFT</div>
+        @endif
+    @endforeach
+@elseif($type[0]->type=='TA')
+    @foreach ($data_ta as $item)
+        @if ($item->qc_passed != 'Y')
+            <div class="watermark">DRAFT</div>
+        @endif
+    @endforeach
+@elseif($type[0]->type=='WIP') 
+    @foreach ($data_wip as $item)
+        @if ($item->qc_passed != 'Y')
+            <div class="watermark">DRAFT</div>
+        @endif
+    @endforeach
+@elseif($type[0]->type=='FG') 
+    @foreach ($data_fg as $item)
+        @if ($item->qc_passed != 'Y')
+            <div class="watermark">DRAFT</div>
+        @endif
+    @endforeach
+@endif   
     <div class="container-fluid">
         <div class="row">
             <div class="col-8 d-flex align-items-center gap-10">
