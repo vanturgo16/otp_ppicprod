@@ -190,8 +190,20 @@ class BarcodeController extends Controller
         $barcodeDetails = DB::table('barcode_detail as bd')
             ->join('barcodes as b', 'bd.id_barcode', '=', 'b.id')
             ->leftJoin('sales_orders as so', 'b.id_sales_orders', '=', 'so.id')
+
             ->join('work_orders as wo', 'b.id_work_orders', '=', 'wo.id')
-            ->join('master_product_fgs  as mp', 'b.id_master_products', '=', 'mp.id')
+            ->join(
+                \DB::raw(
+                    '(SELECT id, product_code, description, id_master_units, \'FG\' as type_product FROM master_product_fgs WHERE status = \'Active\' UNION ALL SELECT id, wip_code as product_code, description, id_master_units, \'WIP\' as type_product FROM master_wips WHERE status = \'Active\') e'
+                ),
+                function ($join) {
+                    // $join->on('d.id_master_products', '=', 'e.id');
+                    // $join->on('d.type_product', '=', 'e.type_product');
+                    $join->on('so.id_master_products', '=', 'e.id');
+                    $join->on('so.type_product', '=', 'e.type_product');
+                }
+            )
+            // ->join('master_product_fgs  as mp', 'b.id_master_products', '=', 'mp.id')
             ->join('master_work_centers as mwc', 'b.id_work_centers', '=', 'mwc.id')
             ->leftJoin('master_customers as mc', 'b.id_master_customers', '=', 'mc.id')
             ->select(
@@ -203,9 +215,13 @@ class BarcodeController extends Controller
                 'mwc.work_center_code',
                 'mwc.work_center',
                 'mc.name as nm_cust',
-                'mp.description'
+                'e.description',
+                // 'e.perforasi',
+                'e.product_code',
+                'e.type_product'
             )->where('bd.id_barcode', $id)
             ->get();
+            // dd($barcodeDetails);
         return view('barcode.show_barcode', compact('barcodeDetails'));
     }
 
@@ -230,7 +246,8 @@ class BarcodeController extends Controller
                 'mp.description',
                 'mp.thickness',
                 'mp.perforasi',
-                'mp.width'
+                'mp.width',
+                'mp.height',
             )->where('bd.barcode_number', $id)
             ->first();
         //  dd($barcode);
@@ -259,6 +276,7 @@ class BarcodeController extends Controller
                 'mp.thickness',
                 'mp.perforasi',
                 'mp.width',
+                'mp.height',
                 //  'mp.type_product_code',
                 //  'mp.group_sub_code',
             )->where('bd.id_barcode', $id)
@@ -321,9 +339,9 @@ class BarcodeController extends Controller
         return view('barcode.print_cbc', compact('barcodeDetails'));
     }
 
-    public function table_print()
-    {
+    // public function table_print()
+    // {
 
-        return view('barcode.table');
-    }
+    //     return view('barcode.table');
+    // }
 }

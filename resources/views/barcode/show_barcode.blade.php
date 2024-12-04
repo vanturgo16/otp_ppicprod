@@ -62,7 +62,7 @@
                         <td>{{ $data->barcode_number }}</td>
                         <td>{{ $data->status ?? 'N/A'}}</td>
 
-                        <td>{{ $data->description }}</td>
+                        <td><b>{{ $data->product_code }}</b> -{{ $data->description }}</td>
                         <td>{{ $data->work_center }}</td>
                         <td>{{ $data->shift }}</td>
                         
