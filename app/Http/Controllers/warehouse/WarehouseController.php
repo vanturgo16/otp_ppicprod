@@ -168,7 +168,8 @@ class WarehouseController extends Controller
                 ->select('barcode_detail.*', 'master_product_fgs.description', 'master_product_fgs.id as product_id', 'sales_orders.id as sales_order_id', 'master_product_fgs.stock')
                 ->first();
 
-            if ($barcodeRecord && $barcodeRecord->status === 'In Stock') {
+            if ($barcodeRecord && strpos($barcodeRecord->status, 'In Stock') !== false) {
+
                 $exists = true;
                 $productName = $barcodeRecord->description; // Ambil nama produk
                 $isBag = (substr($barcode, -1) === 'B');
@@ -184,6 +185,7 @@ class WarehouseController extends Controller
                     'id_sales_orders' => $barcodeRecord->sales_order_id,
                     'id_packing_lists' => $packingListId,
                     'pcs' => $isBag ? $pcs : 1, // Simpan jumlah pcs jika itu bag, 1 jika bukan
+                    'sts_start' => $barcodeRecord->status,
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);
@@ -221,7 +223,7 @@ class WarehouseController extends Controller
                 ->select('barcode_detail.*', 'master_product_fgs.description', 'master_product_fgs.id as product_id', 'barcodes.id_sales_orders as sales_order_id', 'master_product_fgs.stock')
                 ->first();
 
-            if ($barcodeRecord && $barcodeRecord->status === 'In Stock') {
+            if ($barcodeRecord && strpos($barcodeRecord->status, 'In Stock') !== false) {
                 $exists = true;
                 $productName = $barcodeRecord->description; // Ambil nama produk
                 $isBag = (substr($barcode, -1) === 'B');
@@ -236,6 +238,7 @@ class WarehouseController extends Controller
                     'barcode' => $barcode,
                     'id_packing_lists' => $packingListId,
                     'pcs' => $isBag ? $pcs : 1, // Simpan jumlah pcs jika itu bag, 1 jika bukan
+                    'sts_start' => $barcodeRecord->status,
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);
@@ -354,7 +357,7 @@ class WarehouseController extends Controller
                 // Update status barcode di tabel barcode_detail
                 DB::table('barcode_detail')
                     ->where('barcode_number', $barcode)
-                    ->update(['status' => 'In Stock']);
+                    ->update(['status' => $barcodeDetail->sts_start]);
 
                 // Hapus entri barcode dari tabel packing_list_details
                 DB::table('packing_list_details')->where('id', $id)->delete();
@@ -418,7 +421,8 @@ class WarehouseController extends Controller
                         ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
                         ->join('master_product_fgs', 'barcodes.id_master_products', '=', 'master_product_fgs.id')
                         ->where('barcode_detail.barcode_number', $barcode)
-                        ->where('barcode_detail.status', 'In Stock')
+                        // ->where('barcode_detail.status', 'In Stock')
+                        ->where(DB::raw('strpos(barcode_detail.status, "In Stock")'), '!==', 'false')
                         ->select('barcode_detail.*', 'master_product_fgs.description', 'master_product_fgs.id as product_id', 'sales_orders.id as sales_order_id', 'master_product_fgs.stock', 'sales_orders.outstanding_delivery_qty')
                         ->first();
 
@@ -461,7 +465,7 @@ class WarehouseController extends Controller
 
                         DB::table('barcode_detail')
                             ->where('barcode_number', $oldDetail->barcode)
-                            ->update(['status' => 'In Stock']);
+                            ->update(['status' => $oldDetail->sts_start]);
 
                         DB::table('barcode_detail')
                             ->where('barcode_number', $barcode)
@@ -531,7 +535,7 @@ class WarehouseController extends Controller
             ->join('master_units', 'master_product_fgs.id_master_units', '=', 'master_units.id')
             ->leftJoin('report_blow_production_results', function ($join) {
                 $join->on('barcode_detail.barcode_number', '=', 'report_blow_production_results.barcode')
-                    ->where('barcode_detail.barcode_number', 'like', '%P');
+                    ->where('barcode_detail.barcode_number', 'like', '%B');
             })
             ->leftJoin('report_sf_production_results', function ($join) {
                 $join->on('barcode_detail.barcode_number', '=', 'report_sf_production_results.barcode')
@@ -641,7 +645,7 @@ class WarehouseController extends Controller
                     // Update status barcode di tabel barcode_detail
                     DB::table('barcode_detail')
                         ->where('barcode_number', $detail->barcode)
-                        ->update(['status' => 'In Stock']);
+                        ->update(['status' => $detail->sts_start]);
                 }
             }
 
