@@ -194,10 +194,10 @@
                             <td>{{ $detail->description }}</td>
                             <td>{{ $detail->barcode_number }}</td>
                             <td>{{ $detail->so_number }}</td>
-                            <td>{{ substr($detail->barcode_number, -1) === 'B' ? $detail->pcs . ' PCS' : '0 ' . $detail->unit }}</td>
-                            <td>{{ substr($detail->barcode_number, -1) === 'B' ? ($detail->weight ?? 'N/A') : ($detail->production_weight ?? 'N/A') }} KG</td>
+                            <td>{{ $detail->pcs . ' PCS' }}</td>
+                            <td>{{ $detail->production_weight }} KG</td>
                             @php
-                            $totalRoll += substr($detail->barcode_number, -1) === 'B' ? $detail->pcs : 0;
+                            $totalRoll += $detail->pcs;
                             $totalWeight += substr($detail->barcode_number, -1) === 'B' ? $detail->weight : $detail->production_weight;
                             @endphp
                         </tr>
