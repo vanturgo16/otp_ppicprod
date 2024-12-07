@@ -81,16 +81,19 @@
                                         <td>{{ $detail->id_sales_orders }}</td>
                                         <td>{{ $detail->barcode }}</td>
                                         <td>{{ $detail->product_description }}</td>
-                                        <td><input type="number" class="form-control number_of_box" data-id="{{ $detail->id }}" name="number_of_box" value="{{ $detail->number_of_box }}"></td>
-                                        <td><input type="number" class="form-control weight" data-id="{{ $detail->id }}" name="weight" value="{{ $detail->weight }}"></td>
                                         @if (str_ends_with($detail->barcode, 'B'))
+                                        <td><input type="number" class="form-control number_of_box" data-id="{{ $detail->id }}" name="number_of_box" value="0"></td>
+                                        <td><input type="number" class="form-control weight" data-id="{{ $detail->id }}" name="weight" value="0"></td>
                                         <td><input type="number" class="form-control pcs" data-id="{{ $detail->id }}" name="pcs" value="{{ $detail->pcs }}"></td>
                                         @else
+                                        <td></td>
+                                        <td></td>
                                         <td></td>
                                         @endif
                                         <td><button type="button" class="btn btn-danger btn-sm remove-barcode">Remove</button></td>
                                     </tr>
                                     @endforeach
+
                                 </tbody>
                             </table>
                         </div>
@@ -159,13 +162,16 @@
                                 '<td>' + ($('#change_so').val() || '') + '</td>' +
                                 '<td>' + $('#barcode').val() + '</td>' +
                                 '<td>' + (response.product_name || '') + '</td>' +
-                                '<td><input type="number" class="form-control number_of_box" data-id="' + response.id + '" name="number_of_box"></td>' +
-                                '<td><input type="number" class="form-control weight" data-id="' + response.id + '" name="weight"></td>' +
                                 (response.is_bag ?
+                                    '<td><input type="number" class="form-control number_of_box" data-id="' + response.id + '" name="number_of_box" value="0"></td>' +
+                                    '<td><input type="number" class="form-control weight" data-id="' + response.id + '" name="weight" value="0"></td>' +
                                     '<td><input type="number" class="form-control pcs" data-id="' + response.id + '" name="pcs" value="0"></td>' :
+                                    '<td><input type="number" class="form-control number_of_box" data-id="' + response.id + '" name="number_of_box"></td>' +
+                                    '<td><input type="number" class="form-control weight" data-id="' + response.id + '" name="weight"></td>' +
                                     '<td></td>') +
                                 '<td><button type="button" class="btn btn-danger btn-sm remove-barcode">Remove</button></td>' +
                                 '</tr>';
+
                             $('#barcode-table tbody').append(newRow);
                             $('#barcode').val('');
                             $('#change_so').val('');
