@@ -190,7 +190,7 @@
 
                             $('#barcode-table tbody').append(newRow);
                             $('#barcode').val('');
-                            $('#change_so').val('');
+                            // $('#change_so').val('');
                             $('#barcode').focus();
                         } else if (response.duplicate) {
                             Swal.fire({
