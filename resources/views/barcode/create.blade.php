@@ -45,10 +45,11 @@
                                                     data-id-master-customers="{{ $data->id_master_customers }}"
                                                     data-id-master-products="{{ $data->id_master_products }}"
                                                     data-type-product-code="{{ $data->type_product_code }}"
-                                                    data-group-sub-code="{{ $data->group_sub_code }}">
-                                                    {{ $data->wo_number }} {{ $data->status }} | {{ $data->note }} 
-                                                    {{-- {{ $data->id }} --}}
+                                                    data-group-sub-code="{{ $data->group_sub_code }}"
+                                                    data-type-product="{{ $data->type_product }}"> <!-- Tambahkan ini -->
+                                                    {{ $data->wo_number }} {{ $data->status }} | {{ $data->note }}
                                                 </option>
+                                                
                                                 @endforeach
                                             </select>
                                         </div>
@@ -61,6 +62,8 @@
                                             <input type="hidden" class="form-control" id="id_master_products" name="id_master_products" value="">
                                             <input type="hidden" class="form-control" id="type_product_code" name="type_product_code" value="">
                                             <input type="hidden" class="form-control" id="group_sub_code" name="group_sub_code" value="">
+                                            <input type="hidden" class="form-control" id="type_product" name="type_product" value="">
+
                                     <div class="row mb-4 field-wrapper">
                                         <label for="horizontal-password-input" class="col-sm-3 col-form-label">Work Center</label>
                                         <div class="col-sm-9">
@@ -123,6 +126,7 @@
             var idMasterProducts = selectedOption.data('id-master-products');
             var typeProductCode = selectedOption.data('type-product-code');
             var groupSubCode = selectedOption.data('group-sub-code');
+            var typeProduct = selectedOption.data('type-product'); //
 
             // Update hidden fields
             $('#id_sales_orders').val(idSalesOrders);
@@ -131,6 +135,7 @@
             $('#id_master_products').val(idMasterProducts);
             $('#type_product_code').val(typeProductCode);
             $('#group_sub_code').val(groupSubCode);
+            $('#type_product').val(typeProduct); // Tambahkan
         });
     });
 </script>

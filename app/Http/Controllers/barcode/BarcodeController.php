@@ -58,22 +58,41 @@ class BarcodeController extends Controller
 
     public function create()
     {
-
         $wo = DB::table('work_orders as a')
-            ->join('sales_orders as b', 'a.id_sales_orders', '=', 'b.id')
-            ->leftjoin('master_product_fgs as c', 'a.id_master_products', '=', 'c.id')
+            ->leftJoin('sales_orders as b', 'a.id_sales_orders', '=', 'b.id')
+            ->leftJoin(
+                DB::raw('
+                    (SELECT 
+                        id, product_code, description, id_master_units,type_product_code,
+                        group_sub_code, \'FG\' AS type_product, perforasi, weight 
+                    FROM master_product_fgs 
+                    WHERE status = \'Active\'
+    
+                    UNION ALL 
+    
+                    SELECT 
+                        id, wip_code AS product_code, description, id_master_units,
+                        type_product_code,group_sub_code, \'WIP\' AS type_product, perforasi, weight 
+                    FROM master_wips 
+                    WHERE status = \'Active\'
+                    ) c
+                '), 
+                function ($join) {
+                    $join->on('a.id_master_products', '=', 'c.id')
+                         ->on('a.type_product', '=', 'c.type_product');
+                }
+            )
             ->where('a.status', 'Posted')
-            ->select('a.*', 'b.id as id_sal', 'b.id_master_customers', 'c.type_product_code', 'c.group_sub_code')
+            ->select('a.*', 'b.id_master_customers', 'c.type_product_code', 'c.group_sub_code')
             ->get();
-
+    
         // dd($wo);
-
+    
         $wc = DB::table('master_work_centers')->where('status', 'Active')->get();
-
+    
         return view('barcode.create', compact('wo', 'wc'));
     }
-
-
+    
     public function cange($id)
     {
         $results = DB::table('barcodes as a')
@@ -113,7 +132,6 @@ class BarcodeController extends Controller
         return view('barcode.cange', compact('so', 'results'));
     }
 
-
     public function store(Request $request)
     {
         // Validate the request data
@@ -149,7 +167,8 @@ class BarcodeController extends Controller
                     'id_master_process_productions' => $request->input('id_master_process_productions'),
                     'id_master_customers'           => $request->input('id_master_customers'),
                     'id_master_products'            => $request->input('id_master_products'),
-                    'staff'                         => Auth::user()->name
+                    'staff'                         => Auth::user()->name,
+                    'type_product'                  => $request->input('type_product')
                 ]);
 
                 // Generate barcode numbers and save them
@@ -188,98 +207,153 @@ class BarcodeController extends Controller
     public function show($id)
     {
         $barcodeDetails = DB::table('barcode_detail as bd')
-            ->join('barcodes as b', 'bd.id_barcode', '=', 'b.id')
-            ->leftJoin('sales_orders as so', 'b.id_sales_orders', '=', 'so.id')
-
-            ->join('work_orders as wo', 'b.id_work_orders', '=', 'wo.id')
+        ->join('barcodes as b', 'bd.id_barcode', '=', 'b.id')
+        ->leftJoin('sales_orders as so', 'b.id_sales_orders', '=', 'so.id')
+        ->join('work_orders as wo', 'b.id_work_orders', '=', 'wo.id')
             ->join(
-                \DB::raw(
-                    '(SELECT id, product_code, description, id_master_units, \'FG\' as type_product FROM master_product_fgs WHERE status = \'Active\' UNION ALL SELECT id, wip_code as product_code, description, id_master_units, \'WIP\' as type_product FROM master_wips WHERE status = \'Active\') e'
-                ),
-                function ($join) {
-                    // $join->on('d.id_master_products', '=', 'e.id');
-                    // $join->on('d.type_product', '=', 'e.type_product');
-                    $join->on('so.id_master_products', '=', 'e.id');
-                    $join->on('so.type_product', '=', 'e.type_product');
-                }
-            )
-            // ->join('master_product_fgs  as mp', 'b.id_master_products', '=', 'mp.id')
-            ->join('master_work_centers as mwc', 'b.id_work_centers', '=', 'mwc.id')
-            ->leftJoin('master_customers as mc', 'b.id_master_customers', '=', 'mc.id')
-            ->select(
-                'bd.barcode_number',
-                'bd.created_at as tgl_buat',
-                'b.shift',
-                'so.so_number',
-                'wo.wo_number',
-                'mwc.work_center_code',
-                'mwc.work_center',
-                'mc.name as nm_cust',
-                'e.description',
-                // 'e.perforasi',
-                'e.product_code',
-                'e.type_product'
-            )->where('bd.id_barcode', $id)
+                DB::raw('
+                (SELECT 
+                    id, product_code, description, id_master_units, type_product_code, 
+                    thickness, width, height, group_sub_code, \'FG\' AS type_product, perforasi, weight 
+                FROM master_product_fgs 
+                WHERE STATUS = \'Active\'
+                
+                UNION ALL 
+                
+                SELECT 
+                    id, wip_code AS product_code, description, id_master_units, type_product_code, 
+                    thickness, width, NULL AS height, group_sub_code, \'WIP\' AS type_product, perforasi, weight 
+                FROM master_wips 
+                WHERE STATUS = \'Active\'
+                ) mp
+            '), 
+            function ($join) {
+                $join->on('b.id_master_products', '=', 'mp.id')
+                     ->on('wo.type_product', '=', 'mp.type_product');
+            }
+        )
+        ->join('master_work_centers as mwc', 'b.id_work_centers', '=', 'mwc.id')
+        ->leftJoin('master_customers as mc', 'b.id_master_customers', '=', 'mc.id')
+        ->select(
+            'bd.barcode_number',
+            'bd.created_at as tgl_buat',
+            'b.shift',
+            'so.so_number',
+            'wo.wo_number',
+            'mwc.work_center_code',
+            'mwc.work_center',
+            'mc.name as nm_cust',
+            'mp.description',
+            'mp.thickness',
+            'mp.perforasi',
+            'mp.width',
+            'mp.product_code',
+            DB::raw('IF(mp.type_product = "FG", mp.height, NULL) AS height')
+        )
+        ->where('bd.id_barcode', $id)
             ->get();
-            // dd($barcodeDetails);
+        
         return view('barcode.show_barcode', compact('barcodeDetails'));
     }
-
+    
     public function print_satuan_standar($id)
     {
         $barcode = DB::table('barcode_detail as bd')
-            ->join('barcodes as b', 'bd.id_barcode', '=', 'b.id')
-            ->leftJoin('sales_orders as so', 'b.id_sales_orders', '=', 'so.id')
-            ->join('work_orders as wo', 'b.id_work_orders', '=', 'wo.id')
-            ->join('master_product_fgs  as mp', 'b.id_master_products', '=', 'mp.id')
-            ->join('master_work_centers as mwc', 'b.id_work_centers', '=', 'mwc.id')
-            ->leftJoin('master_customers as mc', 'b.id_master_customers', '=', 'mc.id')
-            ->select(
-                'bd.barcode_number',
-                'bd.created_at as tgl_buat',
-                'b.shift',
-                'so.so_number',
-                'wo.wo_number',
-                'mwc.work_center_code',
-                'mwc.work_center',
-                'mc.name as nm_cust',
-                'mp.description',
-                'mp.thickness',
-                'mp.perforasi',
-                'mp.width',
-                'mp.height',
-            )->where('bd.barcode_number', $id)
-            ->first();
+        ->join('barcodes as b', 'bd.id_barcode', '=', 'b.id')
+        ->leftJoin('sales_orders as so', 'b.id_sales_orders', '=', 'so.id')
+        ->join('work_orders as wo', 'b.id_work_orders', '=', 'wo.id')
+        ->join(
+            DB::raw('
+                (SELECT 
+                    id, product_code, description, id_master_units, type_product_code, 
+                    thickness, width, height, group_sub_code, \'FG\' AS type_product, perforasi, weight 
+                FROM master_product_fgs 
+                WHERE STATUS = \'Active\'
+                
+                UNION ALL 
+                
+                SELECT 
+                    id, wip_code AS product_code, description, id_master_units, type_product_code, 
+                    thickness, width, NULL AS height, group_sub_code, \'WIP\' AS type_product, perforasi, weight 
+                FROM master_wips 
+                WHERE STATUS = \'Active\'
+                ) mp
+            '), 
+            function ($join) {
+                $join->on('b.id_master_products', '=', 'mp.id')
+                     ->on('wo.type_product', '=', 'mp.type_product');
+            }
+        )
+        ->join('master_work_centers as mwc', 'b.id_work_centers', '=', 'mwc.id')
+        ->leftJoin('master_customers as mc', 'b.id_master_customers', '=', 'mc.id')
+        ->select(
+            'bd.barcode_number',
+            'bd.created_at as tgl_buat',
+            'b.shift',
+            'so.so_number',
+            'wo.wo_number',
+            'mwc.work_center_code',
+            'mwc.work_center',
+            'mc.name as nm_cust',
+            'mp.description',
+            'mp.thickness',
+            'mp.perforasi',
+            'mp.width',
+            DB::raw('IF(mp.type_product = "FG", mp.height, NULL) AS height')
+        )
+        ->where('bd.barcode_number', $id)
+        ->first();
         //  dd($barcode);
         return view('barcode.print_satuan', compact('barcode'));
     }
-
+    
     public function print_standar($id)
     {
         $barcodeDetails = DB::table('barcode_detail as bd')
-            ->join('barcodes as b', 'bd.id_barcode', '=', 'b.id')
-            ->leftJoin('sales_orders as so', 'b.id_sales_orders', '=', 'so.id')
-            ->join('work_orders as wo', 'b.id_work_orders', '=', 'wo.id')
-            ->join('master_product_fgs  as mp', 'b.id_master_products', '=', 'mp.id')
-            ->join('master_work_centers as mwc', 'b.id_work_centers', '=', 'mwc.id')
-            ->leftJoin('master_customers as mc', 'b.id_master_customers', '=', 'mc.id')
-            ->select(
-                'bd.barcode_number',
-                'bd.created_at as tgl_buat',
-                'b.shift',
-                'so.so_number',
-                'wo.wo_number',
-                'mwc.work_center_code',
-                'mwc.work_center',
-                'mc.name as nm_cust',
-                'mp.description',
-                'mp.thickness',
-                'mp.perforasi',
-                'mp.width',
-                'mp.height',
-                //  'mp.type_product_code',
-                //  'mp.group_sub_code',
-            )->where('bd.id_barcode', $id)
+        ->join('barcodes as b', 'bd.id_barcode', '=', 'b.id')
+        ->leftJoin('sales_orders as so', 'b.id_sales_orders', '=', 'so.id')
+        ->join('work_orders as wo', 'b.id_work_orders', '=', 'wo.id')
+        ->join(
+            DB::raw('
+                (SELECT 
+                    id, product_code, description, id_master_units, type_product_code, 
+                    thickness, width, height, group_sub_code, \'FG\' AS type_product, perforasi, weight 
+                FROM master_product_fgs 
+                WHERE STATUS = \'Active\'
+                
+                UNION ALL 
+                
+                SELECT 
+                    id, wip_code AS product_code, description, id_master_units, type_product_code, 
+                    thickness, width, NULL AS height, group_sub_code, \'WIP\' AS type_product, perforasi, weight 
+                FROM master_wips 
+                WHERE STATUS = \'Active\'
+                ) mp
+            '), 
+            function ($join) {
+                $join->on('b.id_master_products', '=', 'mp.id')
+                     ->on('wo.type_product', '=', 'mp.type_product');
+            }
+        )
+        ->join('master_work_centers as mwc', 'b.id_work_centers', '=', 'mwc.id')
+        ->leftJoin('master_customers as mc', 'b.id_master_customers', '=', 'mc.id')
+        ->select(
+            'bd.barcode_number',
+            'bd.created_at as tgl_buat',
+            'b.shift',
+            'so.so_number',
+            'wo.wo_number',
+            'mwc.work_center_code',
+            'mwc.work_center',
+            'mc.name as nm_cust',
+            'mp.description',
+            'mp.thickness',
+            'mp.perforasi',
+            'mp.width',
+            DB::raw('IF(mp.type_product = "FG", mp.height, NULL) AS height')
+        )
+        ->where('bd.id_barcode', $id)
+          
             ->get();
         return view('barcode.print', compact('barcodeDetails'));
     }
