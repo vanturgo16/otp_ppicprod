@@ -203,7 +203,7 @@ class workOrderController extends Controller
             $data['type_product_material'] = $product_ref == null ? null : $product_ref->type_ref;
             // $data['qty_needed'] = $product_ref->id_master_wips_material;
             $data['id_master_units_needed'] = $product_ref == null ? null : $product_ref->master_units_id;
-            if ($product_ref == null){
+            if ($product_ref == null) {
                 $data['id_master_products_material'] = null;
             } else if ($product_ref->type_ref == 'WIP') {
                 $data['id_master_products_material'] = $product_ref->id_master_wips;
@@ -371,6 +371,14 @@ class workOrderController extends Controller
             $product = DB::table('master_product_fgs as a')
                 ->select('a.*')
                 ->get();
+        } else if ($typeProduct == 'RM') {
+            $product = DB::table('master_raw_materials as a')
+                ->select('a.*', 'a.rm_code as product_code')
+                ->get();
+        } else if ($typeProduct == 'AUX') {
+            $product = DB::table('master_tool_auxiliaries as a')
+                ->select('a.*', 'a.code as product_code')
+                ->get();
         }
 
         $typeProductNeeded = $workOrder->type_product_material;
@@ -380,6 +388,14 @@ class workOrderController extends Controller
                 ->get();
         } else if ($typeProductNeeded == 'FG') {
             $productNeeded = DB::table('master_product_fgs as a')
+                ->select('a.*')
+                ->get();
+        } else if ($typeProduct == 'RM') {
+            $productNeeded = DB::table('master_raw_materials as a')
+                ->select('a.*')
+                ->get();
+        } else if ($typeProduct == 'AUX') {
+            $productNeeded = DB::table('master_tool_auxiliaries as a')
                 ->select('a.*')
                 ->get();
         } else {
@@ -513,12 +529,21 @@ class workOrderController extends Controller
         if ($typeProduct == 'WIP') {
             $products = DB::table('master_wips as a')
                 ->where('a.status', 'Active')
-                ->select('a.id', 'a.wip_code', 'a.description', 'a.perforasi')
+                ->select('a.id', 'a.wip_code as product_code', 'a.description', 'a.perforasi', 'a.group_sub_code')
                 ->get();
         } else if ($typeProduct == 'FG') {
             $products = DB::table('master_product_fgs as a')
                 ->where('a.status', 'Active')
-                ->select('a.id', 'a.product_code', 'a.description', 'a.perforasi')
+                ->select('a.id', 'a.product_code', 'a.description', 'a.perforasi', 'a.group_sub_code')
+                ->get();
+        } else if ($typeProduct == 'RM') {
+            $products = DB::table('master_raw_materials as a')
+                ->where('a.status', 'Active')
+                ->select('a.id', 'a.rm_code as product_code', 'a.description')
+                ->get();
+        } else if ($typeProduct == 'AUX') {
+            $products = DB::table('master_tool_auxiliaries as a')
+                ->select('a.id', 'a.code as product_code', 'a.description')
                 ->get();
         }
         return response()->json(['products' => $products]);
@@ -573,12 +598,21 @@ class workOrderController extends Controller
             ->first();
 
         $combinedDataProducts = DB::table('master_product_fgs')
-            ->select('id', 'product_code', 'description', 'id_master_units', DB::raw("'FG' as type_product"), 'perforasi')
+            ->select('id', 'product_code', 'description', 'id_master_units', DB::raw("'FG' as type_product"), 'perforasi', 'weight', 'group_sub_code')
             ->where('status', 'Active')
             ->unionAll(
                 DB::table('master_wips')
-                    ->select('id', 'wip_code as product_code', 'description', 'id_master_units', DB::raw("'WIP' as type_product"), 'perforasi')
+                    ->select('id', 'wip_code as product_code', 'description', 'id_master_units', DB::raw("'WIP' as type_product"), 'perforasi', 'weight', 'group_sub_code')
                     ->where('status', 'Active')
+            )
+            ->unionAll(
+                DB::table('master_raw_materials')
+                    ->select('id', 'rm_code as product_code', 'description', 'id_master_units', DB::raw("'RM' as type_product"), DB::raw('"" as perforasi'), 'weight', DB::raw('"" as group_sub_code'))
+                    ->where('status', 'Active')
+            )
+            ->unionAll(
+                DB::table('master_tool_auxiliaries')
+                    ->select('id', 'code as product_code', 'description', 'id_master_units', DB::raw("'AUX' as type_product"), DB::raw('"" as perforasi'), DB::raw('"" as weight'), DB::raw('"" as group_sub_code'))
             )
             ->get();
 
@@ -922,10 +956,11 @@ class workOrderController extends Controller
     public function print(Request $request)
     {
         $id_sales_orders = $request->id_sales_orders;
-        $salesOrder = salesOrder::with('masterUnit', 'masterSalesman', 'masterCustomer')
+        $salesOrder = salesOrder::with('workOrder', 'masterUnit', 'masterSalesman', 'masterCustomer')
             ->where('id', $id_sales_orders)
             ->first();
 
+        $process_prod = substr($salesOrder->workOrder[0]->wo_number, 2, 3);
         $typeProduct = $salesOrder->type_product;
         $idProduct = $salesOrder->id_master_products;
         if ($typeProduct == 'WIP') {
@@ -938,6 +973,18 @@ class workOrderController extends Controller
                 ->select('a.id', 'a.product_code', 'a.description', 'a.thickness', 'a.width', 'a.height', 'a.perforasi', 'a.id_master_units', 'a.sales_price as price')
                 ->where('a.id', $idProduct)
                 ->first();
+        } else if ($typeProduct == 'RM') {
+            $product = DB::table('master_raw_materials as a')
+                ->select('a.id', 'a.rm_code as product_code', 'a.description', 'a.id_master_units')
+                ->join('master_units as b', 'a.id_master_units', '=', 'b.id')
+                ->where('a.id', $idProduct)
+                ->first();
+        } else if ($typeProduct == 'AUX') {
+            $product = DB::table('master_tool_auxiliaries as a')
+                ->select('a.id', 'a.code as product_code', 'a.description', 'a.id_master_units')
+                ->join('master_units as b', 'a.id_master_units', '=', 'b.id')
+                ->where('a.id', $idProduct)
+                ->first();
         }
 
         // Urutan kustom yang dinamis
@@ -945,12 +992,11 @@ class workOrderController extends Controller
 
         // Buat placeholder untuk FIELD
         $fieldPlaceholders = implode(',', array_fill(0, count($order), '?'));
-
-        $work_order_details = DB::table('work_orders as a')
-            ->select('a.*', 'c.pc_needed', 'c.dsc', 'd.process_code', 'e.work_center_code', 'f.unit_code', 'g.unit_code as unit_needed')
+        $work_order = DB::table('work_orders as a')
+            ->select('a.*', 'c.pc_needed', 'c.dsc', 'd.process_code', 'e.work_center_code', 'f.unit_code', 'g.unit_code as unit_needed', 'b.weight', 'c.weight_needed')
             ->join(
                 \DB::raw(
-                    '(SELECT id, product_code, description, id_master_units, \'FG\' as type_product FROM master_product_fgs WHERE status = \'Active\' UNION ALL SELECT id, wip_code as product_code, description, id_master_units, \'WIP\' as type_product FROM master_wips WHERE status = \'Active\') b'
+                    '(SELECT id, product_code, description, id_master_units, \'FG\' as type_product, weight FROM master_product_fgs WHERE status = \'Active\' UNION ALL SELECT id, wip_code as product_code, description, id_master_units, \'WIP\' as type_product, weight FROM master_wips WHERE status = \'Active\') b'
                 ),
                 function ($join) {
                     $join->on('a.id_master_products', '=', 'b.id');
@@ -959,7 +1005,7 @@ class workOrderController extends Controller
             )
             ->leftJoin(
                 \DB::raw(
-                    '(SELECT id, product_code as pc_needed, description as dsc, id_master_units, \'FG\' as type_product FROM master_product_fgs WHERE status = \'Active\' UNION ALL SELECT id, wip_code as pc_needed, description as dsc, id_master_units, \'WIP\' as type_product FROM master_wips WHERE status = \'Active\') c'
+                    '(SELECT id, product_code as pc_needed, description as dsc, id_master_units, \'FG\' as type_product, weight as weight_needed FROM master_product_fgs WHERE status = \'Active\' UNION ALL SELECT id, wip_code as pc_needed, description as dsc, id_master_units, \'WIP\' as type_product, weight as weight_needed FROM master_wips WHERE status = \'Active\') c'
                 ),
                 function ($join) {
                     $join->on('a.id_master_products_material', '=', 'c.id');
@@ -968,13 +1014,57 @@ class workOrderController extends Controller
             )
             ->join('master_process_productions as d', 'a.id_master_process_productions', '=', 'd.id')
             ->leftJoin('master_work_centers as e', 'a.id_master_work_centers', '=', 'e.id')
-            ->join('master_units as f', 'a.id_master_units', '=', 'f.id')
-            ->leftJoin('master_units as g', 'a.id_master_units_needed', '=', 'g.id')
+            ->join('master_units as f', 'b.id_master_units', '=', 'f.id')
+            ->leftJoin('master_units as g', 'c.id_master_units', '=', 'g.id')
             ->where('a.id_sales_orders', $id_sales_orders)
             ->orderByRaw("FIELD(SUBSTRING(a.wo_number, 3, 3), $fieldPlaceholders) ASC", $order)
-            ->get();
-        // echo json_encode($work_order_details);
+            ->first();
+
+        if ($process_prod == 'BLW') {
+            $work_order_details = DB::table('work_order_details as a')
+                ->select('a.*', 'b.wo_number', 'c.id as id_raw_materials', 'c.rm_code', 'c.description', 'd.unit_code', 'd.unit', 'e.process_code', 'f.work_center_code')
+                ->join('work_orders as b', 'b.id', '=', 'a.id_work_orders')
+                ->join('master_raw_materials as c', 'c.id', '=', 'a.id_master_products')
+                ->join('master_units as d', 'd.id', '=', 'a.id_master_units')
+
+                ->join('master_process_productions as e', 'b.id_master_process_productions', '=', 'e.id')
+                ->leftJoin('master_work_centers as f', 'b.id_master_work_centers', '=', 'f.id')
+                ->join('master_units as g', 'b.id_master_units', '=', 'g.id')
+                ->leftJoin('master_units as h', 'b.id_master_units_needed', '=', 'h.id')
+                ->where('b.id_sales_orders', $id_sales_orders)
+                // ->orderByRaw("FIELD(SUBSTRING(b.wo_number, 3, 3), $fieldPlaceholders) ASC", $order)
+                ->get();
+        } else {
+            $work_order_details = DB::table('work_orders as a')
+                ->select('a.*', 'c.pc_needed', 'c.dsc', 'd.process_code', 'e.work_center_code', 'f.unit_code', 'g.unit_code as unit_needed')
+                ->join(
+                    \DB::raw(
+                        '(SELECT id, product_code, description, id_master_units, \'FG\' as type_product FROM master_product_fgs WHERE status = \'Active\' UNION ALL SELECT id, wip_code as product_code, description, id_master_units, \'WIP\' as type_product FROM master_wips WHERE status = \'Active\') b'
+                    ),
+                    function ($join) {
+                        $join->on('a.id_master_products', '=', 'b.id');
+                        $join->on('a.type_product', '=', 'b.type_product');
+                    }
+                )
+                ->leftJoin(
+                    \DB::raw(
+                        '(SELECT id, product_code as pc_needed, description as dsc, id_master_units, \'FG\' as type_product FROM master_product_fgs WHERE status = \'Active\' UNION ALL SELECT id, wip_code as pc_needed, description as dsc, id_master_units, \'WIP\' as type_product FROM master_wips WHERE status = \'Active\') c'
+                    ),
+                    function ($join) {
+                        $join->on('a.id_master_products_material', '=', 'c.id');
+                        $join->on('a.type_product_material', '=', 'c.type_product');
+                    }
+                )
+                ->join('master_process_productions as d', 'a.id_master_process_productions', '=', 'd.id')
+                ->leftJoin('master_work_centers as e', 'a.id_master_work_centers', '=', 'e.id')
+                ->join('master_units as f', 'a.id_master_units', '=', 'f.id')
+                ->leftJoin('master_units as g', 'a.id_master_units_needed', '=', 'g.id')
+                ->where('a.id_sales_orders', $id_sales_orders)
+                ->orderByRaw("FIELD(SUBSTRING(a.wo_number, 3, 3), $fieldPlaceholders) ASC", $order)
+                ->get();
+        }
+        // echo json_encode($work_order);
         // exit;
-        return view('ppic.work_order.print', compact('salesOrder', 'product', 'work_order_details'));
+        return view('ppic.work_order.print', compact('salesOrder', 'product', 'work_order_details', 'process_prod', 'work_order'));
     }
 }

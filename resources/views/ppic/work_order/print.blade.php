@@ -18,11 +18,32 @@
         /* table, .footer {
             font-size: 1rem;
         } */
+
+        /* Watermark CSS */
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            font-size: 100px;
+            color: rgba(0, 0, 0, 0.1);
+            pointer-events: none;
+            user-select: none;
+        }
+
+        /* Ensure content is above the watermark */
+        .content {
+            position: relative;
+            z-index: 2;
+        }
     </style>
 
 </head>
 
 <body>
+    <div class="watermark {{ $salesOrder->status == 'Request' || $salesOrder->status == 'Un Posted' ? '' : 'd-none' }}">
+        DRAFT</div>
     <div class="container-fluid">
         <div class="row">
             <div class="col-8 d-flex align-items-center gap-10">
@@ -73,8 +94,12 @@
                     <tr>
                         <td>Size</td>
                         <td>:</td>
-                        <td>{{ $product->thickness . ' MIC X ' . $product->width . ' MM X ' . $product->height . ' M' }}
-                        </td>
+                        @if ($salesOrder->type_product == 'RM' || $salesOrder->type_product == 'AUX')
+                            <td>-</td>
+                        @else
+                            <td>{{ $product->thickness . ' MIC X ' . $product->width . ' MM X ' . $product->height . ' M' }}
+                            </td>
+                        @endif
                         <td style="width: 100px;"></td>
                         <td>SO Date</td>
                         <td>:</td>
@@ -83,7 +108,11 @@
                     <tr>
                         <td>Perforasi</td>
                         <td>:</td>
-                        <td>{{ $product->perforasi }}</td>
+                        @if ($salesOrder->type_product == 'RM' || $salesOrder->type_product == 'AUX')
+                            <td>-</td>
+                        @else
+                            <td>{{ $product->perforasi }}</td>
+                        @endif
                         <td style="width: 100px;"></td>
                         <td>Order Qty</td>
                         <td>:</td>
@@ -104,22 +133,53 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($work_order_details as $item)
+                        @if ($process_prod == 'BLW')
                             <tr style="border-bottom: 1px solid black; height: 35px;">
-                                <td class="p-1" style="width: 25%;">WO No : {{ $item->wo_number }}</td>
-                                <td class="p-1" >
-                                    Process : {{ $item->process_code }} &nbsp;
-                                    Machine : {{ $item->work_center_code }} &nbsp;
-                                    Qty Process : {{ $item->qty . ' ' . $item->unit_code . ' X 1 ' . $item->unit_code }}
+                                <td class="p-1" style="width: 25%;">WO No : {{ $work_order->wo_number }}</td>
+                                <td class="p-1">
+                                    Process : {{ $work_order->process_code }} &nbsp;
+                                    Machine : {{ $work_order->work_center_code }} &nbsp;
+                                    Qty Process :
+                                    {{ $work_order->qty . ' ' . $work_order->unit_code . ' X ' . $work_order->weight . ' ' . $work_order->unit_code }}
                                 </td>
-                                <td class="p-1 text-end" style="width: 10%;">{{ $item->qty . ' ' . $item->unit_code }}</td>
+                                <td class="p-1 text-end" style="width: 10%;">
+                                    {{ $work_order->qty . ' ' . $work_order->unit_code }}
+                                </td>
                             </tr>
-                            <tr style="border-bottom: 1px solid black; height: 30px;">
-                                <td class="p-1"  style="width: 25%; padding-left: 30px !important;">{{ $item->pc_needed }}</td>
-                                <td class="p-1" >{{ $item->dsc }}</td>
-                                <td class="p-1 text-end" style="width: 10%;">{{ $item->qty_needed . ' ' . $item->unit_needed }}</td>
-                            </tr>
-                        @endforeach
+                            @foreach ($work_order_details as $item)
+                                <tr>
+                                    <td class="p-1" style="width: 25%; padding-left: 30px !important;">
+                                        {{ $loop->iteration . '. ' . $item->rm_code }}
+                                    </td>
+                                    <td class="p-1">{{ $item->description }}</td>
+                                    <td class="p-1 text-end" style="width: 10%;">
+                                        {{ $item->qty . '. ' . $item->unit_code}}
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @else
+                            @foreach ($work_order_details as $item)
+                                <tr style="border-bottom: 1px solid black; height: 35px;">
+                                    <td class="p-1" style="width: 25%;">WO No : {{ $item->wo_number }}</td>
+                                    <td class="p-1">
+                                        Process : {{ $item->process_code }} &nbsp;
+                                        Machine : {{ $item->work_center_code }} &nbsp;
+                                        Qty Process :
+                                        {{ $item->qty . ' ' . $item->unit_code . ' X 1 ' . $item->unit_code }}
+                                    </td>
+                                    <td class="p-1 text-end" style="width: 10%;">
+                                        {{ $item->qty . ' ' . $item->unit_code }}
+                                    </td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid black; height: 30px;">
+                                    <td class="p-1" style="width: 25%; padding-left: 30px !important;">
+                                        {{ $item->pc_needed }}</td>
+                                    <td class="p-1">{{ $item->dsc }}</td>
+                                    <td class="p-1 text-end" style="width: 10%;">
+                                        {{ $item->qty_needed . ' ' . $item->unit_needed }}</td>
+                                </tr>
+                            @endforeach
+                        @endif
                     </tbody>
                 </table>
             </div>

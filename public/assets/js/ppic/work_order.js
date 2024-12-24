@@ -45,11 +45,21 @@ $(document).ready(function () {
                     $('.typeProductSelect').val(response.sales_order.type_product);
 
                     // Function untuk menambahkan opsi produk ke elemen select
+                    // function appendProductOption(product) {
+                    //     $perforasi = product.perforasi == null ? '-' : product.perforasi;
+                    //     $('.productSelect').append($('<option>', {
+                    //         value: product.id,
+                    //         text: product.description + ' | Perforasi: ' + $perforasi
+                    //     }));
+                    // }
                     function appendProductOption(product) {
-                        $perforasi = product.perforasi == null ? '-' : product.perforasi;
+                        // $perforasi = product.perforasi == null ? '-' : product.perforasi;
+                        $perforasi = product.perforasi === '' ? '' : (product.perforasi === null ? ' | Perforasi : - ' : ' | Perforasi: ' + product.perforasi);
+                        $group_sub_code = product.group_sub_code === '' ? '' : (product.group_sub_code === null ? ' | Group Sub : - ' : ' | Group Sub: ' + product.group_sub_code);
+                        // options += '<option value="' + product.id + '">' + product.description + $perforasi + $group_sub_code + '</option>';
                         $('.productSelect').append($('<option>', {
                             value: product.id,
-                            text: product.description + ' | Perforasi: ' + $perforasi
+                            text: product.product_code + ' ' + product.description + $perforasi + $group_sub_code
                         }));
                     }
 
@@ -211,7 +221,7 @@ $(document).ready(function () {
                 $('.data-select2').select2({
                     width: 'resolve', // need to override the changed default
                     theme: "classic",
-                    dropdownParent: $("#printWorkOrder") 
+                    dropdownParent: $("#printWorkOrder")
                 });
                 $('#printWorkOrder').modal('show');
             },
@@ -268,17 +278,23 @@ function fetchProducts(selectElement) {
             },
             success: function (response) {
                 // Tanggapi dengan mengisi opsi produk sesuai data dari server
-                if (selectedType == 'WIP') {
-                    $.each(response.products, function (index, product) {
-                        $perforasi = product.perforasi == null ? '-' : product.perforasi
-                        options += '<option value="' + product.id + '">' + product.wip_code + ' | ' + product.description + ' | Perforasi: ' + $perforasi + '</option>';
-                    });
-                } else if (selectedType == 'FG') {
-                    $.each(response.products, function (index, product) {
-                        $perforasi = product.perforasi == null ? '-' : product.perforasi
-                        options += '<option value="' + product.id + '">' + product.product_code + ' | ' + product.description + ' | Perforasi: ' + $perforasi + '</option>';
-                    });
-                }
+                // if (selectedType == 'WIP') {
+                //     $.each(response.products, function (index, product) {
+                //         $perforasi = product.perforasi == null ? '-' : product.perforasi
+                //         options += '<option value="' + product.id + '">' + product.wip_code + ' | ' + product.description + ' | Perforasi: ' + $perforasi + '</option>';
+                //     });
+                // } else if (selectedType == 'FG') {
+                //     $.each(response.products, function (index, product) {
+                //         $perforasi = product.perforasi == null ? '-' : product.perforasi
+                //         options += '<option value="' + product.id + '">' + product.product_code + ' | ' + product.description + ' | Perforasi: ' + $perforasi + '</option>';
+                //     });
+                // }
+                $.each(response.products, function (index, product) {
+                    // $perforasi = product.perforasi == null ? '' : ' | Perforasi: ' + product.perforasi;
+                    $perforasi = product.perforasi === undefined ? '' : (product.perforasi === null ? ' | Perforasi: - ' : ' | Perforasi: ' + product.perforasi);
+                    $group_sub_code = product.group_sub_code == null ? '' : ' | Group Sub: ' + product.group_sub_code;
+                    options += '<option value="' + product.id + '">' + product.product_code + ' ' + product.description + $perforasi + $group_sub_code + '</option>';
+                });
                 productSelect.html(options);
             },
             error: function (xhr, status, error) {
@@ -319,17 +335,23 @@ function fetchProductMaterials(selectElement) {
             },
             success: function (response) {
                 // Tanggapi dengan mengisi opsi produk sesuai data dari server
-                if (selectedType == 'WIP') {
-                    $.each(response.products, function (index, product) {
-                        $perforasi = product.perforasi == null ? '-' : product.perforasi
-                        options += '<option value="' + product.id + '">' + product.wip_code + ' | ' + product.description + ' | Perforasi: ' + $perforasi + '</option>';
-                    });
-                } else if (selectedType == 'FG') {
-                    $.each(response.products, function (index, product) {
-                        $perforasi = product.perforasi == null ? '-' : product.perforasi
-                        options += '<option value="' + product.id + '">' + product.product_code + ' | ' + product.description + ' | Perforasi: ' + $perforasi + '</option>';
-                    });
-                }
+                // if (selectedType == 'WIP') {
+                //     $.each(response.products, function (index, product) {
+                //         $perforasi = product.perforasi == null ? '-' : product.perforasi
+                //         options += '<option value="' + product.id + '">' + product.wip_code + ' | ' + product.description + ' | Perforasi: ' + $perforasi + '</option>';
+                //     });
+                // } else if (selectedType == 'FG') {
+                //     $.each(response.products, function (index, product) {
+                //         $perforasi = product.perforasi == null ? '-' : product.perforasi
+                //         options += '<option value="' + product.id + '">' + product.product_code + ' | ' + product.description + ' | Perforasi: ' + $perforasi + '</option>';
+                //     });
+                // }
+                $.each(response.products, function (index, product) {
+                    // $perforasi = product.perforasi == null ? '' : ' | Perforasi: ' + product.perforasi;
+                    $perforasi = product.perforasi === undefined ? '' : (product.perforasi === null ? ' | Perforasi: - ' : ' | Perforasi: ' + product.perforasi);
+                    $group_sub_code = product.group_sub_code == null ? '' : ' | Group Sub: ' + product.group_sub_code;
+                    options += '<option value="' + product.id + '">' + product.product_code + ' ' + product.description + $perforasi + $group_sub_code + '</option>';
+                });
                 productSelect.html(options);
             },
             error: function (xhr, status, error) {

@@ -3,6 +3,7 @@
 namespace App\Models\Marketing;
 
 use App\Models\marketing\salesOrderDetail;
+use App\Models\ppic\workOrder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -36,5 +37,10 @@ class salesOrder extends Model
     public function masterSalesman()
     {
         return $this->belongsTo(\App\Models\MstSalesmans::class, 'id_master_salesmen', 'id');
+    }
+
+    public function workOrder()
+    {
+        return $this->hasMany(workOrder::class, 'id_sales_orders', 'id');
     }
 }
