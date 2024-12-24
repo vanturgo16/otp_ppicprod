@@ -154,11 +154,12 @@
                                                 @foreach ($product as $data)
                                                     @php
                                                         $perforasi = $data->perforasi == null ? '-' : $data->perforasi;
+                                                        $group_sub_code = $data->group_sub_code == null ? '' : ' | Group Sub: ' . $data->group_sub_code;
                                                     @endphp
                                                     <option value="{{ $data->id }}"
                                                         {{ $data->id == $workOrder->id_master_products ? 'selected' : '' }}>
                                                         {{ $data->product_code }} -
-                                                        {{ $data->description }} | Perforasi: {{ $perforasi }}</option>
+                                                        {{ $data->description }} | Perforasi: {{ $perforasi }} {{ $group_sub_code }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
@@ -242,11 +243,12 @@
                                                 @foreach ($productNeeded as $data)
                                                     @php
                                                         $perforasi = $data->perforasi == null ? '-' : $data->perforasi;
+                                                        $group_sub_code = $data->group_sub_code == null ? '' : ' | Group Sub: ' . $data->group_sub_code;
                                                     @endphp
                                                     <option value="{{ $data->id }}"
                                                         {{ $data->id == $workOrder->id_master_products_material ? 'selected' : '' }}>
                                                         {{ $data->product_code }} -
-                                                        {{ $data->description }} | Perforasi: {{ $perforasi }}</option>
+                                                        {{ $data->description }} | Perforasi: {{ $perforasi }} {{ $group_sub_code }}</option>
                                                 @endforeach
                                             </select>
                                         </div>

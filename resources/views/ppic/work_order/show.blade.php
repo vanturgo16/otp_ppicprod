@@ -86,9 +86,14 @@
                                         <dt class="col-sm-3 mb-2"><label>Product</label></dt>
                                         @php
                                             $perforasi = $product->perforasi == null ? '-' : $product->perforasi;
+                                            $group_sub_code =
+                                                $product->group_sub_code == null
+                                                    ? ''
+                                                    : ' | Group Sub: ' . $product->group_sub_code;
                                         @endphp
                                         <dd class="col-sm-9 mb-2">
-                                            {{ $product->description . ' | Perforasi: ' . $perforasi }}</dd>
+                                            {{ $product->product_code . ' | ' . $product->description . ' | Perforasi: ' . $perforasi . $group_sub_code }}
+                                        </dd>
 
                                         <dt class="col-sm-3 mb-2"><label>Qty Process</label></dt>
                                         <dd class="col-sm-9 mb-2">{{ $work_order->qty }}</dd>
@@ -122,9 +127,13 @@
                                                     : ($productNeeded->perforasi == null
                                                         ? '-'
                                                         : $productNeeded->perforasi);
+                                            $group_sub_code =
+                                                $productNeeded->group_sub_code == null
+                                                    ? ''
+                                                    : ' | Group Sub: ' . $productNeeded->group_sub_code;
                                         @endphp
                                         <dd class="col-sm-9 mb-2">
-                                            {{ $productNeeded == null ? '-' : $productNeeded->description . ' | Perforasi: ' . $perforasiNeeded }}
+                                            {{ $productNeeded == null ? '-' : $productNeeded->product_code . ' | ' . $productNeeded->description . ' | Perforasi: ' . $perforasiNeeded . $group_sub_code }}
                                         </dd>
 
                                         <dt class="col-sm-3 mb-2"><label>Qty Needed</label></dt>

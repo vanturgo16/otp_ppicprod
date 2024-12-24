@@ -27,7 +27,7 @@ class workOrder extends Model
     {
         return $this->belongsTo(\App\Models\MstProcessProductions::class, 'id_master_process_productions', 'id');
     }
-    
+
     public function masterWorkCenter()
     {
         return $this->belongsTo(\App\Models\MstWorkCenters::class, 'id_master_work_centers', 'id');
