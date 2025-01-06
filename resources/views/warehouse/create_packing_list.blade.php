@@ -173,15 +173,15 @@
                         console.log("Response:", response.exists);
 
                         if (response.exists) {
-                            var newRow = '<tr data-id="' + response.id + '">' +
+                             newRow = '<tr data-id="' + response.id + '">' +
                                 '<td class="row-number">' + ($('#barcode-table tbody tr').length + 1) + '</td>' +
                                 '<td>' + ($('#change_so').val() || '') + '</td>' +
                                 '<td>' + $('#barcode').val() + '</td>' +
                                 '<td>' + (response.product_name || '') + '</td>' +
                                 (response.is_bag ?
-                                    '<td><input type="number" class="form-control number_of_box" data-id="' + response.id + '" name="number_of_box" value="0"></td>' +
-                                    '<td><input type="number" class="form-control weight" data-id="' + response.id + '" name="weight" value="0"></td>' +
-                                    '<td><input type="number" class="form-control pcs" data-id="' + response.id + '" name="pcs" value="0"></td>' :
+                                    '<td><input type="number" class="form-control number_of_box" data-id="' + response.id + '" name="number_of_box" value="' + ($('#barcode-table tbody tr').length + 1) +'" readonly></td>' +
+                                    '<td><input type="number" class="form-control weight" data-id="' + response.id + '" name="weight" value="' + response.pcs + '" readonly></td>' +
+                                    '<td><input type="number" class="form-control pcs" data-id="' + response.id + '" name="pcs" value="' + response.pcs + '" readonly></td>' :
                                     '<td></td>' +
                                     '<td></td>' +
                                     '<td></td>') +
