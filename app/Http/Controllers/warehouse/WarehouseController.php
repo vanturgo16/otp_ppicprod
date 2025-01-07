@@ -479,26 +479,26 @@ class WarehouseController extends Controller
                     if ($isBag) {
                         DB::table('master_product_fgs')
                             ->where('id', $barcodeRecord->product_id)
-                            ->decrement('stock', $pcs);
+                            ->increment('stock', $pcs);
                         DB::table('sales_orders')
                             ->where('id', $barcodeRecord->sales_order_id)
-                            ->decrement('outstanding_delivery_qty', $pcs);
+                            ->increment('outstanding_delivery_qty', $pcs);
                     } else {
                         DB::table('master_product_fgs')
                             ->where('id', $barcodeRecord->product_id)
-                            ->decrement('stock', 1);
+                            ->increment('stock', 1);
                         DB::table('sales_orders')
                             ->where('id', $barcodeRecord->sales_order_id)
-                            ->decrement('outstanding_delivery_qty', 1);
+                            ->increment('outstanding_delivery_qty', 1);
                     }
                 } elseif ($barcodeRecord->type_product === 'WIP') {
                     // Jika produk WIP, stok dikurangi 1 untuk semua tipe WIP
                     DB::table('master_wips')
                     ->where('id', $barcodeRecord->product_id)
-                    ->decrement('stock', 1); // Kurangi stok 1 unit
+                    ->increment('stock', 1); // Kurangi stok 1 unit
                     DB::table('sales_orders')
                     ->where('id', $barcodeRecord->sales_order_id)
-                    ->decrement('outstanding_delivery_qty', 1); // Kurangi outstanding delivery qty 1 unit
+                    ->increment('outstanding_delivery_qty', 1); // Kurangi outstanding delivery qty 1 unit
                 }
                 
 
