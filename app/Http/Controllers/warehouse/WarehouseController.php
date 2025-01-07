@@ -222,8 +222,8 @@ class WarehouseController extends Controller
                 }
                 // Hitung number_of_box berdasarkan jumlah box yang sudah ada
                 $numberOfBox = DB::table('packing_list_details')
-                ->where('id_packing_lists', $packingListId)
-                ->count() + 1;
+                    ->where('id_packing_lists', $packingListId)
+                    ->count() + 1;
 
                 $insertedId = DB::table('packing_list_details')->insertGetId([
                     'barcode' => $barcode,
@@ -238,14 +238,14 @@ class WarehouseController extends Controller
 
                 if ($isBag) {
                     DB::table('master_product_fgs')
-                    ->where('id', $barcodeRecord->product_id)
+                        ->where('id', $barcodeRecord->product_id)
                         ->decrement('stock', $pcs);
                     DB::table('sales_orders')
                         ->where('id', $barcodeRecord->sales_order_id)
                         ->decrement('outstanding_delivery_qty', $pcs);
                 } else {
                     DB::table('master_product_fgs')
-                    ->where('id', $barcodeRecord->product_id)
+                        ->where('id', $barcodeRecord->product_id)
                         ->decrement('stock', 1);
                     DB::table('sales_orders')
                         ->where('id', $barcodeRecord->sales_order_id)
@@ -364,8 +364,8 @@ class WarehouseController extends Controller
             'is_bag' => $isBag,
             'sales_order_id' => $barcodeRecord->sales_order_id,
             'pcs' => $pcs,
-            'changeSo'=>$changeSo
-             // Sertakan nilai pcs dalam respons
+            'changeSo' => $changeSo
+            // Sertakan nilai pcs dalam respons
             // 'weight' => , 
             // 'no_box' => 
 
