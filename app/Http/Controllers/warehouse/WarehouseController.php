@@ -465,32 +465,42 @@ class WarehouseController extends Controller
             $barcodeRecord = DB::table('barcodes')
                 ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
                 ->join('master_product_fgs', 'barcodes.id_master_products', '=', 'master_product_fgs.id')
+                ->join('master_wips', 'barcodes.id_master_products', '=', 'master_wips.id')
                 ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
                 ->where('barcode_detail.barcode_number', $barcodeDetail->barcode)
-                ->select('master_product_fgs.id as product_id', 'barcodes.id_sales_orders as sales_order_id')
+                ->select('master_product_fgs.id as product_id', 'barcodes.id_sales_orders as sales_order_id','barcodes.type_product as type_product','barcode_detail.status as status')
                 ->first();
 
             if ($barcodeRecord) {
                 $barcode = $barcodeDetail->barcode;
-
+                $isBag = stripos($barcodeRecord->status, 'bag') !== false;
                 // Kembalikan stok ke jumlah sebelumnya
-                if (substr($barcode, -1) === 'B') {
-                    // Jika barcode adalah bag, kembalikan stok berdasarkan pcs
-                    DB::table('master_product_fgs')
-                        ->where('id', $barcodeRecord->product_id)
-                        ->increment('stock', $pcs);
+                if ($barcodeRecord->type_product === 'FG') {
+                    if ($isBag) {
+                        DB::table('master_product_fgs')
+                            ->where('id', $barcodeRecord->product_id)
+                            ->increment('stock', $pcs);
+                        DB::table('sales_orders')
+                            ->where('id', $barcodeRecord->sales_order_id)
+                            ->increment('outstanding_delivery_qty', $pcs);
+                    } else {
+                        DB::table('master_product_fgs')
+                            ->where('id', $barcodeRecord->product_id)
+                            ->increment('stock', 1);
+                        DB::table('sales_orders')
+                            ->where('id', $barcodeRecord->sales_order_id)
+                            ->increment('outstanding_delivery_qty', 1);
+                    }
+                } elseif ($barcodeRecord->type_product === 'WIP') {
+                    // Jika produk WIP, stok dikurangi 1 untuk semua tipe WIP
+                    DB::table('master_wips')
+                    ->where('id', $barcodeRecord->product_id)
+                    ->increment('stock', 1); // Kurangi stok 1 unit
                     DB::table('sales_orders')
-                        ->where('id', $barcodeRecord->sales_order_id)
-                        ->increment('outstanding_delivery_qty', $pcs);
-                } else {
-                    // Jika bukan bag, tambahkan stok sebesar 1 (atau sesuaikan jika diperlukan jumlah yang berbeda)
-                    DB::table('master_product_fgs')
-                        ->where('id', $barcodeRecord->product_id)
-                        ->increment('stock', 1);
-                    DB::table('sales_orders')
-                        ->where('id', $barcodeRecord->sales_order_id)
-                        ->increment('outstanding_delivery_qty', 1);
+                    ->where('id', $barcodeRecord->sales_order_id)
+                    ->increment('outstanding_delivery_qty', 1); // Kurangi outstanding delivery qty 1 unit
                 }
+                
 
                 // Update status barcode di tabel barcode_detail
                 DB::table('barcode_detail')
