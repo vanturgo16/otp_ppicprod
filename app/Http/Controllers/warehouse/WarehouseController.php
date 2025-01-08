@@ -699,7 +699,6 @@ class WarehouseController extends Controller
         return view('warehouse.print_packing_list', compact('packingList', 'details'));
     }
 
-
     public function show($id)
     {
         $packingList = DB::table('packing_lists')
