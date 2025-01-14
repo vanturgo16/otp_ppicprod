@@ -195,10 +195,10 @@
                             <td>{{ $detail->barcode_number }}</td>
                             <td>{{ $detail->so_number }}</td>
                             <td>{{ $detail->pcs . ' PCS' }}</td>
-                            <td>{{ $detail->production_weight }} KG</td>
+                            <td>{{ $detail->production_weight}} KG</td>
                             @php
                             $totalRoll += $detail->pcs;
-                            $totalWeight += substr($detail->barcode_number, -1) === 'B' ? $detail->weight : $detail->production_weight;
+                            $totalWeight += stripos($detail->sts_start, 'bag') ? $detail->weight : $detail->production_weight;
                             @endphp
                         </tr>
                         @endforeach
