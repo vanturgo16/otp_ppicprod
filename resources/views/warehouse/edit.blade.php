@@ -80,10 +80,10 @@
                                         <td class="row-number">{{ $index + 1 }}</td>
                                         <td>{{ $detail->id_sales_orders }}</td>
                                         <td>{{ $detail->barcode }}</td>
-                                        <td>{{ $detail->product_description }}</td>
-                                        @if (str_ends_with($detail->barcode, 'B'))
-                                        <td><input type="number" class="form-control number_of_box" data-id="{{ $detail->id }}" name="number_of_box" value="0"></td>
-                                        <td><input type="number" class="form-control weight" data-id="{{ $detail->id }}" name="weight" value="0"></td>
+                                        <td>{{ $detail->description }}</td>
+                                        @if (stripos($detail->sts_start, 'bag'))
+                                        <td><input type="number" class="form-control number_of_box" data-id="{{ $detail->id }}" name="number_of_box" value="{{ $detail->no_box }}"></td>
+                                        <td><input type="number" class="form-control weight" data-id="{{ $detail->id }}" name="weight" value="{{ $detail->weight }}"></td>
                                         <td><input type="number" class="form-control pcs" data-id="{{ $detail->id }}" name="pcs" value="{{ $detail->pcs }}"></td>
                                         @else
                                         <td></td>
