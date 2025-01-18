@@ -310,7 +310,7 @@ class WarehouseController extends Controller
                     ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
                     ->join('master_product_fgs', 'barcodes.id_master_products', '=', 'master_product_fgs.id')
                     ->leftjoin('report_bag_production_result_details', 'barcode_detail.barcode_number', '=', 'report_bag_production_result_details.barcode') // Join tabel tambahan
-                    ->Join('report_bag_production_results', 'report_bag_production_result_details.id_report_bags', '=', 'report_bag_production_results.id_report_bags')
+                    ->leftjoin('report_bag_production_results', 'report_bag_production_result_details.id_report_bags', '=', 'report_bag_production_results.id_report_bags')
                     ->where('barcode_detail.barcode_number', $barcode)
                     ->where('barcodes.id_master_customers', $customerId)
                     ->select(
