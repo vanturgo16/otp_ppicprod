@@ -75,12 +75,13 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    @if($details && $details->isNotEmpty())
                                     @foreach($details as $index => $detail)
                                     <tr data-id="{{ $detail->id }}">
                                         <td class="row-number">{{ $index + 1 }}</td>
                                         <td>{{ $detail->id_sales_orders }}</td>
                                         <td>{{ $detail->barcode }}</td>
-                                        <td>{{ $detail->description }}</td>
+                                        <td>{{ $detail->product_description }}</td>
                                         @if (stripos($detail->sts_start, 'bag'))
                                         <td><input type="number" class="form-control number_of_box" data-id="{{ $detail->id }}" name="number_of_box" value="{{ $detail->no_box }}"></td>
                                         <td><input type="number" class="form-control weight" data-id="{{ $detail->id }}" name="weight" value="{{ $detail->weight }}"></td>
@@ -93,8 +94,13 @@
                                         <td><button type="button" class="btn btn-danger btn-sm remove-barcode">Remove</button></td>
                                     </tr>
                                     @endforeach
-
+                                    @else
+                                    <tr>
+                                        <td colspan="8" class="text-center">No details available</td>
+                                    </tr>
+                                    @endif
                                 </tbody>
+
                             </table>
                         </div>
                     </div>
