@@ -54,7 +54,8 @@
                             
                             
                             <div>
-                                <a href="/create-barcode" class="btn btn-primary waves-effect waves-light">Add New Generate Barcode</a>
+                                <a href="{{ url('/create-barcode') }}" class="btn btn-success waves-effect waves-light">Add New Generate Barcode</a>
+                                <a href="{{ url('/create-barcode-mesin') }}" class="btn btn-info waves-effect waves-light">Add New Generate Barcode (AUX,RM)</a>
                                 
                                 <!-- Include modal content -->
                                
