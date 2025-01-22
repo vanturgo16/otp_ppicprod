@@ -194,26 +194,7 @@ class WarehouseController extends Controller
                     )
                     ->first();
             } elseif ($barcodeRecord && $barcodeRecord->type_product === 'WIP') {
-                // $barcodeRecord = DB::table('barcodes')
-                //     ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
-                //     ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id') // Join ke sales_orders
-                //     ->join(
-                //         'master_wips',
-                //         'barcodes.id_master_products',
-                //         '=',
-                //         'master_wips.id'
-                //     ) // Join hanya untuk non-FG
-                //     ->where('barcode_detail.barcode_number', $barcode)
-                //     ->where('sales_orders.so_number', $changeSo)
-                //     ->select(
-                //         'barcode_detail.*',
-                //         'master_wips.description',
-                //         'master_wips.id as product_id',
-                //         'barcodes.id_sales_orders as sales_order_id',
-                //         'barcodes.type_product',
-                //         'master_wips.stock',
-                //         DB::raw('1 as pcs') // Default pcs jika tidak ada di tabel lain
-                //     )
+                
                 $barcodeRecord = DB::table('barcodes')
                     ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
                     ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
