@@ -195,7 +195,7 @@
                                     <td>{{ $detail->description }}</td>
                                     <td>{{ $detail->barcode_number }}</td>
                                     <td>{{ $detail->so_number }}</td>
-                                    <td>{{ $detail->pcs . ' PCS' }}</td>
+                                    <td>{{ $detail->pcs .' '. $detail->unit}}</td>
                                     <td>{{ stripos($detail->sts_start, 'bag') ? $detail->weight : $detail->production_weight }} KG</td>
                                     @php
                                         $totalRoll += $detail->pcs;
