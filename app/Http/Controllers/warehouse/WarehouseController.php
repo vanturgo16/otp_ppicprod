@@ -795,6 +795,7 @@ class WarehouseController extends Controller
             ->join('barcode_detail', 'packing_list_details.barcode', '=', 'barcode_detail.barcode_number')
             ->join('barcodes', 'barcode_detail.id_barcode', '=', 'barcodes.id')
             ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
+            
             ->leftJoin('master_product_fgs', function ($join) {
                 $join->on('barcodes.id_master_products', '=', 'master_product_fgs.id')
                     ->where('barcodes.type_product', '=', 'FG');
