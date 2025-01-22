@@ -128,7 +128,7 @@
                                                         ? '-'
                                                         : $productNeeded->perforasi);
                                             $group_sub_code =
-                                                $productNeeded->group_sub_code == null
+                                                ($productNeeded == null || $productNeeded->group_sub_code == null)
                                                     ? ''
                                                     : ' | Group Sub: ' . $productNeeded->group_sub_code;
                                         @endphp

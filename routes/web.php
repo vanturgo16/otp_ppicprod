@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GrnController;
 use App\Http\Controllers\barcode\BarcodeController;
+use App\Http\Controllers\barcode\BarcodeMesinController;
 use App\Http\Controllers\barcode\TracabelityController;
 use App\Http\Controllers\user\PermissionController;
 use App\Http\Controllers\user\RoleController;
@@ -84,6 +85,12 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
         Route::get('/print-broker-barcode/{id}', 'print_broker')->name('print_broker');
         Route::get('/print-cbc-barcode/{id}', 'print_cbc')->name('print_cbc');
         Route::get('/table', 'table_print')->name('table_print');
+    });
+
+    Route::controller(BarcodeMesinController::class)->middleware('permission:PPIC_Barcode')->group(function () {
+        // Route::get('/barcode', 'index')->name('barcode');
+        Route::get('/create-barcode-mesin', 'create')->name('barcode.create.mesin');
+        Route::post('/store-barcode-mesin', 'store')->name('post.create.mesin');
     });
 
     Route::controller(TracabelityController::class)->middleware('permission:PPIC_Barcode')->group(function () {
