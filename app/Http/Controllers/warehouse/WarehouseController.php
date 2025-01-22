@@ -758,7 +758,8 @@ class WarehouseController extends Controller
             ->get();
 
 
-        // Debug data dengan dd()
+        // Debug data dengan 
+        //dd()
 
         return view('warehouse.print_packing_list', compact('packingList', 'details'));
     }
