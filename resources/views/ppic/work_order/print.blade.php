@@ -140,10 +140,10 @@
                                     Process : {{ $work_order->process_code }} &nbsp;
                                     Machine : {{ $work_order->work_center_code }} &nbsp;
                                     Qty Process :
-                                    {{ $work_order->qty . ' ' . $work_order->unit_code . ' X ' . $work_order->weight . ' ' . $work_order->unit_code }}
+                                    {{ $work_order->qty . ' ' . $salesOrder->masterUnit->unit_code . ' X ' . $work_order->weight . ' ' . $work_order->unit_code }}
                                 </td>
                                 <td class="p-1 text-end" style="width: 10%;">
-                                    {{ $work_order->qty . ' ' . $work_order->unit_code }}
+                                    {{ $work_order->qty . ' ' . $salesOrder->masterUnit->unit_code }}
                                 </td>
                             </tr>
                             @foreach ($work_order_details as $item)
