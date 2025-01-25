@@ -37,8 +37,8 @@
                             <div class="mb-3">
                                 <label for="customer" class="form-label">Customer</label>
                                 <input type="text" class="form-control" id="customer" name="customer"
-                                    value="{{ $customer->name }}" readonly>
-                                <input type="hidden" id="customer_id" name="customer_id" value="{{ $customer->id }}">
+                                    value="{{ $packingList->customer_name }}" readonly>
+                                <input type="hidden" id="customer_id" name="customer_id" value="{{ $packingList->customer_id }}">
                             </div>
                             <div class="mb-3">
                                 <label for="all_barcodes" class="form-label">All Barcodes</label>
@@ -89,7 +89,7 @@
                                                 <td class="row-number">{{ $index + 1 }}</td>
                                                 <td>{{ $detail->id_sales_orders }}</td>
                                                 <td>{{ $detail->barcode }}</td>
-                                                <td>{{ $detail->product_description }}</td>
+                                                <td>{{ $detail->product_description}}</td>
                                                 @if (stripos($detail->sts_start, 'bag'))
                                                     <td><input type="number" class="form-control number_of_box"
                                                             data-id="{{ $detail->id }}" name="number_of_box"

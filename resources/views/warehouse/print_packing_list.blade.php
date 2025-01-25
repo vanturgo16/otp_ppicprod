@@ -212,7 +212,11 @@
             </div>
             <div class="row mt-4">
                 <div class="col-12" style="float: right; text-align: right;">
-                    <p><strong>Subtotal:</strong> {{ $totalRoll }} {{ $detail->unit }}</p>
+                    <p>
+                        <strong>Subtotal:</strong> 
+                        {{ $totalRoll }} pcs
+                        {{-- {{ $detail->unit }} --}}
+                    </p>
                     <p><strong>Total Berat:</strong> {{ number_format($totalWeight, 2) }} KG</p>
                 </div>
             </div>

@@ -184,17 +184,12 @@
                                     '<td>' + $('#barcode').val() + '</td>' +
                                     '<td>' + (response.product_name || '') + '</td>' +
                                     (response.is_bag ?
-                                        '<td><input type="number" class="form-control number_of_box" data-id="' +
-                                        response.id + '" name="number_of_box" value="' + ($(
-                                            '#barcode-table tbody tr').length + 1) +
+                                        '<td><input type="number" class="form-control number_of_box" data-id="' + response.id + '" name="number_of_box" value="' + response.no_box +
                                         '" readonly></td>' +
-                                        '<td><input type="number" class="form-control weight" data-id="' +
-                                        response.id + '" name="weight" value="' + response
-                                        .weight + '" readonly></td>' +
-                                        '<td><input type="number" class="form-control pcs" data-id="' +
-                                        response.id + '" name="pcs" value="' + response.pcs +
+                                        '<td><input type="number" class="form-control weight" data-id="' + response.id + '" name="weight" value="' + response.weight + '" readonly></td>' +
+                                        '<td><input type="number" class="form-control pcs" data-id="' + response.id + '" name="pcs" value="' + response.pcs +
                                         '" readonly></td>' :
-                                        '<td></td>' + // Kolom kosong jika bukan "bag"
+                                        '<td>' + response.no_box +'</td>' + // Kolom kosong jika bukan "bag"
                                         '<td></td>' + // Kolom kosong untuk weight
                                         '<td></td>' // Kolom kosong untuk pcs
                                     ) +
