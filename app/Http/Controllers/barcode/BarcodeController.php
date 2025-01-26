@@ -361,27 +361,49 @@ class BarcodeController extends Controller
     public function print_broker($id)
     {
         $barcodeDetails = DB::table('barcode_detail as bd')
-            ->join('barcodes as b', 'bd.id_barcode', '=', 'b.id')
-            ->leftJoin('sales_orders as so', 'b.id_sales_orders', '=', 'so.id')
-            ->join('work_orders as wo', 'b.id_work_orders', '=', 'wo.id')
-            ->join('master_product_fgs  as mp', 'b.id_master_products', '=', 'mp.id')
-            ->join('master_work_centers as mwc', 'b.id_work_centers', '=', 'mwc.id')
-            ->leftJoin('master_customers as mc', 'b.id_master_customers', '=', 'mc.id')
-            ->select(
-                'bd.barcode_number',
-                'bd.created_at as tgl_buat',
-                'b.shift',
-                'so.so_number',
-                'wo.wo_number',
-                'mwc.work_center_code',
-                'mwc.work_center',
-                'mc.name as nm_cust',
-                'mp.description',
-                'mp.thickness',
-                'mp.perforasi',
-                'mp.width',
-                'mp.height',
-            )->where('bd.id_barcode', $id)
+        ->join('barcodes as b', 'bd.id_barcode', '=', 'b.id')
+        ->leftJoin('sales_orders as so', 'b.id_sales_orders', '=', 'so.id')
+        ->join('work_orders as wo', 'b.id_work_orders', '=', 'wo.id')
+        ->join(
+            DB::raw('
+                (SELECT 
+                    id, product_code, description, id_master_units, type_product_code, 
+                    thickness, width, height, group_sub_code, \'FG\' AS type_product, perforasi, weight 
+                FROM master_product_fgs 
+                WHERE STATUS = \'Active\'
+                
+                UNION ALL 
+                
+                SELECT 
+                    id, wip_code AS product_code, description, id_master_units, type_product_code, 
+                    thickness, width, NULL AS height, group_sub_code, \'WIP\' AS type_product, perforasi, weight 
+                FROM master_wips 
+                WHERE STATUS = \'Active\'
+                ) mp
+            '), 
+            function ($join) {
+                $join->on('b.id_master_products', '=', 'mp.id')
+                     ->on('wo.type_product', '=', 'mp.type_product');
+            }
+        )
+        ->join('master_work_centers as mwc', 'b.id_work_centers', '=', 'mwc.id')
+        ->leftJoin('master_customers as mc', 'b.id_master_customers', '=', 'mc.id')
+        ->select(
+            'bd.barcode_number',
+            'bd.created_at as tgl_buat',
+            'b.shift',
+            'so.so_number',
+            'wo.wo_number',
+            'mwc.work_center_code',
+            'mwc.work_center',
+            'mc.name as nm_cust',
+            'mp.description',
+            'mp.thickness',
+            'mp.perforasi',
+            'mp.width',
+            DB::raw('IF(mp.type_product = "FG", mp.height, NULL) AS height')
+        )
+        ->where('bd.id_barcode', $id)
             ->get();
         return view('barcode.print_broker', compact('barcodeDetails'));
     }
@@ -389,26 +411,50 @@ class BarcodeController extends Controller
     public function print_cbc($id)
     {
         $barcodeDetails = DB::table('barcode_detail as bd')
-            ->join('barcodes as b', 'bd.id_barcode', '=', 'b.id')
-            ->leftJoin('sales_orders as so', 'b.id_sales_orders', '=', 'so.id')
-            ->join('work_orders as wo', 'b.id_work_orders', '=', 'wo.id')
-            ->join('master_product_fgs  as mp', 'b.id_master_products', '=', 'mp.id')
-            ->join('master_work_centers as mwc', 'b.id_work_centers', '=', 'mwc.id')
-            ->leftJoin('master_customers as mc', 'b.id_master_customers', '=', 'mc.id')
-            ->select(
-                'bd.barcode_number',
-                'bd.created_at as tgl_buat',
-                'b.shift',
-                'so.so_number',
-                'wo.wo_number',
-                'mwc.work_center_code',
-                'mwc.work_center',
-                'mc.name as nm_cust',
-                'mp.description',
-                'mp.thickness',
-                'mp.perforasi',
-                'mp.width',
-            )->where('bd.id_barcode', $id)
+        ->join('barcodes as b', 'bd.id_barcode', '=', 'b.id')
+        ->leftJoin('sales_orders as so', 'b.id_sales_orders', '=', 'so.id')
+        ->join('work_orders as wo', 'b.id_work_orders', '=', 'wo.id')
+        ->join(
+            DB::raw('
+                (SELECT 
+                    id, product_code, description, id_master_units, type_product_code, 
+                    thickness, width, height, group_sub_code, \'FG\' AS type_product, perforasi, weight 
+                FROM master_product_fgs 
+                WHERE STATUS = \'Active\'
+                
+                UNION ALL 
+                
+                SELECT 
+                    id, wip_code AS product_code, description, id_master_units, type_product_code, 
+                    thickness, width, NULL AS height, group_sub_code, \'WIP\' AS type_product, perforasi, weight 
+                FROM master_wips 
+                WHERE STATUS = \'Active\'
+                ) mp
+            '), 
+            function ($join) {
+                $join->on('b.id_master_products', '=', 'mp.id')
+                     ->on('wo.type_product', '=', 'mp.type_product');
+            }
+        )
+        ->join('master_work_centers as mwc', 'b.id_work_centers', '=', 'mwc.id')
+        ->leftJoin('master_customers as mc', 'b.id_master_customers', '=', 'mc.id')
+        ->select(
+            'bd.barcode_number',
+            'bd.created_at as tgl_buat',
+            'b.shift',
+            'so.so_number',
+            'wo.wo_number',
+            'mwc.work_center_code',
+            'mwc.work_center',
+            'mc.name as nm_cust',
+            'mp.description',
+            'mp.thickness',
+            'mp.perforasi',
+            'mp.width',
+            DB::raw('IF(mp.type_product = "FG", mp.height, NULL) AS height')
+        )
+        ->where('bd.id_barcode', $id)
+        
             ->get();
         return view('barcode.print_cbc', compact('barcodeDetails'));
     }

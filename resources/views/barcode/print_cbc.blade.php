@@ -54,9 +54,26 @@
                         <td class="label"><strong>Lot</strong></td>
                         <td class="colon">:</td>
                         <td class="value">
-                            <img class="barcode-img" src="data:image/png;base64,{{ DNS1D::getBarcodePNG($barcode->barcode_number, 'C128') }}" alt="barcode" />
-                            <div class="barcode-number">{{ $barcode->barcode_number }}</div>
+                            <dev>{{ $barcode->barcode_number }}</dev>
+                            {{-- <img class="barcode-img" src="data:image/png;base64,{{ DNS1D::getBarcodePNG($barcode->barcode_number, 'C128') }}" alt="barcode" /> --}}
+                           
                         </td>
+                        <tr>
+                            <td class="label">
+                                <br>
+                                <br>
+                               
+                               <b> Made In Indonesia</b></td>
+                            <td></td>
+                            <td>  
+                                &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                                &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                                &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                                <img class="qr-code" src="data:image/png;base64,{{ DNS2D::getBarcodePNG($barcode->barcode_number, 'QRCODE', 4, 4) }}" alt="QR Code" />
+                
+                
+                            </td>
+                        </tr>
                     </tr>
                 </table>
                 <hr class="thick-line">
