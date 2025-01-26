@@ -20,7 +20,7 @@
     </b>
     </tr>
     <tr>
-        <td colspan="3" class="company-name">PT Olefina Tifaplas Polikemindo</td>
+        <td colspan="3" class="company-name">PT Olefina Tifaplas Polikemindo </td>
     </tr>
     
     <tr>
