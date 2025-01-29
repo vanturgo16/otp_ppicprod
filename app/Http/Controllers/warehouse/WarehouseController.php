@@ -200,6 +200,64 @@ class WarehouseController extends Controller
             ->leftJoin('report_bag_production_results', 'report_bag_production_result_details.id_report_bags', '=', 'report_bag_production_results.id_report_bags')
             ->first();
             
+        if ($changeSo) {
+            // Validasi berdasarkan sales order
+            $barcodeRecord = DB::table('barcodes')
+                ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
+                ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id') // Join ke sales_orders
+                ->where('barcode_detail.barcode_number', $barcode)
+                ->where('sales_orders.so_number', $changeSo)
+                ->select(
+                    'barcode_detail.*',
+                    'barcodes.type_product',
+                    'barcodes.id_sales_orders as sales_order_id'
+                )
+                ->first();
+
+            // Cek type_product
+            if ($barcodeRecord && $barcodeRecord->type_product === 'FG') {
+                $barcodeRecord = DB::table('barcodes')
+                    ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
+                    ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id') // Join ke sales_orders
+                    ->join('master_product_fgs', 'barcodes.id_master_products', '=', 'master_product_fgs.id')
+                    ->leftjoin('report_bag_production_result_details', 'barcode_detail.barcode_number', '=', 'report_bag_production_result_details.barcode') // Join tabel tambahan
+                    ->leftjoin('report_bag_production_results', 'report_bag_production_result_details.id_report_bags', '=', 'report_bag_production_results.id_report_bags')
+                    ->where('barcode_detail.barcode_number', $barcode)
+                    ->where('sales_orders.so_number', $changeSo)
+                    ->select(
+                        'barcode_detail.*',
+                        'master_product_fgs.description',
+                        'master_product_fgs.id as product_id',
+                        'barcodes.id_sales_orders as sales_order_id',
+                        'master_product_fgs.stock',
+                        'barcodes.type_product',
+                        'report_bag_production_result_details.wrap_pcs as pcs', // Ambil nilai pcs dari report_bag_production_result_details
+                        'report_bag_production_results.weight_starting' // Ambil nilai weight_starting dari report_bag_production_result
+                    )
+                    ->first();
+            } else {
+                $barcodeRecord = DB::table('barcodes')
+                    ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
+                    ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id') // Join ke sales_orders
+                    ->join(
+                        'master_wips',
+                        'barcodes.id_master_products',
+                        '=',
+                        'master_wips.id'
+                    ) // Join hanya untuk non-FG
+                    ->where('barcode_detail.barcode_number', $barcode)
+                    ->where('sales_orders.so_number', $changeSo)
+                    ->select(
+                        'barcode_detail.*',
+                        'master_wips.description',
+                        'master_wips.id as product_id',
+                        'barcodes.id_sales_orders as sales_order_id',
+                        'barcodes.type_product',
+                        'master_wips.stock',
+                        DB::raw('1 as pcs') // Default pcs jika tidak ada di tabel lain
+                    )
+                    ->first();
+            }
 
         if ($barcodeRecord && strpos($barcodeRecord->status, 'In Stock') !== false) {
             $exists = true;
@@ -455,6 +513,44 @@ class WarehouseController extends Controller
                 'master_customers.id as customer_id'
             )
             ->first();
+            ->where('packing_list_details.id_packing_lists', $id)
+            ->select('barcodes.type_product as type_product')
+            ->first();
+
+        if ($details && $details->type_product === 'WIP') {
+            // Jika type_product adalah WIP
+            $details = DB::table('packing_list_details')
+                ->join('barcode_detail', 'packing_list_details.barcode', '=', 'barcode_detail.barcode_number')
+                ->join('barcodes', 'barcodes.id', '=', 'barcode_detail.id_barcode')
+                ->join('master_wips', 'barcodes.id_master_products', '=', 'master_wips.id')
+                ->where('packing_list_details.id_packing_lists', $id)
+                ->select(
+                    'packing_list_details.*',
+                    'master_wips.description as product_description',
+                    'packing_list_details.number_of_box as no_box'
+                )
+                ->get();
+        } elseif ($details && $details->type_product === 'FG') {
+            // Jika type_product adalah FG
+            $details = DB::table('packing_list_details')
+                ->join('barcode_detail', 'packing_list_details.barcode', '=', 'barcode_detail.barcode_number')
+                ->join('barcodes', 'barcodes.id', '=', 'barcode_detail.id_barcode')
+                ->leftJoin('report_bag_production_result_details', 'barcode_detail.barcode_number', '=', 'report_bag_production_result_details.barcode')
+                ->join('master_product_fgs', 'barcodes.id_master_products', '=', 'master_product_fgs.id') // Diperbaiki
+                ->where('packing_list_details.id_packing_lists', $id)
+                ->select(
+                    'packing_list_details.*',
+                    'master_product_fgs.description as product_description',
+                    'packing_list_details.number_of_box as no_box'
+                )
+                ->get();
+        }
+
+        // Ambil data packing list
+        $packingList = DB::table('packing_lists')->where('id', $id)->first();
+
+        // Ambil data customer
+        $customer = DB::table('master_customers')->where('id', $packingList->id_master_customers)->first();
 
         // Return view dengan data yang sudah diproses
         return view('warehouse.edit', compact('packingList', 'details'));
@@ -637,6 +733,29 @@ class WarehouseController extends Controller
             )
 
             // Select kolom yang diambil
+            ->leftJoin('master_product_fgs', function ($join) {
+                $join->on('barcodes.id_master_products', '=', 'master_product_fgs.id')
+                    ->where('barcodes.type_product', '=', 'FG');
+            })
+            ->leftJoin('master_wips', function ($join) {
+                $join->on('barcodes.id_master_products', '=', 'master_wips.id')
+                    ->where('barcodes.type_product', '=', 'WIP');
+            })
+            ->join('master_units', function ($join) {
+                $join->on('master_product_fgs.id_master_units', '=', 'master_units.id')
+                    ->orOn('master_wips.id_master_units', '=', 'master_units.id');
+            })
+            ->leftJoin('report_blow_production_results', function ($join) {
+                $join->on('barcode_detail.barcode_number', '=', 'report_blow_production_results.barcode')
+                    ->where('packing_list_details.sts_start', 'like', '%BLW');
+            })
+            ->leftJoin('report_sf_production_results', function ($join) {
+                $join->on('barcode_detail.barcode_number', '=', 'report_sf_production_results.barcode')
+                    ->where(function ($query) {
+                        $query->where('packing_list_details.sts_start', 'like', '%FLD')
+                            ->orWhere('packing_list_details.sts_start', 'like', '%SLT');
+                    });
+            })
             ->select(
                 'barcodes.type_product',
                 DB::raw('COALESCE(master_product_fgs.product_code, master_wips.wip_code, master_tool_auxiliaries.code, master_raw_materials.rm_code) as product_code'),
