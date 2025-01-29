@@ -169,8 +169,8 @@ class WarehouseController extends Controller
                     ->where('barcodes.id_master_customers', $customerId);
             })
             ->select(
-            'barcode_detail.barcode_number',
-            'barcode_detail.status',
+                'barcode_detail.barcode_number',
+                'barcode_detail.status',
                 'barcodes.type_product',
                 'barcodes.id_sales_orders as sales_order_id',
                 'barcodes.qty',
@@ -199,65 +199,7 @@ class WarehouseController extends Controller
             ->leftJoin('report_bag_production_result_details', 'barcode_detail.barcode_number', '=', 'report_bag_production_result_details.barcode')
             ->leftJoin('report_bag_production_results', 'report_bag_production_result_details.id_report_bags', '=', 'report_bag_production_results.id_report_bags')
             ->first();
-            
-        if ($changeSo) {
-            // Validasi berdasarkan sales order
-            $barcodeRecord = DB::table('barcodes')
-                ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
-                ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id') // Join ke sales_orders
-                ->where('barcode_detail.barcode_number', $barcode)
-                ->where('sales_orders.so_number', $changeSo)
-                ->select(
-                    'barcode_detail.*',
-                    'barcodes.type_product',
-                    'barcodes.id_sales_orders as sales_order_id'
-                )
-                ->first();
 
-            // Cek type_product
-            if ($barcodeRecord && $barcodeRecord->type_product === 'FG') {
-                $barcodeRecord = DB::table('barcodes')
-                    ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
-                    ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id') // Join ke sales_orders
-                    ->join('master_product_fgs', 'barcodes.id_master_products', '=', 'master_product_fgs.id')
-                    ->leftjoin('report_bag_production_result_details', 'barcode_detail.barcode_number', '=', 'report_bag_production_result_details.barcode') // Join tabel tambahan
-                    ->leftjoin('report_bag_production_results', 'report_bag_production_result_details.id_report_bags', '=', 'report_bag_production_results.id_report_bags')
-                    ->where('barcode_detail.barcode_number', $barcode)
-                    ->where('sales_orders.so_number', $changeSo)
-                    ->select(
-                        'barcode_detail.*',
-                        'master_product_fgs.description',
-                        'master_product_fgs.id as product_id',
-                        'barcodes.id_sales_orders as sales_order_id',
-                        'master_product_fgs.stock',
-                        'barcodes.type_product',
-                        'report_bag_production_result_details.wrap_pcs as pcs', // Ambil nilai pcs dari report_bag_production_result_details
-                        'report_bag_production_results.weight_starting' // Ambil nilai weight_starting dari report_bag_production_result
-                    )
-                    ->first();
-            } else {
-                $barcodeRecord = DB::table('barcodes')
-                    ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
-                    ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id') // Join ke sales_orders
-                    ->join(
-                        'master_wips',
-                        'barcodes.id_master_products',
-                        '=',
-                        'master_wips.id'
-                    ) // Join hanya untuk non-FG
-                    ->where('barcode_detail.barcode_number', $barcode)
-                    ->where('sales_orders.so_number', $changeSo)
-                    ->select(
-                        'barcode_detail.*',
-                        'master_wips.description',
-                        'master_wips.id as product_id',
-                        'barcodes.id_sales_orders as sales_order_id',
-                        'barcodes.type_product',
-                        'master_wips.stock',
-                        DB::raw('1 as pcs') // Default pcs jika tidak ada di tabel lain
-                    )
-                    ->first();
-            }
 
         if ($barcodeRecord && strpos($barcodeRecord->status, 'In Stock') !== false) {
             $exists = true;
@@ -280,8 +222,8 @@ class WarehouseController extends Controller
                 'number_of_box' => $numberOfBox,
                 'weight' => $isBag ? $barcodeRecord->weight_starting : '',
                 'pcs' => ($barcodeRecord->type_product === 'AUX' || $barcodeRecord->type_product === 'RAW')
-                ? $barcodeRecord->qty  // Gunakan qty dari barcode untuk AUX dan RAW
-                : ($isBag ? $pcs : 1),
+                    ? $barcodeRecord->qty  // Gunakan qty dari barcode untuk AUX dan RAW
+                    : ($isBag ? $pcs : 1),
                 'sts_start' => $barcodeRecord->status,
                 'created_at' => now(),
                 'updated_at' => now()
@@ -402,12 +344,14 @@ class WarehouseController extends Controller
                 ->join('master_wips', 'barcodes.id_master_products', '=', 'master_wips.id')
                 ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
                 ->where('barcode_detail.barcode_number', $barcodeDetail->barcode)
-                ->select('master_product_fgs.id as product_id', 
-                'barcodes.id_sales_orders as sales_order_id', 
-                'barcodes.type_product as type_product', 
-                'barcode_detail.status as status', 
-                'report_bag_production_result_details.wrap_pcs', 
-                'barcodes.qty')
+                ->select(
+                    'master_product_fgs.id as product_id',
+                    'barcodes.id_sales_orders as sales_order_id',
+                    'barcodes.type_product as type_product',
+                    'barcode_detail.status as status',
+                    'report_bag_production_result_details.wrap_pcs',
+                    'barcodes.qty'
+                )
                 ->first();
 
             if ($barcodeRecord) {
@@ -513,44 +457,6 @@ class WarehouseController extends Controller
                 'master_customers.id as customer_id'
             )
             ->first();
-            ->where('packing_list_details.id_packing_lists', $id)
-            ->select('barcodes.type_product as type_product')
-            ->first();
-
-        if ($details && $details->type_product === 'WIP') {
-            // Jika type_product adalah WIP
-            $details = DB::table('packing_list_details')
-                ->join('barcode_detail', 'packing_list_details.barcode', '=', 'barcode_detail.barcode_number')
-                ->join('barcodes', 'barcodes.id', '=', 'barcode_detail.id_barcode')
-                ->join('master_wips', 'barcodes.id_master_products', '=', 'master_wips.id')
-                ->where('packing_list_details.id_packing_lists', $id)
-                ->select(
-                    'packing_list_details.*',
-                    'master_wips.description as product_description',
-                    'packing_list_details.number_of_box as no_box'
-                )
-                ->get();
-        } elseif ($details && $details->type_product === 'FG') {
-            // Jika type_product adalah FG
-            $details = DB::table('packing_list_details')
-                ->join('barcode_detail', 'packing_list_details.barcode', '=', 'barcode_detail.barcode_number')
-                ->join('barcodes', 'barcodes.id', '=', 'barcode_detail.id_barcode')
-                ->leftJoin('report_bag_production_result_details', 'barcode_detail.barcode_number', '=', 'report_bag_production_result_details.barcode')
-                ->join('master_product_fgs', 'barcodes.id_master_products', '=', 'master_product_fgs.id') // Diperbaiki
-                ->where('packing_list_details.id_packing_lists', $id)
-                ->select(
-                    'packing_list_details.*',
-                    'master_product_fgs.description as product_description',
-                    'packing_list_details.number_of_box as no_box'
-                )
-                ->get();
-        }
-
-        // Ambil data packing list
-        $packingList = DB::table('packing_lists')->where('id', $id)->first();
-
-        // Ambil data customer
-        $customer = DB::table('master_customers')->where('id', $packingList->id_master_customers)->first();
 
         // Return view dengan data yang sudah diproses
         return view('warehouse.edit', compact('packingList', 'details'));
@@ -733,29 +639,6 @@ class WarehouseController extends Controller
             )
 
             // Select kolom yang diambil
-            ->leftJoin('master_product_fgs', function ($join) {
-                $join->on('barcodes.id_master_products', '=', 'master_product_fgs.id')
-                    ->where('barcodes.type_product', '=', 'FG');
-            })
-            ->leftJoin('master_wips', function ($join) {
-                $join->on('barcodes.id_master_products', '=', 'master_wips.id')
-                    ->where('barcodes.type_product', '=', 'WIP');
-            })
-            ->join('master_units', function ($join) {
-                $join->on('master_product_fgs.id_master_units', '=', 'master_units.id')
-                    ->orOn('master_wips.id_master_units', '=', 'master_units.id');
-            })
-            ->leftJoin('report_blow_production_results', function ($join) {
-                $join->on('barcode_detail.barcode_number', '=', 'report_blow_production_results.barcode')
-                    ->where('packing_list_details.sts_start', 'like', '%BLW');
-            })
-            ->leftJoin('report_sf_production_results', function ($join) {
-                $join->on('barcode_detail.barcode_number', '=', 'report_sf_production_results.barcode')
-                    ->where(function ($query) {
-                        $query->where('packing_list_details.sts_start', 'like', '%FLD')
-                            ->orWhere('packing_list_details.sts_start', 'like', '%SLT');
-                    });
-            })
             ->select(
                 'barcodes.type_product',
                 DB::raw('COALESCE(master_product_fgs.product_code, master_wips.wip_code, master_tool_auxiliaries.code, master_raw_materials.rm_code) as product_code'),
@@ -801,9 +684,9 @@ class WarehouseController extends Controller
     {
         // Ambil data packing list dengan informasi customer
         $packingList = DB::table('packing_lists as pl')
-        ->join('master_customers as mc', 'pl.id_master_customers', '=', 'mc.id')
-        ->select('pl.*', 'mc.name as customer_name')
-        ->where('pl.id', $id)
+            ->join('master_customers as mc', 'pl.id_master_customers', '=', 'mc.id')
+            ->select('pl.*', 'mc.name as customer_name')
+            ->where('pl.id', $id)
             ->first();
 
         // Deklarasi kondisi tipe produk
@@ -816,9 +699,9 @@ class WarehouseController extends Controller
 
         // Ambil detail packing list dengan deskripsi berdasarkan tipe produk
         $detailsQuery = DB::table('packing_list_details as pld')
-        ->join('barcode_detail as bd', 'pld.barcode', '=', 'bd.barcode_number')
-        ->join('barcodes as b', 'bd.id_barcode', '=', 'b.id')
-        ->join('sales_orders as so', 'b.id_sales_orders', '=', 'so.id');
+            ->join('barcode_detail as bd', 'pld.barcode', '=', 'bd.barcode_number')
+            ->join('barcodes as b', 'bd.id_barcode', '=', 'b.id')
+            ->join('sales_orders as so', 'b.id_sales_orders', '=', 'so.id');
 
         // Iterasi kondisi tipe produk untuk left join
         foreach ($typeProductConditions as $type => $table) {
@@ -828,7 +711,7 @@ class WarehouseController extends Controller
             // Tambahkan left join dengan nama tabel dan alias yang diparsing
             $detailsQuery->leftJoin(DB::raw($tableName . ' as ' . $alias), function ($join) use ($type, $alias) {
                 $join->on('b.id_master_products', '=', DB::raw($alias . '.id'))
-                ->where('b.type_product', '=', $type);
+                    ->where('b.type_product', '=', $type);
             });
         }
 
@@ -867,12 +750,12 @@ class WarehouseController extends Controller
     }
     // Method untuk menghapus packing list
     public function destroy($id)
-{
-    DB::transaction(function () use ($id) {
-        // Ambil semua detail packing list
-        $details = DB::table('packing_list_details')->where('id_packing_lists', $id)->get();
+    {
+        DB::transaction(function () use ($id) {
+            // Ambil semua detail packing list
+            $details = DB::table('packing_list_details')->where('id_packing_lists', $id)->get();
 
-        foreach ($details as $detail) {
+            foreach ($details as $detail) {
                 // Ambil informasi barcode
                 $barcodeRecord = DB::table('barcodes')
                     ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
@@ -896,68 +779,68 @@ class WarehouseController extends Controller
                     )
                     ->where('barcode_detail.barcode_number', $detail->barcode)
                     ->select(
-                    'barcodes.type_product',
-                    'packing_list_details.pcs',
+                        'barcodes.type_product',
+                        'packing_list_details.pcs',
                         'packing_list_details.sts_start',
                         'sales_orders.id as sales_order_id',
                         'barcodes.id_master_products as product_id'
                     )
                     ->first();
-                    
+
 
                 // dd($barcodeRecord);
 
 
-            if ($barcodeRecord) {
-                // Kembalikan stok sesuai jenis produk
-                $pcs = $barcodeRecord->pcs;
+                if ($barcodeRecord) {
+                    // Kembalikan stok sesuai jenis produk
+                    $pcs = $barcodeRecord->pcs;
 
-                if ($barcodeRecord->type_product === 'FG') {
-                    DB::table('master_product_fgs')
-                        ->where('id', $barcodeRecord->product_id)
-                        ->increment('stock', $pcs);
-                    DB::table('sales_orders')
-                        ->where('id', $barcodeRecord->sales_order_id)
-                        ->increment('outstanding_delivery_qty', $pcs);
-                } elseif ($barcodeRecord->type_product === 'WIP') {
-                    DB::table('master_wips')
-                        ->where('id', $barcodeRecord->product_id)
-                        ->increment('stock', $pcs);
-                    DB::table('sales_orders')
-                        ->where('id', $barcodeRecord->sales_order_id)
-                        ->increment('outstanding_delivery_qty', $pcs);
-                } elseif ($barcodeRecord->type_product === 'AUX') {
-                    DB::table('master_tool_auxiliaries')
-                        ->where('id', $barcodeRecord->product_id)
-                        ->increment('stock', $pcs);
-                    DB::table('sales_orders')
-                        ->where('id', $barcodeRecord->sales_order_id)
-                        ->increment('outstanding_delivery_qty', $pcs);
-                } elseif ($barcodeRecord->type_product === 'RAW') {
-                    DB::table('master_raw_materials')
-                        ->where('id', $barcodeRecord->product_id)
-                        ->increment('stock', $pcs);
-                    DB::table('sales_orders')
-                        ->where('id', $barcodeRecord->sales_order_id)
-                        ->increment('outstanding_delivery_qty', $pcs);
+                    if ($barcodeRecord->type_product === 'FG') {
+                        DB::table('master_product_fgs')
+                            ->where('id', $barcodeRecord->product_id)
+                            ->increment('stock', $pcs);
+                        DB::table('sales_orders')
+                            ->where('id', $barcodeRecord->sales_order_id)
+                            ->increment('outstanding_delivery_qty', $pcs);
+                    } elseif ($barcodeRecord->type_product === 'WIP') {
+                        DB::table('master_wips')
+                            ->where('id', $barcodeRecord->product_id)
+                            ->increment('stock', $pcs);
+                        DB::table('sales_orders')
+                            ->where('id', $barcodeRecord->sales_order_id)
+                            ->increment('outstanding_delivery_qty', $pcs);
+                    } elseif ($barcodeRecord->type_product === 'AUX') {
+                        DB::table('master_tool_auxiliaries')
+                            ->where('id', $barcodeRecord->product_id)
+                            ->increment('stock', $pcs);
+                        DB::table('sales_orders')
+                            ->where('id', $barcodeRecord->sales_order_id)
+                            ->increment('outstanding_delivery_qty', $pcs);
+                    } elseif ($barcodeRecord->type_product === 'RAW') {
+                        DB::table('master_raw_materials')
+                            ->where('id', $barcodeRecord->product_id)
+                            ->increment('stock', $pcs);
+                        DB::table('sales_orders')
+                            ->where('id', $barcodeRecord->sales_order_id)
+                            ->increment('outstanding_delivery_qty', $pcs);
+                    }
+
+                    // Update status barcode di tabel barcode_detail
+                    DB::table('barcode_detail')
+                        ->where('barcode_number', $detail->barcode)
+                        ->update(['status' => $detail->sts_start]);
                 }
-
-                // Update status barcode di tabel barcode_detail
-                DB::table('barcode_detail')
-                    ->where('barcode_number', $detail->barcode)
-                    ->update(['status' => $detail->sts_start]);
             }
-        }
 
-        // Hapus detail packing list
-        DB::table('packing_list_details')->where('id_packing_lists', $id)->delete();
+            // Hapus detail packing list
+            DB::table('packing_list_details')->where('id_packing_lists', $id)->delete();
 
-        // Hapus packing list
-        DB::table('packing_lists')->where('id', $id)->delete();
-    });
+            // Hapus packing list
+            DB::table('packing_lists')->where('id', $id)->delete();
+        });
 
-    return redirect()->route('packing-list')->with('pesan', 'Data berhasil dihapus.');
-}
+        return redirect()->route('packing-list')->with('pesan', 'Data berhasil dihapus.');
+    }
 
 
 
