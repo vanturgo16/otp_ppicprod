@@ -133,8 +133,8 @@
     <div class="container-fluid">
         <div class="header-row">
             <div class="header-left">
-                <img src="https://production.olefinatifaplas.my.id/assets/images/icon-otp.png" alt=""
-                    height="60" width="60">
+                <img src="https://production.olefinatifaplas.my.id/assets/images/icon-otp.png" alt="" height="60"
+                    width="60">
                 <div>
                     <h1>PT OLEFINA TIFAPLAS POLIKEMINDO</h1>
                     <p>Jl. Raya Serang KM 16.8 Desa Telaga, Kec. Cikupa Tangerang, 15710<br>
@@ -185,73 +185,35 @@
                     </thead>
                     <tbody>
                         @php
-                        $totalRoll = 0;
-                        $totalWeight = 0;
+                            $totalRoll = 0;
+                            $totalWeight = 0;
                         @endphp
                         @foreach ($details as $index => $detail)
-                        <tr>
-                            <td>{{ $index + 1 }}</td>
-                            <td>{{ $detail->product_code }}</td>
-                            <td>{{ $detail->description }}</td>
-                            <td>{{ $detail->barcode_number }}</td>
-                            <td>{{ $detail->so_number }}</td>
-                            <td>{{ $detail->pcs . ' PCS' }}</td>
-                            <td>{{ stripos($detail->sts_start, 'bag') ? $detail->weight : $detail->production_weight }} KG</td>
-                            @php
-                            $totalRoll += $detail->pcs;
-                            $totalWeight += stripos($detail->sts_start, 'bag')
-                            ? $detail->weight
-                            : $detail->production_weight;
-                            @endphp
-                        </tr>
+                                                <tr>
+                                                    <td>{{ $index + 1 }}</td>
+                                                    <td>{{ $detail->product_code }}</td>
+                                                    <td>{{ $detail->description }}</td>
+                                                    <td>{{ $detail->barcode_number }}</td>
+                                                    <td>{{ $detail->so_number }}</td>
+                                                    <td>{{ $detail->pcs . ' ' . $detail->unit}}</td>
+                                                    <td>{{ stripos($detail->sts_start, 'bag') ? $detail->weight : $detail->production_weight }}
+                                                        KG</td>
+                                                    @php
+                                                        $totalRoll += $detail->pcs;
+                                                        $totalWeight += stripos($detail->sts_start, 'bag')
+                                                            ? $detail->weight
+                                                            : $detail->production_weight;
+                                                    @endphp
+                                                </tr>
                         @endforeach
-
                     </tbody>
                 </table>
             </div>
-<<<<<<< HEAD
         </div>
         <div class="row mt-4">
             <div class="col-12" style="float: right; text-align: right;">
-                <p><strong>Subtotal:</strong> {{ $totalRoll }} {{ $detail->unit }}</p>
+                <p><strong>Subtotal:</strong> {{ $totalRoll }} PCS</p>
                 <p><strong>Total Berat:</strong> {{ number_format($totalWeight, 2) }} KG</p>
-=======
-
-            <div class="row mt-4">
-                <div class="col-12">
-                    <table class="main-table">
-                        <thead>
-                            <tr>
-                                <th>No</th>
-                                <th>Item Code</th>
-                                <th>Description</th>
-                                <th>Barcode</th>
-                                <th>No. SO</th>
-                                <th>Isi Dus</th>
-                                <th>Berat</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @php
-                                $totalRoll = 0;
-                                $totalWeight = 0;
-                            @endphp
-                            @foreach ($details as $index => $detail)
-                                <tr>
-                                    <td>{{ $index + 1 }}</td>
-                                    <td>{{ $detail->product_code }}</td>
-                                    <td>{{ $detail->description }}</td>
-                                    <td>{{ $detail->barcode_number }}</td>
-                                    <td>{{ $detail->so_number }}</td>
-                                    <td>{{ $detail->pcs .' '. $detail->unit}}</td>
-                                    <td>{{ stripos($detail->sts_start, 'bag') ? $detail->weight : $detail->production_weight }} KG</td>
-                                </tr>
-                            @endforeach
-
-                        </tbody>
-                    </table>
-                </div>
->>>>>>> 6e5a55b40421054756e8455cfe587964ccfc178c
             </div>
         </div>
         <div class="signature-row">
@@ -267,3 +229,5 @@
     </div>
 </div>
 @endsection
+
+{{--  --}}
