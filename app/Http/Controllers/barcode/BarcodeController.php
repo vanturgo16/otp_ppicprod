@@ -413,9 +413,5 @@ class BarcodeController extends Controller
         return view('barcode.print_cbc', compact('barcodeDetails'));
     }
 
-    // public function table_print()
-    // {
 
-    //     return view('barcode.table');
-    // }
 }

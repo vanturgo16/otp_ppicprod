@@ -480,6 +480,7 @@ class workOrderController extends Controller
     public function getAllSalesOrders()
     {
         $salesOrders = salesOrder::select('*')
+            ->whereIn('so_type', ['Reguler', 'Sample', 'Stock'])
             ->where('status', 'Posted')
             ->get();
         return $salesOrders;
