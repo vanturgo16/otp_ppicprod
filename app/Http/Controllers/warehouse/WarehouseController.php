@@ -192,8 +192,6 @@ class WarehouseController extends Controller
                         'report_bag_production_results.weight_starting' // Ambil nilai weight_starting dari report_bag_production_result
                     )
                     ->first();
-
-
             } else {
                 $barcodeRecord = DB::table('barcodes')
                     ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
@@ -539,8 +537,8 @@ class WarehouseController extends Controller
                 ->where('packing_list_details.id_packing_lists', $id)
                 ->select(
                     'packing_list_details.*',
-                'master_wips.description as product_description',
-                'packing_list_details.number_of_box as no_box'
+                    'master_wips.description as product_description',
+                    'packing_list_details.number_of_box as no_box'
                 )
                 ->get();
         } elseif ($details && $details->type_product === 'FG') {
@@ -553,8 +551,8 @@ class WarehouseController extends Controller
                 ->where('packing_list_details.id_packing_lists', $id)
                 ->select(
                     'packing_list_details.*',
-                'master_product_fgs.description as product_description',
-                'packing_list_details.number_of_box as no_box'
+                    'master_product_fgs.description as product_description',
+                    'packing_list_details.number_of_box as no_box'
                 )
                 ->get();
         }
@@ -604,7 +602,13 @@ class WarehouseController extends Controller
                         ->where('barcode_detail.barcode_number', $barcode)
                         // ->where('barcode_detail.status', 'In Stock')
                         ->where(DB::raw('strpos(barcode_detail.status, "In Stock")'), '!==', 'false')
-                        ->select('barcode_detail.*', 'master_product_fgs.description', 'master_product_fgs.id as product_id', 'sales_orders.id as sales_order_id', 'master_product_fgs.stock', 'sales_orders.outstanding_delivery_qty'//,barcode_detail.status
+                        ->select(
+                            'barcode_detail.*',
+                            'master_product_fgs.description',
+                            'master_product_fgs.id as product_id',
+                            'sales_orders.id as sales_order_id',
+                            'master_product_fgs.stock',
+                            'sales_orders.outstanding_delivery_qty' //,barcode_detail.status
                         )
                         ->first();
 
@@ -705,38 +709,38 @@ class WarehouseController extends Controller
     public function printPackingList($id)
     {
         $packingList = DB::table('packing_lists')
-        ->join('master_customers', 'packing_lists.id_master_customers', '=', 'master_customers.id')
-        ->select('packing_lists.packing_number', 'packing_lists.date', 'master_customers.name as customer_name')
-        ->where('packing_lists.id', $id)
-        ->first();
+            ->join('master_customers', 'packing_lists.id_master_customers', '=', 'master_customers.id')
+            ->select('packing_lists.packing_number', 'packing_lists.date', 'master_customers.name as customer_name')
+            ->where('packing_lists.id', $id)
+            ->first();
 
         $details = DB::table('packing_list_details')
-        ->join('barcode_detail', 'packing_list_details.barcode', '=', 'barcode_detail.barcode_number')
-        ->join('barcodes', 'barcode_detail.id_barcode', '=', 'barcodes.id')
-        ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
+            ->join('barcode_detail', 'packing_list_details.barcode', '=', 'barcode_detail.barcode_number')
+            ->join('barcodes', 'barcode_detail.id_barcode', '=', 'barcodes.id')
+            ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
 
-        ->leftJoin('master_product_fgs', function ($join) {
-            $join->on('barcodes.id_master_products', '=', 'master_product_fgs.id')
-            ->where('barcodes.type_product', '=', 'FG');
-        })
+            ->leftJoin('master_product_fgs', function ($join) {
+                $join->on('barcodes.id_master_products', '=', 'master_product_fgs.id')
+                    ->where('barcodes.type_product', '=', 'FG');
+            })
             ->leftJoin('master_wips', function ($join) {
                 $join->on('barcodes.id_master_products', '=', 'master_wips.id')
-                ->where('barcodes.type_product', '=', 'WIP');
+                    ->where('barcodes.type_product', '=', 'WIP');
             })
             ->join('master_units', function ($join) {
                 $join->on('master_product_fgs.id_master_units', '=', 'master_units.id')
-                ->orOn('master_wips.id_master_units', '=', 'master_units.id');
+                    ->orOn('master_wips.id_master_units', '=', 'master_units.id');
             })
             ->leftJoin('report_blow_production_results', function ($join) {
                 $join->on('barcode_detail.barcode_number', '=', 'report_blow_production_results.barcode')
-                ->where('packing_list_details.sts_start', 'like', '%BLW');
+                    ->where('packing_list_details.sts_start', 'like', '%BLW');
             })
             ->leftJoin('report_sf_production_results', function ($join) {
                 $join->on('barcode_detail.barcode_number', '=', 'report_sf_production_results.barcode')
-                ->where(function ($query) {
-                    $query->where('packing_list_details.sts_start', 'like', '%FLD')
-                        ->orWhere('packing_list_details.sts_start', 'like', '%SLT');
-                });
+                    ->where(function ($query) {
+                        $query->where('packing_list_details.sts_start', 'like', '%FLD')
+                            ->orWhere('packing_list_details.sts_start', 'like', '%SLT');
+                    });
             })
             ->select(
                 'barcodes.type_product',
