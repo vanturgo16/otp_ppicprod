@@ -37,6 +37,9 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
+    {{-- select 2 --}}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
     @if (request()->is('ppic/*'))
     <link rel="stylesheet" href="{{ asset('assets/css/ppic/style.css') }}">
     @endif
@@ -490,10 +493,11 @@
     <script src="{{ asset('assets/js/pages/form-advanced.init.js') }}"></script>
 
     {{-- select 2 --}}
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.min.js"></script>
+
+    <!-- FORM LOAD JS -->
+    <script src="{{ asset('assets/js/formLoad.js') }}"></script>
 
     <script>
         $(document).ready(function() {
@@ -545,6 +549,16 @@
         $('.data-select2').select2({
             width: 'resolve', // need to override the changed default
             theme: "classic"
+        });
+
+        $('.input-select2').select2({
+            width: 'resolve',
+        });
+        $(document).on("shown.bs.modal", ".modal", function () {
+            $(".input-select2").select2({
+                dropdownParent: this,
+                width: 'resolve', 
+            });
         });
     </script>
     @stack('scripts')

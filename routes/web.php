@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GrnController;
+use App\Http\Controllers\GRNoteController;
 use App\Http\Controllers\barcode\BarcodeController;
 use App\Http\Controllers\barcode\BarcodeMesinController;
 use App\Http\Controllers\barcode\TracabelityController;
@@ -67,8 +68,29 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
         Route::put('/update_ext_lot_number', [GrnController::class, 'update_ext_lot_number'])->name('update_ext_lot_number');
         Route::get('/detail-external-no-lot/{lot_number}', [GrnController::class, 'detail_external_no_lot'])->name('detail_external_no_lot');
 
+        //GOOD RECEIPT NOTE
+        Route::controller(GRNoteController::class)->group(function () {
+            Route::prefix('grn')->group(function () {
+                //DATA GRN
+                Route::get('/', 'index')->name('grn.index');
+                Route::get('/add/{type}', 'add')->name('grn.add');
+                Route::get('/edit/{id}', 'edit')->name('grn.edit');
+                Route::post('/store', 'store')->name('grn.store');
+                Route::post('/update/{id}', 'update')->name('grn.update');
+                Route::post('/delete/{id}', 'delete')->name('grn.delete');
+                Route::post('/posted/{id}', 'posted')->name('grn.posted');
+                Route::post('/unposted/{id}', 'unposted')->name('grn.unposted');
+                Route::get('/print/{lang}/{id}', 'print')->name('grn.print');
+                Route::get('/get-po-details', 'getPODetails')->name('grn.getPODetails');
+                Route::get('/get-pr-details', 'getPRDetails')->name('grn.getPRDetails');
+                //ITEM PR
+                Route::get('/item/edit/{id}', 'editItem')->name('grn.editItem');
+                Route::post('/item/store/{id}', 'storeItem')->name('grn.storeItem');
+                Route::post('/item/update/{id}', 'updateItem')->name('grn.updateItem');
+                Route::post('/item/delete/{id}', 'deleteItem')->name('grn.deleteItem');
+            });
+        });
         
-     
     }); 
 
     include __DIR__ . '/ppic/workOrder.php';
