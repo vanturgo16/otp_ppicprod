@@ -185,8 +185,8 @@
                     </thead>
                     <tbody>
                         @php
-                            $totalRoll = 0;
-                            $totalWeight = 0;
+$totalRoll = 0;
+$totalWeight = 0;
                         @endphp
                         @foreach ($details as $index => $detail)
                                                 <tr>
@@ -199,10 +199,10 @@
                                                     <td>{{ stripos($detail->sts_start, 'bag') ? $detail->weight : $detail->production_weight }}
                                                         KG</td>
                                                     @php
-                                                        $totalRoll += $detail->pcs;
-                                                        $totalWeight += stripos($detail->sts_start, 'bag')
-                                                            ? $detail->weight
-                                                            : $detail->production_weight;
+    $totalRoll += $detail->pcs;
+    $totalWeight += stripos($detail->sts_start, 'bag')
+        ? $detail->weight
+        : $detail->production_weight;
                                                     @endphp
                                                 </tr>
                         @endforeach
@@ -212,7 +212,7 @@
         </div>
         <div class="row mt-4">
             <div class="col-12" style="float: right; text-align: right;">
-                <p><strong>Subtotal:</strong> {{ $totalRoll }} PCS</p>
+                <p><strong>Subtotal:</strong> {{ $totalRoll }}  {{$detail->unit}}</p>
                 <p><strong>Total Berat:</strong> {{ number_format($totalWeight, 2) }} KG</p>
             </div>
         </div>
