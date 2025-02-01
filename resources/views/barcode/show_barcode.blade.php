@@ -28,12 +28,13 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-
+                        <a href="javascript:window.history.back();" class="btn btn-secondary btn-sm waves-effect waves-light">Back</a>
                     </div>
+             
 
             <div class="card-body">
+                <table class="table table-bordered dt-responsive w-100" style="font-size: 12px" id="datatable">
 
-                <table id="datatable" class="table table-bordered table-striped dt-responsive  nowrap w-100">
                     <thead>
                     <tr>
                         <th>No</th>
@@ -70,7 +71,7 @@
                      
                         <td>
 
-                            <a href="{{ route('print_satuan_standar', $data->barcode_number) }}" class="btn btn-primary waves-effect waves-light">Print Standar</a>
+                            <a href="{{ route('print_satuan_standar', $data->barcode_number) }}" class="btn btn-primary btn-sm waves-effect waves-light">Print Standar</a>
                         </td>
                     </tr>
                     @endforeach
