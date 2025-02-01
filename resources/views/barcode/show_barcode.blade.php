@@ -28,7 +28,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <a href="javascript:window.history.back();" class="btn btn-secondary btn-sm waves-effect waves-light">Kembali</a>
+                        <a href="javascript:window.history.back();" class="btn btn-secondary btn-sm waves-effect waves-light">Back</a>
                     </div>
              
 

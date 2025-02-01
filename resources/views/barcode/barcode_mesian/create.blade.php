@@ -76,8 +76,8 @@
                             </div>
                         </div>
                     </div>
+                    <table class="table table-bordered dt-responsive w-100" style="font-size: small" id="datatable">
 
-                    <table id="datatable" class="table table-bordered dt-responsive nowrap" style="width:100%">
                         <thead>
                         <tr>
                             <th>No</th>
