@@ -109,6 +109,10 @@
                                 <input type="text" class="form-control" id="dn_type" name="dn_type" required readonly>
                             </div>
                             <div class="mb-3">
+                                <label for="type_product" class="form-label">Tipe Produk</label>
+                                <input type="text" class="form-control" id="type_product" name="type_product" required readonly>
+                            </div>
+                            <div class="mb-3">
                                 <label for="transaction_type" class="form-label">Tipe Transaksi</label>
                                 <input type="text" class="form-control" id="transaction_type" name="transaction_type" required readonly>
                             </div>
@@ -206,6 +210,7 @@
                         $('#dn_type').val(data.dn_type);
                         $('#transaction_type').val(data.transaction_type);
                         $('#salesman_name').val(data.salesman_name);
+                        $('#type_product').val(data.type_product);
                     }
                 });
             }

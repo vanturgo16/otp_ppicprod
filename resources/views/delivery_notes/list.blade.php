@@ -183,11 +183,7 @@
         });
 
         function generateActionButtons(data) {
-            let buttons = `<div class="btn-group" role="group" aria-label="Action Buttons">
-                <a href="/delivery_notes/${data.id}" class="btn btn-sm btn-primary waves-effect waves-light">
-                    <i class="bx bx-show-alt"></i>
-                </a>`;
-
+            let buttons = ``;
             if (data.status == 'Request') {
                 buttons += `<form action="/delivery_notes/${data.id}/post" method="post" class="d-inline" data-id="">
                     @method('PUT')
@@ -204,9 +200,19 @@
                         <i class="bx bx-undo" title="Un Posted"> Un Posted</i>
                     </button>
                 </form>`;
+                buttons += `<a href="/delivery_notes/${data.id}/print?type=DN" target="_blank" 
+   rel="noopener noreferrer" class="btn btn-sm btn-secondary">
+                <i class="bx bx-printer"></i> Print DN</a>`;
+                buttons += `<a href="/delivery_notes/${data.id}/print?type=DR" target="_blank" 
+   rel="noopener noreferrer" class="btn btn-sm btn-secondary">
+                <i class="bx bx-printer"></i> Print DR</a>`;
+                buttons += `<a href="/delivery_notes/${data.id}/print?type=DS" target="_blank" 
+   rel="noopener noreferrer" class="btn btn-sm btn-secondary">
+                <i class="bx bx-printer"></i> Print DS</a>`;
             }
 
-            buttons += `<a href="/print_packing_list/${data.id}" class="btn btn-sm btn-secondary">
+            buttons += `<a href="/print_packing_list/${data.id}" target="_blank" 
+   rel="noopener noreferrer" class="btn btn-sm btn-secondary">
                 <i class="bx bx-printer"></i> Print Packing List
             </a>`;
 
