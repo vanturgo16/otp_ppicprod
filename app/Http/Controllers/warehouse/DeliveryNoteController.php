@@ -148,11 +148,11 @@ class DeliveryNoteController extends Controller
         try {
             $validatedData = $request->validate([
                 'packing_list_id' => 'required|exists:packing_lists,id',
+                'type_product' => 'required',
             ]);
 
             // Cek apakah packing list sudah ada di dalam delivery_note_details
             $existingPackingList = DB::table('delivery_note_details')
-                // ->where('id_delivery_notes', $id)
                 ->where('id_packing_lists', $validatedData['packing_list_id'])
                 ->exists();
 
@@ -160,21 +160,62 @@ class DeliveryNoteController extends Controller
                 throw new \Exception('Packing list sudah ada di dalam delivery note detail.');
             }
 
-            // Mengambil data quantity dan weight dari packing list details dan produksi
+            // Mengambil data quantity dan weight berdasarkan type_product
             $packingListDetails = DB::table('packing_list_details')
                 ->join('barcode_detail', 'packing_list_details.barcode', '=', 'barcode_detail.barcode_number')
                 ->join('barcodes', 'barcode_detail.id_barcode', '=', 'barcodes.id')
                 ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
-                ->join('master_product_fgs', 'sales_orders.id_master_products', '=', 'master_product_fgs.id')
-                ->join('master_units', 'master_product_fgs.id_master_units', '=', 'master_units.id')
-                ->leftJoin('report_sf_production_results', 'packing_list_details.barcode', '=', 'report_sf_production_results.barcode')
-                ->leftJoin('report_blow_production_results', 'packing_list_details.barcode', '=', 'report_blow_production_results.barcode')
+
+                // Left join berdasarkan type_product
+                ->leftJoin('master_product_fgs', function ($join) {
+                    $join->on('barcodes.id_master_products', '=', 'master_product_fgs.id')
+                        ->where('barcodes.type_product', '=', 'FG');
+                })
+                ->leftJoin('master_wips', function ($join) {
+                    $join->on('barcodes.id_master_products', '=', 'master_wips.id')
+                        ->where('barcodes.type_product', '=', 'WIP');
+                })
+                ->leftJoin('master_tool_auxiliaries', function ($join) {
+                    $join->on('barcodes.id_master_products', '=', 'master_tool_auxiliaries.id')
+                        ->where('barcodes.type_product', '=', 'AUX');
+                })
+                ->leftJoin('master_raw_materials', function ($join) {
+                    $join->on('barcodes.id_master_products', '=', 'master_raw_materials.id')
+                        ->where('barcodes.type_product', '=', 'RAW');
+                })
+
+                // Menghubungkan unit produk secara dinamis
+                ->join('master_units', function ($join) {
+                    $join->on('master_product_fgs.id_master_units', '=', 'master_units.id')
+                        ->orOn('master_wips.id_master_units', '=', 'master_units.id')
+                        ->orOn('master_tool_auxiliaries.id_master_units', '=', 'master_units.id')
+                        ->orOn('master_raw_materials.id_master_units', '=', 'master_units.id');
+                })
+
+                // Mengambil berat berdasarkan jenis produksi
+                ->leftJoinSub(
+                    DB::table('report_blow_production_results')
+                        ->select('barcode', 'weight as blow_weight'),
+                    'blow_results',
+                    function ($join) {
+                        $join->on('barcode_detail.barcode_number', '=', 'blow_results.barcode')
+                            ->where('barcodes.type_product', '=', 'WIP');
+                    }
+                )
+                ->leftJoinSub(
+                    DB::table('report_sf_production_results')
+                        ->select('barcode', 'weight as sf_weight'),
+                    'sf_results',
+                    function ($join) {
+                        $join->on('barcode_detail.barcode_number', '=', 'sf_results.barcode')
+                            ->where('barcodes.type_product', '=', 'FG');
+                    }
+                )
+
+                // Pilih kolom yang diperlukan
                 ->select(
                     DB::raw('COUNT(packing_list_details.barcode) as total_qty'),
-                    DB::raw('SUM(CASE 
-                        WHEN packing_list_details.barcode LIKE "%B" THEN packing_list_details.weight
-                        ELSE COALESCE(report_sf_production_results.weight, report_blow_production_results.weight, 0)
-                    END) as total_weight'),
+                    DB::raw('SUM(COALESCE(sf_results.sf_weight, blow_results.blow_weight, master_raw_materials.weight, 0)) as total_weight'),
                     'master_units.id as id_master_unit',
                     'sales_orders.id as id_sales_order',
                     'sales_orders.id_master_salesmen as id_master_salesman'
@@ -184,10 +225,10 @@ class DeliveryNoteController extends Controller
                 ->first();
 
             if (!$packingListDetails) {
-                throw new \Exception('Packing list details not found');
+                throw new \Exception('Packing list details tidak ditemukan.');
             }
 
-            // Menyimpan data ke dalam tabel delivery_note_details
+            // Simpan ke dalam tabel delivery_note_details
             DB::table('delivery_note_details')->insert([
                 'id_delivery_notes' => $id,
                 'id_sales_orders' => $packingListDetails->id_sales_order,
@@ -196,6 +237,7 @@ class DeliveryNoteController extends Controller
                 'id_master_units' => $packingListDetails->id_master_unit,
                 'weight' => $packingListDetails->total_weight,
                 'po_number' => $request->po_number,
+                'type_product' => $request->type_product,
                 'dn_type' => $request->dn_type,
                 'transaction_type' => $request->transaction_type,
                 'id_master_salesman' => $packingListDetails->id_master_salesman,
@@ -219,6 +261,7 @@ class DeliveryNoteController extends Controller
     }
 
 
+
     public function getPackingListDetails($id)
     {
         $details = DB::table('packing_list_details')
@@ -231,7 +274,8 @@ class DeliveryNoteController extends Controller
                 'sales_orders.reference_number as po_number',
                 'sales_orders.so_category as dn_type',
                 'sales_orders.so_type as transaction_type',
-                'master_salesmen.name as salesman_name'
+                'master_salesmen.name as salesman_name',
+                'barcodes.type_product as type_product'
             )
             ->where('packing_list_details.id_packing_lists', $id)
             ->first();
@@ -318,10 +362,6 @@ class DeliveryNoteController extends Controller
 
         return view('delivery_notes.edit', compact('deliveryNote', 'packingLists', 'vehicles', 'customerAddresses', 'deliveryNoteDetails'));
     }
-
-
-
-
     public function update(Request $request, $id)
     {
         $validatedData = $request->validate([
@@ -366,18 +406,11 @@ class DeliveryNoteController extends Controller
     public function print($id)
     {
         $type = request()->query('type', 'DN');
-        $prefix = '';
-        switch ($type) {
-            case 'DS':
-                $prefix = 'DS';
-                break;
-            case 'DR':
-                $prefix = 'DR';
-                break;
-            default:
-                $prefix = 'DN';
-                break;
-        }
+        $prefix = match ($type) {
+            'DS' => 'DS',
+            'DR' => 'DR',
+            default => 'DN',
+        };
 
         // Mengambil data delivery note
         $deliveryNote = DB::table('delivery_notes')
@@ -397,21 +430,47 @@ class DeliveryNoteController extends Controller
             )
             ->first();
 
-        // Mengambil data quantity dan weight dari delivery_note_details
+        // Mengambil data quantity dan weight dari delivery_note_details dengan left join berdasarkan type_product
         $packingListDetails = DB::table('delivery_note_details')
             ->join('sales_orders', 'delivery_note_details.id_sales_orders', '=', 'sales_orders.id')
-            ->join('master_product_fgs', 'sales_orders.id_master_products', '=', 'master_product_fgs.id')
-            ->join('master_units', 'delivery_note_details.id_master_units', '=', 'master_units.id')
-            ->where('delivery_note_details.id_delivery_notes', $id)
+
+            // Left join berdasarkan type_product
+            ->leftJoin('master_product_fgs', function ($join) {
+                $join->on('sales_orders.id_master_products', '=', 'master_product_fgs.id')
+                    ->where('sales_orders.type_product', '=', 'FG');
+            })
+            ->leftJoin('master_wips', function ($join) {
+                $join->on('sales_orders.id_master_products', '=', 'master_wips.id')
+                    ->where('sales_orders.type_product', '=', 'WIP');
+            })
+            ->leftJoin('master_tool_auxiliaries', function ($join) {
+                $join->on('sales_orders.id_master_products', '=', 'master_tool_auxiliaries.id')
+                    ->where('sales_orders.type_product', '=', 'AUX');
+            })
+            ->leftJoin('master_raw_materials', function ($join) {
+                $join->on('sales_orders.id_master_products', '=', 'master_raw_materials.id')
+                    ->where('sales_orders.type_product', '=', 'RAW');
+            })
+
+            // Menghubungkan tabel master_units secara dinamis
+            ->join('master_units', function ($join) {
+                $join->on('master_product_fgs.id_master_units', '=', 'master_units.id')
+                    ->orOn('master_wips.id_master_units', '=', 'master_units.id')
+                    ->orOn('master_tool_auxiliaries.id_master_units', '=', 'master_units.id')
+                    ->orOn('master_raw_materials.id_master_units', '=', 'master_units.id');
+            })
+
+            // Pilih kolom berdasarkan type_product
             ->select(
                 'delivery_note_details.qty as qty',
                 'delivery_note_details.weight as weight',
                 'master_units.unit_code as unit_name',
-                'master_product_fgs.product_code as product_name',
-                'master_product_fgs.description as product_description',
+                DB::raw('COALESCE(master_product_fgs.product_code, master_wips.wip_code, master_tool_auxiliaries.code, master_raw_materials.rm_code) as product_name'),
+                DB::raw('COALESCE(master_product_fgs.description, master_wips.description, master_tool_auxiliaries.description, master_raw_materials.description) as product_description'),
                 'delivery_note_details.perforasi as perforasi',
                 'delivery_note_details.remark as remark'
             )
+            ->where('delivery_note_details.id_delivery_notes', $id)
             ->get();
 
         // Menghitung total weight
@@ -441,6 +500,7 @@ class DeliveryNoteController extends Controller
         // Menampilkan view cetak dengan data
         return view('delivery_notes.print', $data);
     }
+
 
 
     public function updateRemark(Request $request, $id)
@@ -529,5 +589,21 @@ class DeliveryNoteController extends Controller
             ->get();
 
         return view('delivery_notes.print_packing_list', compact('deliveryNote', 'packingLists'));
+    }
+    public function post($id)
+    {
+        $packingList = DeliveryNote::find($id);
+        $packingList->status = 'Posted';
+        $packingList->save();
+
+        return redirect()->route('delivery_notes.list')->with('pesan', 'Status berhasil diubah menjadi Posted.');
+    }
+    public function unpost($id)
+    {
+        $packingList = DeliveryNote::find($id);
+        $packingList->status = 'Request';
+        $packingList->save();
+
+        return redirect()->route('delivery_notes.list')->with('pesan', 'Status berhasil diubah menjadi Request.');
     }
 }
