@@ -64,8 +64,10 @@
                     </div>
 
             <div class="card-body">
+                <table class="table table-bordered dt-responsive w-100" style="font-size: 12px" id="datatable">
 
-                <table id="datatable" class="table table-bordered dt-responsive nowrap" style="width:100%">
+                   
+                {{-- <table id="datatable" class="table table-bordered dt-responsive nowrap" style="width:100%"> --}}
                     <thead>
                     <tr>
                         <th>No</th>
@@ -100,8 +102,8 @@
                         <td><b>{{ $data->barcode_count }}</b></td>
                         <td>
                             <div class="btn-group">
-                                <button type="button" class="btn btn-success">Print</button>
-                                <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                                <button type="button" class="btn  btn-success btn-sm waves-effect waves-light">Print</button>
+                                <button type="button" class="btn  btn-success dropdown-toggle dropdown-toggle-split btn-sm waves-effect waves-light" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="mdi mdi-chevron-down"></i>
                                 </button>
                                 <div class="dropdown-menu">
@@ -114,7 +116,7 @@
 
                                 </div>
                             </div>
-                            <a href="{{ route('show_barcode', $data->id) }}" class="btn btn-primary waves-effect waves-light">Detail Barcode</a>
+                            <a href="{{ route('show_barcode', $data->id) }}" class="btn btn-primary btn-sm waves-effect waves-light">Detail Barcode</a>
                         </td>
                     </tr>
                     @endforeach
