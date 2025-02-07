@@ -88,7 +88,7 @@
                     className: 'align-top freeze-column',
                     render: function(data, type, row) {
                         let source = row.id_purchase_orders === null ? 'PR' : 'PO';
-                        return '<b>' + data + '</b><br><small>Source: ' + source + '</small>';
+                        return '<b>' + data + '</b><br><small>Sumber: ' + source + '</small>';
                     },
                 },
                 {

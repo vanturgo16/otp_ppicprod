@@ -73,7 +73,7 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
             Route::prefix('grn')->group(function () {
                 //DATA GRN
                 Route::get('/', 'index')->name('grn.index');
-                Route::get('/add/{type}', 'add')->name('grn.add');
+                Route::get('/add/{source}', 'add')->name('grn.add');
                 Route::get('/edit/{id}', 'edit')->name('grn.edit');
                 Route::post('/store', 'store')->name('grn.store');
                 Route::post('/update/{id}', 'update')->name('grn.update');
@@ -84,13 +84,9 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
                 Route::get('/get-po-details', 'getPODetails')->name('grn.getPODetails');
                 Route::get('/get-pr-details', 'getPRDetails')->name('grn.getPRDetails');
                 //ITEM PR
-                Route::get('/item/edit/{id}', 'editItem')->name('grn.editItem');
-                Route::post('/item/store/{id}', 'storeItem')->name('grn.storeItem');
                 Route::post('/item/update/{id}', 'updateItem')->name('grn.updateItem');
-                Route::post('/item/delete/{id}', 'deleteItem')->name('grn.deleteItem');
             });
         });
-        
     }); 
 
     include __DIR__ . '/ppic/workOrder.php';

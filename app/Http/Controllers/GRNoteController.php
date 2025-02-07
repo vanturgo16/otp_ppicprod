@@ -64,9 +64,9 @@ class GRNoteController extends Controller
         $this->auditLogsShort('View List Good Receipt Note');
         return view('gr_note.index');
     }
-    public function add($type)
+    public function add($source)
     {
-        if(!in_array($type, ['PR', 'PO'])){
+        if(!in_array($source, ['PR', 'PO'])){
             return redirect()->route('dashboard')->with(['fail' => 'Tidak Ada Sumber GRN dari '. $type]);
         }
         $lastCode = GoodReceiptNote::orderBy('created_at', 'desc')->value(DB::raw('RIGHT(receipt_number, 7)'));
@@ -74,62 +74,85 @@ class GRNoteController extends Controller
         $nextCode = $lastCode + 1;
         $formattedCode = 'GR'.date('y') . str_pad($nextCode, 7, '0', STR_PAD_LEFT);
 
-        if($type == 'PO'){
+        if($source == 'PO'){
             $postedPO = PurchaseOrders::select('id', 'po_number')->where('status', 'Posted')->get();
-            $postedPRs = PurchaseRequisitions::select('id', 'request_number')->whereIn('status', ['Posted', 'Created PO', 'Closed'])->get();
+            $postedPRs = PurchaseRequisitions::select('id', 'request_number')->get();
         } else {
             $postedPO = [];
-            $postedPRs = PurchaseRequisitions::select('id', 'request_number')->where('status', 'Posted')->get();
+            $postedPRs = PurchaseRequisitions::select('id', 'request_number')->where('status', 'Posted')->where('input_price', 'Y')->get();
         }
         $suppliers = MstSupplier::get();
 
-        return view('gr_note.add',compact('type', 'formattedCode', 'postedPO', 'postedPRs', 'suppliers'));
+        return view('gr_note.add',compact('source', 'formattedCode', 'postedPO', 'postedPRs', 'suppliers'));
     }
     public function store(Request $request)
     {
         $request->validate([
             'receipt_number' => 'required',
             'date' => 'required',
-            'id_purchase_orders' => $request->type == 'PR' ? '' : 'required',
-            'requester' => 'required',
-            'qc_check' => 'required',
+            'id_purchase_orders' => $request->source == 'PR' ? '' : 'required',
+            'reference_number' => 'required',
+            'qc_status' => 'required',
             'status' => 'required',
             'type' => 'required',
         ], [
             'receipt_number.required' => 'Request Number masih kosong.',
             'date.required' => 'Date harus diisi.',
-            'id_purchase_orders.required' => 'Supplier harus diisi.',
-            'requester.required' => 'Requester harus diisi.',
-            'qc_check.required' => 'QC Check harus diisi.',
+            'id_purchase_orders.required' => 'Purchase Order masih kosong.',
+            'reference_number.required' => 'Reference Number masih kosong.',
+            'qc_status.required' => 'QC Check harus diisi.',
             'status.required' => 'Status harus diisi.',
             'type.required' => 'Type masih kosong.',
         ]);
+
+        // Check Data Detail Item Produk
+        $detailItems = PurchaseRequisitionsDetail::where('id_purchase_requisitions', $request->reference_number)->get();
+        if ($detailItems->isEmpty()) {
+            return redirect()->back()->with('fail', 'Tidak ada item produk yang ditemukan dalam Reference Number, Silahkan periksa kembali data PR.');
+        }
         
-        $lastCode = PurchaseRequisitions::orderBy('created_at', 'desc')->value(DB::raw('RIGHT(request_number, 7)'));
+        $lastCode = GoodReceiptNote::orderBy('created_at', 'desc')->value(DB::raw('RIGHT(receipt_number, 7)'));
         $lastCode = $lastCode ? $lastCode : 0;
         $nextCode = $lastCode + 1;
-        $formattedCode = 'PR' . date('y') . str_pad($nextCode, 7, '0', STR_PAD_LEFT);
+        $formattedCode = 'GR'.date('y') . str_pad($nextCode, 7, '0', STR_PAD_LEFT);
         
         DB::beginTransaction();
         try{
-            $storeData = PurchaseRequisitions::create([
-                'request_number' => $formattedCode,
+            $storeData = GoodReceiptNote::create([
+                'receipt_number' => $formattedCode,
                 'date' => $request->date,
+                'id_purchase_orders' => $request->id_purchase_orders,
+                'reference_number' => $request->reference_number,
                 'id_master_suppliers' => $request->id_master_suppliers,
-                'requester' => $request->requester,
-                'qc_check' => $request->qc_check,
-                'note' => $request->note,
+                'qc_status' => $request->qc_status,
+                'non_invoiceable' => $request->non_invoiceable,
                 'status' => $request->status,
                 'type' => $request->type,
+                'remarks' => $request->remarks,
             ]);
 
+            // Store Data Detail
+            foreach($detailItems as $item) {
+                GoodReceiptNoteDetail::create([
+                    'id_good_receipt_notes' => $storeData->id,
+                    'type_product' => $item->type_product,
+                    'id_master_products' => $item->master_products_id,
+                    'qty' => $item->qty,
+                    'outstanding_qty' => $item->qty,
+                    'receipt_qty' => 0,
+                    'master_units_id' => $item->master_units_id,
+                    'status' => 'Open',
+                    'id_purchase_requisition_details' => $item->id,
+                ]);
+            }
+
             // Audit Log
-            $this->auditLogsShort('Tambah Purchase Requisitions');
+            $this->auditLogsShort('Tambah Good Receipt Note ID ('.$storeData->id.')');
             DB::commit();
-            return redirect()->route('pr.edit', encrypt($storeData->id))->with(['success' => 'Berhasil Tambah Data PR, Silahkan Tambahkan Item Produk']);
+            return redirect()->route('grn.edit', encrypt($storeData->id))->with(['success' => 'Berhasil Tambah Data GRN, Silahkan Update Item Produk']);
         } catch (Exception $e) {
             DB::rollback();
-            return redirect()->back()->with(['fail' => 'Gagal Tambah Data PR!']);
+            return redirect()->back()->with(['fail' => 'Gagal Tambah Data GRN!']);
         }
     }
     public function edit($id)
@@ -137,13 +160,13 @@ class GRNoteController extends Controller
         $id = decrypt($id);
         $data = GoodReceiptNote::where('id', $id)->first();
         if($data->id_purchase_orders){
-            $type = 'PO';
-            $postedPO = PurchaseOrders::select('id', 'po_number')->where('status', 'Posted')->get();
-            $postedPRs = PurchaseRequisitions::select('id', 'request_number')->whereIn('status', ['Posted', 'Created PO', 'Closed'])->get();
+            $source = 'PO';
+            $postedPO = PurchaseOrders::select('id', 'po_number')->where('status', 'Posted')->orWhere('id', $data->id_purchase_orders)->get();
+            $postedPRs = PurchaseRequisitions::select('id', 'request_number')->get();
         } else {
-            $type = 'PR';
+            $source = 'PR';
             $postedPO = [];
-            $postedPRs = PurchaseRequisitions::select('id', 'request_number')->where('status', 'Posted')->get();
+            $postedPRs = PurchaseRequisitions::select('id', 'request_number')->where('status', 'Posted')->where('input_price', 'Y')->orWhere('id', $data->reference_number)->get();
         }
         $suppliers = MstSupplier::get();
 
@@ -196,66 +219,99 @@ class GRNoteController extends Controller
             ->orderBy('good_receipt_note_details.created_at')
             ->get();
 
-        return view('gr_note.edit', compact('type', 'data', 'postedPO', 'postedPRs', 'suppliers', 'products', 'units', 'itemDatas'));
+        return view('gr_note.edit', compact('source', 'data', 'postedPO', 'postedPRs', 'suppliers', 'products', 'units', 'itemDatas'));
+    }
+    public function update(Request $request, $id)
+    {
+        $id = decrypt($id);
+        $request->validate([
+            'date' => 'required',
+            'id_purchase_orders' => $request->source == 'PR' ? '' : 'required',
+            'reference_number' => 'required',
+            'qc_status' => 'required',
+            'status' => 'required',
+            'type' => 'required',
+        ], [
+            'date.required' => 'Date harus diisi.',
+            'id_purchase_orders.required' => 'Purchase Order masih kosong.',
+            'reference_number.required' => 'Reference Number masih kosong.',
+            'qc_status.required' => 'QC Check harus diisi.',
+            'status.required' => 'Status harus diisi.',
+            'type.required' => 'Type masih kosong.',
+        ]);
+
+        // Compare With Data Before
+        $dataBefore = GoodReceiptNote::where('id', $id)->first();
+        $changePONumber = $dataBefore->id_purchase_orders != $request->id_purchase_orders;
+        $changeRefNumber = $dataBefore->reference_number != $request->reference_number;
+
+        $dataBefore->date = $request->date;
+        $dataBefore->id_purchase_orders = $request->id_purchase_orders;
+        $dataBefore->reference_number = $request->reference_number;
+        $dataBefore->id_master_suppliers = $request->id_master_suppliers;
+        $dataBefore->qc_status = $request->qc_status;
+        $dataBefore->non_invoiceable = $request->non_invoiceable;
+        $dataBefore->external_doc_number = $request->external_doc_number;
+        $dataBefore->remarks = $request->remarks;
+
+        if($dataBefore->isDirty()){
+            DB::beginTransaction();
+            try{
+                // Update ITEM
+                GoodReceiptNote::where('id', $id)->update([
+                    'date' => $request->date,
+                    'id_purchase_orders' => $request->id_purchase_orders,
+                    'reference_number' => $request->reference_number,
+                    'id_master_suppliers' => $request->id_master_suppliers,
+                    'qc_status' => $request->qc_status,
+                    'non_invoiceable' => $request->non_invoiceable,
+                    'external_doc_number' => $request->external_doc_number,
+                    'type' => $request->type,
+                    'remarks' => $request->remarks,
+                ]);
+
+                // IF PO / Ref Number Change
+                if($changePONumber || $changeRefNumber){
+                    // Rollback Status PO / PR Before
+                    if($changePONumber){
+                        PurchaseOrders::where('id', $request->id_purchase_orders_before)->update(['status' => 'Posted']);
+                    }
+                    if($changeRefNumber){
+                        PurchaseRequisitionsPrice::where('id_purchase_requisitions', $request->reference_number_before)->update(['status' => 'Posted']);
+                    }
+                    // Delete GRN Detail Before
+                    GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)->delete();
+                    // Get Item PR After
+                    $dataItemPR = PurchaseRequisitionsDetail::where('id_purchase_requisitions', $request->reference_number)->get();
+                    foreach($dataItemPR as $item){
+                        GoodReceiptNoteDetail::create([
+                            'id_good_receipt_notes' => $id,
+                            'type_product' => $item->type_product,
+                            'id_master_products' => $item->master_products_id,
+                            'qty' => $item->qty,
+                            'outstanding_qty' => $item->qty,
+                            'receipt_qty' => 0,
+                            'master_units_id' => $item->master_units_id,
+                            'status' => 'Open',
+                            'id_purchase_requisition_details' => $item->id,
+                        ]);
+                    }
+                }
+    
+                // Audit Log
+                $this->auditLogsShort('Update Data GRN ID ('. $id . ')');
+                DB::commit();
+                return redirect()->back()->with(['success' => 'Berhasil Perbaharui Data GRN']);
+            } catch (Exception $e) {
+                DB::rollback();
+                return redirect()->back()->with(['fail' => 'Gagal Perbaharui Data GRN!']);
+            }
+        } else {
+            return redirect()->back()->with(['info' => 'Tidak Ada Yang Dirubah, Data Sama Dengan Sebelumnya']);
+        }
     }
 
     //ITEM GRN
-    public function storeItem(Request $request, $id)
-    {
-        $id = decrypt($id); //ID GRN
-        $request->validate([
-            'type_product' => 'required',
-            'id_master_products' => 'required',
-            'qty' => 'required',
-            'master_units_id' => 'required',
-        ], [
-            'type_product.required' => 'Type Produk masih kosong.',
-            'id_master_products.required' => 'Produk harus diisi.',
-            'qty.required' => 'Qty harus diisi.',
-            'master_units_id.required' => 'Unit harus diisi.',
-        ]);
-        
-        DB::beginTransaction();
-        try{
-            $storeData = GoodReceiptNoteDetail::create([
-                'id_good_receipt_notes' => $id,
-                'type_product' => $request->type_product,
-                'id_master_products' => $request->id_master_products,
-                'qty' => $request->qty,
-                'master_units_id' => $request->master_units_id,
-                'note' => $request->note,
-            ]);
-
-            // Audit Log
-            $this->auditLogsShort('Tambah Good Receipt Note Detail ID : (' . $storeData->id . ')');
-            DB::commit();
-            return redirect()->route('grn.edit', encrypt($id))->with(['success' => 'Berhasil Tambah Item GRN Ke Dalam Tabel', 'scrollTo' => 'tableItem']);
-        } catch (Exception $e) {
-            DB::rollback();
-            return redirect()->back()->with(['fail' => 'Gagal Tambah Item GRN!']);
-        }
-    }
-    public function editItem($id)
-    {
-        $id = decrypt($id);
-        $data = GoodReceiptNoteDetail::where('id', $id)->first();
-        if($data->type_product == 'RM'){
-            $products = MstRawMaterial::select('id', 'description')->get();
-        } elseif($data->type_product == 'WIP'){
-            $products = MstWip::select('id', 'description')->get();
-        } elseif($data->type_product == 'FG'){
-            $products = MstProductFG::select('id', 'description', 'perforasi', 'group_sub_code')->get();
-        } elseif($data->type_product == 'TA'){
-            $products = MstToolAux::select('id', 'description')->where('type', '!=', 'Other')->get();
-        } elseif($data->type_product == 'Other'){
-            $products = MstToolAux::select('id', 'description')->where('type', 'Other')->get();
-        } else {
-            $products = [];
-        }
-        $units = MstUnits::select('id', 'unit_code')->get();
-            
-        return view('gr_note.item.edit', compact('data', 'products', 'units'));
-    }
     public function updateItem(Request $request, $id)
     {
         $id = decrypt($id);
@@ -287,25 +343,6 @@ class GRNoteController extends Controller
             return redirect()->back()->with(['info' => 'Tidak Ada Yang Dirubah, Data Sama Dengan Sebelumnya']);
         }
     }
-    public function deleteItem($id)
-    {
-        $id = decrypt($id);
-        DB::beginTransaction();
-        try{
-            GoodReceiptNoteDetail::where('id', $id)->delete();
-
-            // Audit Log
-            $this->auditLogsShort('Hapus Good Receipt Note Detail ID : (' . $id . ')');
-            DB::commit();
-            return redirect()->back()->with(['success' => 'Berhasil Hapus Item GRN', 'scrollTo' => 'tableItem']);
-        } catch (Exception $e) {
-            DB::rollback();
-            return redirect()->back()->with(['fail' => 'Gagal Hapus Item GRN!']);
-        }
-    }
-
-
-
 
 
     public function getPODetails(Request $request)
@@ -343,5 +380,4 @@ class GRNoteController extends Controller
             return response()->json(['success' => false]);
         }
     }
-
 }

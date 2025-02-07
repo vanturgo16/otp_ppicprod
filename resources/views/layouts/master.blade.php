@@ -550,17 +550,38 @@
             width: 'resolve', // need to override the changed default
             theme: "classic"
         });
+    </script>
 
-        $('.input-select2').select2({
-            width: 'resolve',
-        });
-        $(document).on("shown.bs.modal", ".modal", function () {
-            $(".input-select2").select2({
-                dropdownParent: this,
-                width: 'resolve', 
+    <script>
+        $(document).ready(function () {
+            // Function to initialize Select2 globally
+            function initSelect2(context) {
+                $(context).find('.input-select2').each(function () {
+                    if (!$(this).hasClass("select2-hidden-accessible")) { 
+                        $(this).select2({
+                            width: 'resolve',
+                            dropdownParent: $(this).closest('.modal').length ? $(this).closest('.modal') : $('body')
+                        });
+                    }
+                });
+            }
+            // Initialize Select2 on page load
+            initSelect2(document);
+            // Initialize Select2 when modal is shown
+            $(document).on("shown.bs.modal", ".modal", function () {
+                initSelect2(this);
+            });
+            // Destroy Select2 when modal is hidden to prevent conflicts
+            $(document).on("hidden.bs.modal", ".modal", function () {
+                $(this).find(".input-select2").each(function () {
+                    if ($(this).hasClass("select2-hidden-accessible")) {
+                        $(this).select2('destroy');
+                    }
+                });
             });
         });
     </script>
+
     @stack('scripts')
 
 </body>

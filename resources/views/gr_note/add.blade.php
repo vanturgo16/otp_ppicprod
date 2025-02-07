@@ -15,7 +15,7 @@
                     <div class="page-title-right">
                         <ol class="breadcrumb m-0">
                             <li class="breadcrumb-item"><a href="javascript: void(0);">Good Receipt Note</a></li>
-                            <li class="breadcrumb-item active"> Tambah GRN dari ({{ $type }})</li>
+                            <li class="breadcrumb-item active"> Tambah GRN dari ({{ $source }})</li>
                         </ol>
                     </div>
                 </div>
@@ -26,11 +26,11 @@
         {{-- FORM GRN --}}
         <div class="card">
             <div class="card-header">
-                <h4 class="card-title">Tambah Good Receipt Note dari ({{ $type }})</h4>
+                <h4 class="card-title">Tambah Good Receipt Note dari ({{ $source }})</h4>
             </div>
             <form method="POST" action="{{ route('grn.store') }}" class="form-material m-t-40 formLoad" enctype="multipart/form-data">
                 @csrf
-                <input type="hidden" name="type" value="{{ $type }}">
+                <input type="hidden" name="source" value="{{ $source }}">
                 <input type="hidden" name="non_invoiceable" value="N">
                 <div class="card-body p-4">
                     <div class="row mb-4 field-wrapper required-field">
@@ -45,7 +45,7 @@
                             <input type="date" name="date" class="form-control" value="{{ date('Y-m-d') }}" required>
                         </div>
                     </div>
-                    @if($type == 'PO')
+                    @if($source == 'PO')
                         <div class="row mb-4 field-wrapper required-field">
                             <label class="col-sm-3 col-form-label">Purchase Orders (PO) </label>
                             <div class="col-sm-9">
@@ -61,8 +61,8 @@
                     <div class="row mb-4 field-wrapper required-field">
                         <label class="col-sm-3 col-form-label">Reference Number (PR) </label>
                         <div class="col-sm-9">
-                            <select class="form-select input-select2" name="reference_number" id="" style="width: 100%" required>
-                                <option value="">Pilih Reference Number</option>
+                            <select class="form-select input-select2 @if($source == 'PO') readonly-select2 @endif" name="reference_number" id="" style="width: 100%" required>
+                                <option value="">@if($source == 'PO') Otomatis Terisi.. @else Pilih Reference Number @endif</option>
                                 @foreach ($postedPRs as $item)
                                     <option value="{{ $item->id }}">{{ $item->request_number }}</option>
                                 @endforeach
@@ -72,8 +72,8 @@
                     <div class="row mb-4 field-wrapper required-field">
                         <label class="col-sm-3 col-form-label">Suppliers</label>
                         <div class="col-sm-9">
-                            <select class="form-select input-select2" name="id_master_suppliers" style="width: 100%" required>
-                                <option value="">Pilih Suppliers</option>
+                            <select class="form-select input-select2 readonly-select2" name="id_master_suppliers" style="width: 100%" required>
+                                <option value="">Otomatis Terisi..</option>
                                 @foreach ($suppliers as $item)
                                     <option value="{{ $item->id }}">{{ $item->name }}</option>
                                 @endforeach
@@ -89,7 +89,7 @@
                     <div class="row mb-4 field-wrapper required-field">
                         <label class="col-sm-3 col-form-label">Status </label>
                         <div class="col-sm-9">
-                            <input type="text" class="form-control custom-bg-gray" name="status" value="Request" readonly required>
+                            <input type="text" class="form-control custom-bg-gray" name="status" value="Hold" readonly required>
                         </div>
                     </div>
                     <div class="row mb-4 field-wrapper required-field">
@@ -107,7 +107,7 @@
                     <div class="row mb-4 field-wrapper">
                         <label class="col-sm-3 col-form-label">Note</label>
                         <div class="col-sm-9">
-                            <textarea name="note" rows="3" cols="50" class="form-control" placeholder="Note.. (Opsional)"></textarea>
+                            <textarea name="remarks" rows="3" cols="50" class="form-control" placeholder="Note.. (Opsional)"></textarea>
                         </div>
                     </div>
                 </div>
