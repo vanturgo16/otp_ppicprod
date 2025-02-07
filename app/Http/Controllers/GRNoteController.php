@@ -36,7 +36,7 @@ class GRNoteController extends Controller
     public function index(Request $request)
     {
         $datas = GoodReceiptNote::select('good_receipt_notes.id', 'good_receipt_notes.receipt_number', 'good_receipt_notes.date', 'good_receipt_notes.type', 'good_receipt_notes.status',
-                'good_receipt_notes.external_doc_number', 'good_receipt_notes.qc_status',
+                'good_receipt_notes.id_purchase_orders', 'good_receipt_notes.external_doc_number', 'good_receipt_notes.qc_status',
                 'purchase_requisitions.request_number', 'purchase_orders.po_number', 'master_suppliers.name as supplier_name',
                 DB::raw('(SELECT COUNT(*) FROM good_receipt_note_details WHERE good_receipt_note_details.id_good_receipt_notes = good_receipt_notes.id) as count'))
             ->leftJoin('purchase_requisitions', 'good_receipt_notes.reference_number', 'purchase_requisitions.id')
@@ -84,6 +84,53 @@ class GRNoteController extends Controller
         $suppliers = MstSupplier::get();
 
         return view('gr_note.add',compact('type', 'formattedCode', 'postedPO', 'postedPRs', 'suppliers'));
+    }
+    public function store(Request $request)
+    {
+        $request->validate([
+            'receipt_number' => 'required',
+            'date' => 'required',
+            'id_purchase_orders' => $request->type == 'PR' ? '' : 'required',
+            'requester' => 'required',
+            'qc_check' => 'required',
+            'status' => 'required',
+            'type' => 'required',
+        ], [
+            'receipt_number.required' => 'Request Number masih kosong.',
+            'date.required' => 'Date harus diisi.',
+            'id_purchase_orders.required' => 'Supplier harus diisi.',
+            'requester.required' => 'Requester harus diisi.',
+            'qc_check.required' => 'QC Check harus diisi.',
+            'status.required' => 'Status harus diisi.',
+            'type.required' => 'Type masih kosong.',
+        ]);
+        
+        $lastCode = PurchaseRequisitions::orderBy('created_at', 'desc')->value(DB::raw('RIGHT(request_number, 7)'));
+        $lastCode = $lastCode ? $lastCode : 0;
+        $nextCode = $lastCode + 1;
+        $formattedCode = 'PR' . date('y') . str_pad($nextCode, 7, '0', STR_PAD_LEFT);
+        
+        DB::beginTransaction();
+        try{
+            $storeData = PurchaseRequisitions::create([
+                'request_number' => $formattedCode,
+                'date' => $request->date,
+                'id_master_suppliers' => $request->id_master_suppliers,
+                'requester' => $request->requester,
+                'qc_check' => $request->qc_check,
+                'note' => $request->note,
+                'status' => $request->status,
+                'type' => $request->type,
+            ]);
+
+            // Audit Log
+            $this->auditLogsShort('Tambah Purchase Requisitions');
+            DB::commit();
+            return redirect()->route('pr.edit', encrypt($storeData->id))->with(['success' => 'Berhasil Tambah Data PR, Silahkan Tambahkan Item Produk']);
+        } catch (Exception $e) {
+            DB::rollback();
+            return redirect()->back()->with(['fail' => 'Gagal Tambah Data PR!']);
+        }
     }
     public function edit($id)
     {

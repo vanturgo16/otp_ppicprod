@@ -130,6 +130,12 @@
 @endif
 
 <script>
+    $(document).on('click', '[data-bs-toggle="modal"]', function(e) {
+        e.preventDefault();
+        let targetModal = $(this).attr('data-bs-target'); 
+        // Ensure modal is moved outside the sticky column before opening
+        $(targetModal).appendTo('body').modal('show');
+    });
     $(document).on('submit', 'form', function () {
         let btn = $(this).find('button[type="submit"]');
         if (!$(this).valid()) return false;
