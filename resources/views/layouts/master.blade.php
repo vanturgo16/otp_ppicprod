@@ -184,7 +184,8 @@
                             </a>
                             <ul class="sub-menu" aria-expanded="false">
                                 @can('PPIC_good-receipt-note')
-                                <li><a href="/good-receipt-note" data-key="t-blog-grid">Good Receipt Note</a></li>
+                                {{-- <li><a href="/good-receipt-note" data-key="t-blog-grid">Good Receipt Note</a></li> --}}
+                                <li><a href="{{ route('grn.index') }}" data-key="t-blog-grid">Good Receipt Note</a></li>
                                 @endcan
 
                                 @can('PPIC_good-lote-number')
@@ -579,6 +580,53 @@
                     }
                 });
             });
+        });
+    </script>
+
+    <script>
+        var tables = $('#tableItem').DataTable({
+            scrollX: true,
+            paging: false,
+            info: false,
+            searching: false,
+            lengthChange: false,
+            responsive: false,
+            ordering: false,
+            fixedColumns: {
+                leftColumns: 2, // Freeze first two columns
+                rightColumns: 1 // Freeze last column (Aksi)
+            }
+        });
+        function adjustTable() {
+            setTimeout(function () {
+                tables.columns.adjust().draw(false); // Adjust column widths
+            }, 10); // Delay to ensure animations finish
+        }
+        // Adjust table when vertical menu button is clicked
+        $('#vertical-menu-btn').on('click', function () {
+            adjustTable();
+        });
+        var observer = new MutationObserver(function (mutationsList) {
+            mutationsList.forEach(function (mutation) {
+                if (mutation.attributeName === "class") {
+                    adjustTable(); // Adjust table when class changes
+                }
+            });
+        });
+        observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    </script>
+
+    <script>
+        $(document).ready(function() {
+            var scrollTo = "{{ session('scrollTo') }}";
+            if (scrollTo) {
+                var element = $("#" + scrollTo);
+                if (element.length) {
+                    $('html, body').animate({
+                        scrollTop: element.offset().top
+                    }, 1500);
+                }
+            }
         });
     </script>
 

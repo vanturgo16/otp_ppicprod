@@ -16,6 +16,7 @@ use App\Http\Controllers\warehouse\DeliveryNoteController;
 
 //PRODUCTION
 use App\Http\Controllers\ProductionController;
+use App\Http\Controllers\QCPassedController;
 
 //Route Login
 Route::get('/', [AuthController::class, 'login'])->name('login');
@@ -85,6 +86,15 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
                 Route::get('/get-pr-details', 'getPRDetails')->name('grn.getPRDetails');
                 //ITEM PR
                 Route::post('/item/update/{id}', 'updateItem')->name('grn.updateItem');
+            });
+        });
+
+        //GRN QC CHECK
+        Route::controller(QCPassedController::class)->group(function () {
+            Route::prefix('grn-qc')->group(function () {
+                //DATA ITEM GRN NEED QC
+                Route::get('/', 'index')->name('grn_qc.index');
+                Route::post('/update/{id}', 'update')->name('grn_qc.update');
             });
         });
     }); 
