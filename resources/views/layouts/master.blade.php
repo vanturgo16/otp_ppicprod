@@ -37,6 +37,9 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
+    {{-- select 2 --}}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
     @if (request()->is('ppic/*'))
     <link rel="stylesheet" href="{{ asset('assets/css/ppic/style.css') }}">
     @endif
@@ -181,7 +184,8 @@
                             </a>
                             <ul class="sub-menu" aria-expanded="false">
                                 @can('PPIC_good-receipt-note')
-                                <li><a href="/good-receipt-note" data-key="t-blog-grid">Good Receipt Note</a></li>
+                                {{-- <li><a href="/good-receipt-note" data-key="t-blog-grid">Good Receipt Note</a></li> --}}
+                                <li><a href="{{ route('grn.index') }}" data-key="t-blog-grid">Good Receipt Note</a></li>
                                 @endcan
 
                                 @can('PPIC_good-lote-number')
@@ -490,10 +494,11 @@
     <script src="{{ asset('assets/js/pages/form-advanced.init.js') }}"></script>
 
     {{-- select 2 --}}
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/jquery.validation/1.16.0/jquery.validate.min.js"></script>
+    <script src="https://cdn.datatables.net/fixedcolumns/4.2.2/js/dataTables.fixedColumns.min.js"></script>
+    <!-- FORM LOAD JS -->
+    <script src="{{ asset('assets/js/formLoad.js') }}"></script>
 
     <script>
         $(document).ready(function() {
@@ -547,6 +552,84 @@
             theme: "classic"
         });
     </script>
+
+    <script>
+        $(document).ready(function () {
+            // Function to initialize Select2 globally
+            function initSelect2(context) {
+                $(context).find('.input-select2').each(function () {
+                    if (!$(this).hasClass("select2-hidden-accessible")) { 
+                        $(this).select2({
+                            width: 'resolve',
+                            dropdownParent: $(this).closest('.modal').length ? $(this).closest('.modal') : $('body')
+                        });
+                    }
+                });
+            }
+            // Initialize Select2 on page load
+            initSelect2(document);
+            // Initialize Select2 when modal is shown
+            $(document).on("shown.bs.modal", ".modal", function () {
+                initSelect2(this);
+            });
+            // Destroy Select2 when modal is hidden to prevent conflicts
+            $(document).on("hidden.bs.modal", ".modal", function () {
+                $(this).find(".input-select2").each(function () {
+                    if ($(this).hasClass("select2-hidden-accessible")) {
+                        $(this).select2('destroy');
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script>
+        var tables = $('#tableItem').DataTable({
+            scrollX: true,
+            paging: false,
+            info: false,
+            searching: false,
+            lengthChange: false,
+            responsive: false,
+            ordering: false,
+            fixedColumns: {
+                leftColumns: 2, // Freeze first two columns
+                rightColumns: 1 // Freeze last column (Aksi)
+            }
+        });
+        function adjustTable() {
+            setTimeout(function () {
+                tables.columns.adjust().draw(false); // Adjust column widths
+            }, 10); // Delay to ensure animations finish
+        }
+        // Adjust table when vertical menu button is clicked
+        $('#vertical-menu-btn').on('click', function () {
+            adjustTable();
+        });
+        var observer = new MutationObserver(function (mutationsList) {
+            mutationsList.forEach(function (mutation) {
+                if (mutation.attributeName === "class") {
+                    adjustTable(); // Adjust table when class changes
+                }
+            });
+        });
+        observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    </script>
+
+    <script>
+        $(document).ready(function() {
+            var scrollTo = "{{ session('scrollTo') }}";
+            if (scrollTo) {
+                var element = $("#" + scrollTo);
+                if (element.length) {
+                    $('html, body').animate({
+                        scrollTop: element.offset().top
+                    }, 1500);
+                }
+            }
+        });
+    </script>
+
     @stack('scripts')
 
 </body>

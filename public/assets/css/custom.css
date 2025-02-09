@@ -17,3 +17,7 @@
     padding-right: 0.1rem;
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.586);
 }
+.my-half {
+    margin-top: 0.1rem !important;
+    margin-bottom: 0.1rem !important;
+}
