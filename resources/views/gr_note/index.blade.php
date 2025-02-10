@@ -14,7 +14,7 @@
                             <h5 class="mb-0">List Good Receipt Note (GRN)</h5>
                             <div>
                                 <a href="{{ route('grn.add', 'PR') }}" class="btn btn-sm btn-primary waves-effect btn-label waves-light" title="Tambah GRN dari PR">
-                                    <i class="mdi mdi-plus label-icon"></i> Tambah GRN dari <b>(PR With Price)</b>
+                                    <i class="mdi mdi-plus label-icon"></i> Tambah GRN dari <b>(PR)</b>
                                 </a>
                                 <a href="{{ route('grn.add', 'PO') }}" class="btn btn-sm btn-success waves-effect btn-label waves-light" title="Tambah GRN dari PO">
                                     <i class="mdi mdi-plus label-icon"></i> Tambah GRN dari <b>(PO)</b>
