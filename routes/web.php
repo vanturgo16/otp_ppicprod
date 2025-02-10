@@ -91,7 +91,7 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
 
         //GRN QC CHECK
         Route::controller(QCPassedController::class)->group(function () {
-            Route::prefix('grn-qc')->group(function () {
+            Route::prefix('grnote-qc')->group(function () {
                 //DATA ITEM GRN NEED QC
                 Route::get('/', 'index')->name('grn_qc.index');
                 Route::post('/update/{id}', 'update')->name('grn_qc.update');
