@@ -99,7 +99,7 @@
                                         <td><input type="number" class="form-control pcs" data-id="{{ $detail->id }}"
                                                 name="pcs" value="{{ $detail->pcs }}"></td>
                                         @else
-                                        <td>{{ $detail->no_box }}</td>
+                                        <td></td>
                                         <td></td>
                                         <td></td>
                                         @endif

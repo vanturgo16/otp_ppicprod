@@ -507,8 +507,8 @@ class WarehouseController extends Controller
                     if ($barcodeRecord) {
                         $exists = true;
                         $productName = $barcodeRecord->description;
-                        //$isBag = stripos($barcodeRecord->status, 'bag') !== false;
-                        $isBag = (substr($barcode, -1) === 'B');
+                        $isBag = stripos($barcodeRecord->status, 'bag') !== false;
+                        // $isBag = (substr($barcode, -1) === 'B');
                     }
 
                     if ($exists) {
@@ -520,7 +520,7 @@ class WarehouseController extends Controller
                             ->select('master_product_fgs.id as product_id', 'barcodes.id_sales_orders as old_sales_order_id', 'master_product_fgs.stock', 'sales_orders.outstanding_delivery_qty')
                             ->first();
 
-                        if ($oldBarcodeRecord && substr($oldDetail->barcode, -1) === 'B') {
+                        if ($oldBarcodeRecord && stripos($oldDetail->status, 'bag') !== false) {
                             DB::table('master_product_fgs')
                                 ->where('id', $oldBarcodeRecord->product_id)
                                 ->increment('stock', $oldDetail->pcs);
@@ -757,22 +757,7 @@ class WarehouseController extends Controller
                     ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
                     ->join('packing_list_details', 'barcode_detail.barcode_number', '=', 'packing_list_details.barcode')
                     ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
-                    ->when(
-                        $detail->sts_start === 'FG',
-                        fn($query) => $query->join('master_product_fgs', 'barcodes.id_master_products', '=', 'master_product_fgs.id')
-                    )
-                    ->when(
-                        $detail->sts_start === 'WIP',
-                        fn($query) => $query->join('master_wips', 'barcodes.id_master_products', '=', 'master_wips.id')
-                    )
-                    ->when(
-                        $detail->sts_start === 'AUX',
-                        fn($query) => $query->join('master_tool_auxiliaries', 'barcodes.id_master_products', '=', 'master_tool_auxiliaries.id')
-                    )
-                    ->when(
-                        $detail->sts_start === 'RAW',
-                        fn($query) => $query->join('master_raw_materials', 'barcodes.id_master_products', '=', 'master_raw_materials.id')
-                    )
+
                     ->where('barcode_detail.barcode_number', $detail->barcode)
                     ->select(
                         'barcodes.type_product',
