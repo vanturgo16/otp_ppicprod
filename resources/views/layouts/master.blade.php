@@ -168,99 +168,116 @@
                             </a>
                         </li>
                         @can('PPIC_Barcode')
-                        <li>
-                            <a href="{{ route('barcode') }}">
-                                <i data-feather="cpu"></i>
-                                <span data-key="t-horizontal">Barcode</span>
-                            </a>
-                        </li>
+                            <li>
+                                <a href="{{ route('barcode') }}">
+                                    <i data-feather="cpu"></i>
+                                    <span data-key="t-horizontal">Barcode</span>
+                                </a>
+                            </li>
                         @endcan
 
                         @can('PPIC')
-                        <li class="{{ request()->is('ppic/*') ? 'mm-active' : '' }}">
-                            <a href="javascript: void(0);" class="has-arrow">
-                                <i data-feather="briefcase"></i>
-                                <span data-key="t-blog">PPIC</span>
-                            </a>
-                            <ul class="sub-menu" aria-expanded="false">
-                                @can('PPIC_good-receipt-note')
-                                {{-- <li><a href="/good-receipt-note" data-key="t-blog-grid">Good Receipt Note</a></li> --}}
-                                <li><a href="{{ route('grn.index') }}" data-key="t-blog-grid">Good Receipt Note</a></li>
-                                @endcan
+                            <li class="{{ request()->is('ppic/*') ? 'mm-active' : '' }}">
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="briefcase"></i><span data-key="t-blog">PPIC</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    @can('PPIC_good-receipt-note')
+                                        <li class="{{ request()->is('ppic/grn/*') ? 'mm-active' : '' }}">
+                                            <a href="{{ route('grn.index') }}" data-key="t-blog-grid">Good Receipt Note</a>
+                                        </li>
+                                    @endcan
+                                    @can('PPIC_grn-qc')
+                                        <li class="{{ request()->is('ppic/grn-qc/*') ? 'mm-active' : '' }}">
+                                            <a href="{{ route('grn_qc.index') }}" data-key="t-blog-grid">GRN Need QC Passed</a>
+                                        </li>
+                                    @endcan
+                                    @can('PPIC_good-lote-number')
+                                        <li class="{{ request()->is('ppic/grn-gln/*') ? 'mm-active' : '' }}">
+                                            <a href="{{ route('grn_gln.index') }}" data-key="t-blog-grid">Good Lot Number</a>
+                                        </li>
+                                    @endcan
+                                </ul>
+                            </li>
 
-                                @can('PPIC_good-lote-number')
-                                <li><a href="/good-lote-number" data-key="t-blog-grid">Good Lote Number</a></li>
-                                @endcan
+                            {{-- OLD PPIC MENU --}}
+                            {{-- <li class="{{ request()->is('ppic/*') ? 'mm-active' : '' }}">
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="briefcase"></i>
+                                    <span data-key="t-blog">PPIC</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    @can('PPIC_good-receipt-note')
+                                    <li><a href="/good-receipt-note" data-key="t-blog-grid">Good Receipt Note</a></li>
+                                    @endcan
 
-                                @can('PPIC_grn-qc')
-                                <li><a href="/grn-qc" data-key="t-blog-grid">GRN Need QC Passed</a></li>
-                                @endcan
+                                    @can('PPIC_good-lote-number')
+                                    <li><a href="/good-lote-number" data-key="t-blog-grid">Good Lote Number</a></li>
+                                    @endcan
 
-                                @can('PPIC_external-no-lot')
-                                <li><a href="/external-no-lot" data-key="t-blog-grid">External No Lot</a></li>
-                                @endcan
+                                    @can('PPIC_grn-qc')
+                                    <li><a href="/grn-qc" data-key="t-blog-grid">GRN Need QC Passed</a></li>
+                                    @endcan
 
-                                @can('PPIC_workOrder')
-                                <li><a href="{{ route('ppic.workOrder.index') }}" data-key="t-blog-grid">Word Order</a></li>
-                                @endcan
+                                    @can('PPIC_external-no-lot')
+                                    <li><a href="/external-no-lot" data-key="t-blog-grid">External No Lot</a></li>
+                                    @endcan
 
-                                {{-- <li><a href="{{ route('ppic.workOrder.index') }}"
-                                class="{{ request()->is('ppic/workOrder/*') ? 'active' : '' }}"><i data-feather="clipboard"></i>Word Order</a>
-                        </li> --}}
-                    </ul>
-                    </li>
-                    @endcan
+                                    @can('PPIC_workOrder')
+                                    <li><a href="{{ route('ppic.workOrder.index') }}" data-key="t-blog-grid">Word Order</a></li>
+                                    @endcan
+                                </ul>
+                            </li> --}}
+                        @endcan
 
-                    @can('Warehouse')
-                    <li class="{{ request()->is('ppic/*') ? 'mm-active' : '' }}">
-                        <a href="javascript: void(0);" class="has-arrow">
-                            <i data-feather="box"></i>
-                            <span data-key="t-blog">Warehouse</span>
-                        </a>
-                        <ul class="sub-menu" aria-expanded="false">
-                            @can('Warehouse_packing_list')
-                            <li><a href="/packing-list" data-key="t-blog-grid">Packing List</a></li>
-                            @endcan
+                        @can('Warehouse')
+                            {{-- <li class="{{ request()->is('ppic/*') ? 'mm-active' : '' }}"> --}}
+                            <li>
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="box"></i>
+                                    <span data-key="t-blog">Warehouse</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    @can('Warehouse_packing_list')
+                                    <li><a href="/packing-list" data-key="t-blog-grid">Packing List</a></li>
+                                    @endcan
 
-                            @can('Warehouse_delivery_notes')
-                            <li><a href="/delivery_notes" data-key="t-blog-grid">Delivery Note</a></li>
-                            @endcan
+                                    @can('Warehouse_delivery_notes')
+                                    <li><a href="/delivery_notes" data-key="t-blog-grid">Delivery Note</a></li>
+                                    @endcan
 
 
-                        </ul>
-                    </li>
-                    @endcan
+                                </ul>
+                            </li>
+                        @endcan
 
-                    @can('PPIC_user_management')
-                    <li class="{{ request()->is('user/*') ? 'mm-active' : '' }}">
-                        <a href="javascript: void(0);" class="has-arrow">
-                            <i data-feather="users"></i>
-                            <span data-key="t-blog">User Management</span>
-                        </a>
-                        <ul class="sub-menu" aria-expanded="false">
-                            @can('PPIC_user.index')
-                            <li><a href="/user" data-key="t-blog-grid">Users</a></li>
-                            @endcan
+                        @can('PPIC_user_management')
+                            <li class="{{ request()->is('user/*') ? 'mm-active' : '' }}">
+                                <a href="javascript: void(0);" class="has-arrow">
+                                    <i data-feather="users"></i>
+                                    <span data-key="t-blog">User Management</span>
+                                </a>
+                                <ul class="sub-menu" aria-expanded="false">
+                                    @can('PPIC_user.index')
+                                    <li><a href="/user" data-key="t-blog-grid">Users</a></li>
+                                    @endcan
 
-                            @can('PPIC_permission.index')
-                            <li><a href="/permission" data-key="t-blog-grid">Permissions</a></li>
-                            @endcan
+                                    @can('PPIC_permission.index')
+                                    <li><a href="/permission" data-key="t-blog-grid">Permissions</a></li>
+                                    @endcan
 
-                            @can('PPIC_role.index')
-                            <li><a href="/role" data-key="t-blog-grid">Account settings</a></li>
-                            @endcan
-                        </ul>
-                    </li>
-                    @endcan
-
+                                    @can('PPIC_role.index')
+                                    <li><a href="/role" data-key="t-blog-grid">Account settings</a></li>
+                                    @endcan
+                                </ul>
+                            </li>
+                        @endcan
                     </ul>
                 </div>
                 <!-- Sidebar -->
             </div>
         </div>
         <!-- Left Sidebar End -->
-
-
 
         <!-- ============================================================== -->
         <!-- Start right Content here -->
@@ -500,12 +517,12 @@
     <!-- FORM LOAD JS -->
     <script src="{{ asset('assets/js/formLoad.js') }}"></script>
 
-    <script>
+    {{-- <script>
         $(document).ready(function() {
             $('body').addClass('sidebar-enable');
             $('body').attr('data-sidebar-size', 'sm');
         });
-    </script>
+    </script> --}}
     {{-- @if (request()->is('ppic/*')) --}}
     <script>
         let baseRoute = '{{ url('') }}';

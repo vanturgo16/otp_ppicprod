@@ -51,7 +51,7 @@ class GRNoteController extends Controller
             $datas->where('good_receipt_notes.status', $request->filterStatus);
         }
 
-        $datas = $datas->orderBy('good_receipt_notes.created_at', 'desc')->limit(10)->get();
+        $datas = $datas->orderBy('good_receipt_notes.created_at', 'desc')->get();
 
         // Datatables
         if ($request->ajax()) {

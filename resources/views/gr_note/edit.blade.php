@@ -172,11 +172,11 @@
                                     @if ($item->status)
                                         <span class="badge bg-{{ $item->status === 'Open' ? 'info' : 'success' }}">{{ ucfirst($item->status) }}</span>
                                     @endif
-                                    @if ($item->qc_status)
+                                    @if ($item->qc_passed)
                                         <br>
-                                        <span class="badge bg-{{ $item->qc_status === 'Y' ? 'success' : 'danger' }}">
-                                            <i class="fas fa-{{ $item->qc_status === 'Y' ? 'check' : 'times' }}"></i>
-                                            {{ $item->qc_status === 'Y' ? 'QC Passed' : 'QC Not Passed' }}
+                                        <span class="badge bg-{{ $item->qc_passed === 'Y' ? 'success' : 'danger' }}">
+                                            <i class="fas fa-{{ $item->qc_passed === 'Y' ? 'check' : 'times' }}"></i>
+                                            {{ $item->qc_passed === 'Y' ? 'QC Passed' : 'QC Not Passed' }}
                                         </span>
                                     @endif
                                     @if ($item->lot_number)
@@ -191,11 +191,12 @@
                                 </td>
                                 @if (in_array($data->status, ['Hold', 'Un Posted']))
                                     <td class="align-top text-center">
-                                        @if($item->qc_status == 'Y' || $item->lot_number)
+                                        @if($item->qc_passed == 'Y' || $item->lot_number)
                                             -
                                         @else
-                                            <button type="button" class="btn btn-sm btn-info my-half" data-bs-toggle="modal" data-bs-target="#update{{ $item->id }}">
-                                                <i class="bx bx-edit-alt"  title="Confirm Qty"></i> @if($item->status) Re - @endif Confirm Qty</i>
+                                            <button type="button" class="btn btn-sm {{ $item->status ? 'btn-info' : 'btn-primary' }} my-half" 
+                                                    data-bs-toggle="modal" data-bs-target="#update{{ $item->id }}"><i class="bx bx-edit-alt" title="Confirm Qty"></i> 
+                                                    @if($item->status) Re - @endif Confirm Qty
                                             </button>
                                         @endif
                                     </td>

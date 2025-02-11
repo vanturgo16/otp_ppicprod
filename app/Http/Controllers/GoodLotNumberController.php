@@ -29,7 +29,7 @@ use App\Models\MstToolAux;
 use App\Models\MstWip;
 use App\Models\PurchaseRequisitionsPrice;
 
-class QCPassedController extends Controller
+class GoodLotNumberController extends Controller
 {
     use AuditLogsTrait;
 
@@ -67,7 +67,15 @@ class QCPassedController extends Controller
             ->leftJoin('master_units', 'good_receipt_note_details.master_units_id', '=', 'master_units.id')
             ->leftjoin('good_receipt_notes', 'good_receipt_note_details.id_good_receipt_notes', 'good_receipt_notes.id')
             ->whereIn('good_receipt_note_details.status', ['Open', 'Closed'])
-            ->where('good_receipt_notes.qc_status', 'Y');
+            ->where(function ($query) {
+                $query->where(function ($q) {
+                    $q->where('good_receipt_notes.qc_status', 'Y')
+                        ->where('good_receipt_note_details.qc_passed', 'Y');
+                })
+                ->orWhere(function ($q) {
+                    $q->where('good_receipt_notes.qc_status', 'N');
+                });
+            });
         if ($request->has('filterType') && $request->filterType != '' && $request->filterType != 'All') {
             $datas->where('good_receipt_note_details.type_product', $request->filterType);
         }
@@ -78,15 +86,34 @@ class QCPassedController extends Controller
 
         // Datatables
         if ($request->ajax()) {
+            $genLotNumber = $this->genLotNumber();
+            
             return DataTables::of($datas)
-                ->addColumn('action', function ($data){
-                    return view('qc_passed.action', compact('data'));
+                ->addColumn('action', function ($data) use ($genLotNumber){
+                    return view('gl_number.action', compact('data', 'genLotNumber'));
                 })->make(true);
         }
 
         //Audit Log
-        $this->auditLogsShort('View List Good Receipt Note Product Need QC Passed');
-        return view('qc_passed.index');
+        $this->auditLogsShort('View List Good Lot Number Product GRN');
+        return view('gl_number.index');
+    }
+
+    public function genLotNumber()
+    {
+        $year = date('y');
+        // Ambil nomor urut terakhir dari database
+        $lastCode = GoodReceiptNoteDetail::whereNotNull('lot_number')->orderBy('lot_number', 'desc')->value(DB::raw('MID(lot_number, 5, 5)'));
+        // Jika tidak ada nomor urut sebelumnya, atur ke 0
+        $lastCode = $lastCode ? $lastCode : 0;
+        // Tingkatkan nomor urut
+        $nextCode = str_pad($lastCode + 1, 5, '0', STR_PAD_LEFT);
+        // Ambil bulan saat ini dalam format dua digit
+        $currentMonth = date('m');
+        // Format kode dengan urutan tahun, bulan, nomor urut, dan karakter konstan
+        $formattedCode = sprintf('%02d%s%05dM', $year, $currentMonth, $nextCode);
+
+        return $formattedCode;
     }
 
     public function update(Request $request, $id)
@@ -95,9 +122,11 @@ class QCPassedController extends Controller
         
         // Validate request
         $request->validate([
-            'decision' => 'required',
+            'lot_number' => 'required',
+            'qty' => 'required',
         ], [
-            'decision.required' => 'Decision QC harus dipilih.',
+            'lot_number.required' => 'Lot Number Masih Kosong.',
+            'qty.required' => 'Qty harus diisi.',
         ]);
         // Ensure the decision is one of the allowed values
         if (!in_array($request->decision, ['reset', 'Y', 'N'])) {

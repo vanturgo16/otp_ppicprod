@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GrnController;
-use App\Http\Controllers\GRNoteController;
 use App\Http\Controllers\barcode\BarcodeController;
 use App\Http\Controllers\barcode\BarcodeMesinController;
 use App\Http\Controllers\barcode\TracabelityController;
@@ -16,7 +15,12 @@ use App\Http\Controllers\warehouse\DeliveryNoteController;
 
 //PRODUCTION
 use App\Http\Controllers\ProductionController;
+
+// PPIC
+use App\Http\Controllers\GRNoteController;
 use App\Http\Controllers\QCPassedController;
+use App\Http\Controllers\GoodLotNumberController;
+
 
 //Route Login
 Route::get('/', [AuthController::class, 'login'])->name('login');
@@ -71,7 +75,7 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
 
         //GOOD RECEIPT NOTE
         Route::controller(GRNoteController::class)->group(function () {
-            Route::prefix('grn')->group(function () {
+            Route::prefix('ppic/grn')->group(function () {
                 //DATA GRN
                 Route::get('/', 'index')->name('grn.index');
                 Route::get('/add/{source}', 'add')->name('grn.add');
@@ -91,10 +95,19 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
 
         //GRN QC CHECK
         Route::controller(QCPassedController::class)->group(function () {
-            Route::prefix('grnote-qc')->group(function () {
+            Route::prefix('ppic/grn-qc')->group(function () {
                 //DATA ITEM GRN NEED QC
                 Route::get('/', 'index')->name('grn_qc.index');
                 Route::post('/update/{id}', 'update')->name('grn_qc.update');
+            });
+        });
+
+        //GRN GOOD LOT NUMBER
+        Route::controller(GoodLotNumberController::class)->group(function () {
+            Route::prefix('ppic/grn-gln')->group(function () {
+                //DATA ITEM GRN NEED QC
+                Route::get('/', 'index')->name('grn_gln.index');
+                Route::post('/update/{id}', 'update')->name('grn_gln.update');
             });
         });
     }); 
