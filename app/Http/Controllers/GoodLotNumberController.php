@@ -94,25 +94,23 @@ class GoodLotNumberController extends Controller
                 })->make(true);
         }
 
-        //Audit Log
+        // Audit Log
         $this->auditLogsShort('View List Good Lot Number Product GRN');
         return view('gl_number.index');
     }
 
     public function genLotNumber()
     {
-        $year = date('y');
-        // Ambil nomor urut terakhir dari database
-        $lastCode = GoodReceiptNoteDetail::whereNotNull('lot_number')->orderBy('lot_number', 'desc')->value(DB::raw('MID(lot_number, 5, 5)'));
-        // Jika tidak ada nomor urut sebelumnya, atur ke 0
-        $lastCode = $lastCode ? $lastCode : 0;
-        // Tingkatkan nomor urut
-        $nextCode = str_pad($lastCode + 1, 5, '0', STR_PAD_LEFT);
-        // Ambil bulan saat ini dalam format dua digit
+        $currentYear = date('y');
         $currentMonth = date('m');
-        // Format kode dengan urutan tahun, bulan, nomor urut, dan karakter konstan
-        $formattedCode = sprintf('%02d%s%05dM', $year, $currentMonth, $nextCode);
-
+        $lastCode = GoodReceiptNoteDetail::whereNotNull('lot_number')
+            ->whereRaw('LEFT(lot_number, 2) = ?', [$currentYear])  // Filter by year
+            ->whereRaw('MID(lot_number, 3, 2) = ?', [$currentMonth]) // Filter by month
+            ->orderByRaw('CAST(MID(lot_number, 5, 5) AS UNSIGNED) DESC') // Order by numeric sequence
+            ->value(DB::raw('MID(lot_number, 5, 5)'));
+        $lastCode = $lastCode ? $lastCode : 0;
+        $nextCode = str_pad($lastCode + 1, 5, '0', STR_PAD_LEFT);
+        $formattedCode = sprintf('%02d%s%05dM', $currentYear, $currentMonth, $nextCode);
         return $formattedCode;
     }
 
@@ -128,32 +126,120 @@ class GoodLotNumberController extends Controller
             'lot_number.required' => 'Lot Number Masih Kosong.',
             'qty.required' => 'Qty harus diisi.',
         ]);
-        // Ensure the decision is one of the allowed values
-        if (!in_array($request->decision, ['reset', 'Y', 'N'])) {
-            return redirect()->back()->with(['fail' => 'Gagal QC GRN Detail!']);
-        }
+        
+        $data = GoodReceiptNoteDetail::where('id', $id)->first();
 
-        $user = auth()->user()->id;
-        // Determine update values based on decision
-        $updateData = [
-            'qc_passed' => $request->decision === 'reset' ? null : $request->decision,
-            'qc_check_by' => $request->decision === 'Y' ? $user : null,
-            'qc_uncheck_by' => $request->decision === 'N' ? $user : null,
-        ];
+        $generateQty = (float) $data->qty_generate_barcode; 
+        $requestQty = (float) str_replace(['.', ','], ['', '.'], $request->qty);
+
+        $totalGenerateQty = $generateQty + $requestQty;
+        $receiptQty = (float) $data->receipt_qty;
+        if($totalGenerateQty > $receiptQty){
+            $restQty = (float) $data->receipt_qty - (float) $data->qty_generate_barcode;
+            $restQty = rtrim(rtrim(sprintf("%.3f", $restQty), '0'), '.');
+            return redirect()->back()->with(['fail' => 'Qty tidak boleh melebihi sisa generated qty (' . $restQty . ')']);
+        }
+        $totalGenerateQty = rtrim(rtrim(sprintf("%.3f", $totalGenerateQty), '0'), '.');
+        $lotNumber = $data->lot_number ?: $this->genLotNumber();
 
         DB::beginTransaction();
         try {
-            // Update the record
-            GoodReceiptNoteDetail::where('id', $id)->update($updateData);
+            // Update data
+            GoodReceiptNoteDetail::where('id', $id)->update([
+                'qty_generate_barcode' => rtrim(rtrim(sprintf("%.3f", $totalGenerateQty), '0'), '.'),
+                'lot_number' => $lotNumber,
+            ]);
+            // Create new data
+            DetailGoodReceiptNoteDetail::insert([
+                'id_grn' => $data->id_good_receipt_notes,
+                'id_grn_detail' => $id,
+                'lot_number' => $lotNumber,
+                'qty' => $requestQty,
+                'qty_out' => 0,
+            ]);
 
             // Audit Log
-            $this->auditLogsShort('Update QC GRN Detail ID (' . $id . ')');
+            $this->auditLogsShort('Generate Lot Number GRN Detail ID (' . $id . ')');
             DB::commit();
-            return redirect()->back()->with(['success' => 'Berhasil QC GRN Detail']);
+            return redirect()->back()->with(['success' => 'Berhasil Tambah Generate Lot Number Produk']);
         } catch (Exception $e) {
             DB::rollback();
-            return redirect()->back()->with(['fail' => 'Gagal QC GRN Detail!']);
+            return redirect()->back()->with(['fail' => 'Gagal Tambah Generate Lot Number Produk!']);
         }
     }
 
+    // Detail Lot Number
+    public function detailLot(Request $request, $id)
+    {
+        $id = decrypt($id);
+
+        // Datatables
+        if ($request->ajax()) {
+            $itemDatas = DetailGoodReceiptNoteDetail::where('id_grn_detail', $id)->get();
+            return DataTables::of($itemDatas)
+                ->addColumn('action', function ($data){
+                    return view('gl_number.detail.action', compact('data'));
+                })
+                ->addColumn('generate_barcode', function ($data){
+                    return view('gl_number.detail.gen_barcode', compact('data'));
+                })->make(true);
+        }
+
+        $data = GoodReceiptNoteDetail::select('good_receipt_notes.receipt_number',
+                DB::raw('
+                    CASE 
+                        WHEN good_receipt_note_details.type_product = "RM" THEN master_raw_materials.description 
+                        WHEN good_receipt_note_details.type_product = "WIP" THEN master_wips.description 
+                        WHEN good_receipt_note_details.type_product = "FG" THEN master_product_fgs.description 
+                        WHEN good_receipt_note_details.type_product IN ("TA", "Other") THEN master_tool_auxiliaries.description 
+                    END as product_desc'),
+                'master_units.unit',
+                'master_units.unit_code',
+                'good_receipt_note_details.*')
+            ->leftJoin('master_raw_materials', function ($join) {
+                $join->on('good_receipt_note_details.id_master_products', '=', 'master_raw_materials.id')
+                    ->on('good_receipt_note_details.type_product', '=', DB::raw('"RM"'));
+            })
+            ->leftJoin('master_wips', function ($join) {
+                $join->on('good_receipt_note_details.id_master_products', '=', 'master_wips.id')
+                    ->on('good_receipt_note_details.type_product', '=', DB::raw('"WIP"'));
+            })
+            ->leftJoin('master_product_fgs', function ($join) {
+                $join->on('good_receipt_note_details.id_master_products', '=', 'master_product_fgs.id')
+                    ->on('good_receipt_note_details.type_product', '=', DB::raw('"FG"'));
+            })
+            ->leftJoin('master_tool_auxiliaries', function ($join) {
+                $join->on('good_receipt_note_details.id_master_products', '=', 'master_tool_auxiliaries.id')
+                    ->on('good_receipt_note_details.type_product', '=', DB::raw('"TA"'))
+                    ->orOn('good_receipt_note_details.type_product', '=', DB::raw('"Other"'));
+            })
+            ->leftJoin('master_units', 'good_receipt_note_details.master_units_id', '=', 'master_units.id')
+            ->leftjoin('good_receipt_notes', 'good_receipt_note_details.id_good_receipt_notes', 'good_receipt_notes.id')
+            ->where('good_receipt_note_details.id', $id)
+            ->first();
+
+
+        //Audit Log
+        $this->auditLogsShort('View List Detail Lot Number Product GRN Detail ID (' . $id . ')');
+        return view('gl_number.detail.index', compact('id', 'data'));
+    }
+    public function updateDetailLot(Request $request, $id)
+    {
+        $id = decrypt($id);
+
+    }
+    public function deleteDetailLot($id)
+    {
+        $id = decrypt($id);
+        
+    }
+    public function generateBarcode(Request $request, $lot_number)
+    {
+        $lotNumber = decrypt($lot_number);
+        $generator = new BarcodeGeneratorHTML();
+        $barcode = $generator->getBarcode($lotNumber, $generator::TYPE_CODE_128);
+        $qty = $request->input('qty', 1);
+
+        return view('gl_number.detail.barcode', compact('barcode','lotNumber','qty'));
+    }
 }

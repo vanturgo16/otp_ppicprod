@@ -24,7 +24,7 @@
                                     <th class="align-middle text-center">Receipt Qty</th>
                                     <th class="align-middle text-center">Units</th>
                                     <th class="align-middle text-center">Qc Passed</th>
-                                    <th class="align-middle text-center">Generated Lot Qty</th>
+                                    <th class="align-middle text-center">Total Generated Lot Qty</th>
                                     <th class="align-middle text-center">Lot Number</th>
                                     <th class="align-middle text-center">Note</th>
                                     <th class="align-middle text-center">Status</th>
