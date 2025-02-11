@@ -340,8 +340,8 @@ class WarehouseController extends Controller
             $barcodeRecord = DB::table('barcodes')
                 ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
                 ->leftjoin('report_bag_production_result_details', 'barcode_detail.barcode_number', '=', 'report_bag_production_result_details.barcode')
-                ->join('master_product_fgs', 'barcodes.id_master_products', '=', 'master_product_fgs.id')
-                ->join('master_wips', 'barcodes.id_master_products', '=', 'master_wips.id')
+                ->leftjoin('master_product_fgs', 'barcodes.id_master_products', '=', 'master_product_fgs.id')
+                ->leftjoin('master_wips', 'barcodes.id_master_products', '=', 'master_wips.id')
                 ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
                 ->where('barcode_detail.barcode_number', $barcodeDetail->barcode)
                 ->select(
