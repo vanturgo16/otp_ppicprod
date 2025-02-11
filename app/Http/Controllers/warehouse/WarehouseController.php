@@ -339,17 +339,13 @@ class WarehouseController extends Controller
             // Ambil informasi produk terkait dari tabel barcodes, master_product_fgs dan sales_orders
             $barcodeRecord = DB::table('barcodes')
                 ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
-                ->leftjoin('report_bag_production_result_details', 'barcode_detail.barcode_number', '=', 'report_bag_production_result_details.barcode')
-                ->leftjoin('master_product_fgs', 'barcodes.id_master_products', '=', 'master_product_fgs.id')
-                ->leftjoin('master_wips', 'barcodes.id_master_products', '=', 'master_wips.id')
                 ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
                 ->where('barcode_detail.barcode_number', $barcodeDetail->barcode)
                 ->select(
-                    'master_product_fgs.id as product_id',
                     'barcodes.id_sales_orders as sales_order_id',
+                    'barcodes.id_master_products as id_master_products',
                     'barcodes.type_product as type_product',
                     'barcode_detail.status as status',
-                    'report_bag_production_result_details.wrap_pcs',
                     'barcodes.qty'
                 )
                 ->first();
@@ -362,14 +358,14 @@ class WarehouseController extends Controller
                 if ($barcodeRecord->type_product === 'FG') {
                     if ($isBag) {
                         DB::table('master_product_fgs')
-                            ->where('id', $barcodeRecord->product_id)
+                            ->where('id', $barcodeRecord->id_master_products)
                             ->increment('stock', $pcs);
                         DB::table('sales_orders')
                             ->where('id', $barcodeRecord->sales_order_id)
                             ->increment('outstanding_delivery_qty', $pcs);
                     } else {
                         DB::table('master_product_fgs')
-                            ->where('id', $barcodeRecord->product_id)
+                            ->where('id', $barcodeRecord->id_master_products)
                             ->increment('stock', 1);
                         DB::table('sales_orders')
                             ->where('id', $barcodeRecord->sales_order_id)
@@ -378,21 +374,21 @@ class WarehouseController extends Controller
                 } elseif ($barcodeRecord->type_product === 'WIP') {
                     // Jika produk WIP, stok dikurangi 1 untuk semua tipe WIP
                     DB::table('master_wips')
-                        ->where('id', $barcodeRecord->product_id)
+                        ->where('id', $barcodeRecord->id_master_products)
                         ->increment('stock', 1); // Kurangi stok 1 unit
                     DB::table('sales_orders')
                         ->where('id', $barcodeRecord->sales_order_id)
                         ->increment('outstanding_delivery_qty', 1); // Kurangi outstanding delivery qty 1 unit
                 } elseif ($barcodeRecord->type_product === 'AUX') {
                     DB::table('master_tool_auxiliaries')
-                        ->where('id', $barcodeRecord->product_id)
+                        ->where('id', $barcodeRecord->id_master_products)
                         ->increment('stock', $barcodeRecord->qty);
                     DB::table('sales_orders')
                         ->where('id', $barcodeRecord->sales_order_id)
                         ->increment('outstanding_delivery_qty', $barcodeRecord->qty);
                 } elseif ($barcodeRecord->type_product === 'RAW') {
                     DB::table('master_raw_materials')
-                        ->where('id', $barcodeRecord->product_id)
+                        ->where('id', $barcodeRecord->id_master_products)
                         ->increment('stock', $barcodeRecord->qty);
                     DB::table('sales_orders')
                         ->where('id', $barcodeRecord->sales_order_id)
