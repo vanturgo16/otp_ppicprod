@@ -137,8 +137,8 @@ class GRNoteController extends Controller
                 PurchaseRequisitions::where('id', $request->reference_number)->update(['status' => 'Created GRN']);
             }
             // Update Recent GRN Before This GRN With Same Reference Number to Closed
-            if(GoodReceiptNote::where('reference_number', $data->reference_number)->exists()){
-                GoodReceiptNote::where('reference_number', $data->reference_number)
+            if(GoodReceiptNote::where('reference_number', $request->reference_number)->exists()){
+                GoodReceiptNote::where('reference_number', $request->reference_number)
                     ->where('status', 'Posted')->latest('id')->limit(1)->update(['status' => 'Closed']);
             }
             // Store Data
@@ -344,6 +344,11 @@ class GRNoteController extends Controller
         if(GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)->whereIn('status', ['Open', 'Closed'])->whereNull('lot_number')->exists()){
             return redirect()->back()->with(['fail' => 'Masih ada produk yang diterima belum generate Lot Number!']);
         }
+        // Check All Product GRN With Status Open / Close Has Generate All Receipt Qty
+        if (GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)->whereIn('status', ['Open', 'Closed'])
+            ->whereColumn('receipt_qty', '!=', 'qty_generate_barcode')->exists()) {
+            return redirect()->back()->with(['fail' => 'Masih ada sisa Qty produk yang diterima belum generate Lot!']);
+        }
 
         DB::beginTransaction();
         try{
@@ -384,6 +389,7 @@ class GRNoteController extends Controller
                     'id_master_products' => $item->id_master_products,
                     'qty' => $item->receipt_qty,
                     'type_stock' => 'IN',
+                    'remarks' => $item->note,
                     'date' => DB::raw('CURRENT_DATE()')
                 ]);
             }
@@ -410,7 +416,7 @@ class GRNoteController extends Controller
             if($data->id_purchase_orders){
                 PurchaseOrders::where('id', $data->id_purchase_orders)->where('status', '!=', 'Created GRN')->update(['status' => 'Created GRN']);
             } else {
-                PurchaseRequisitions::where('id_purchase_requisitions', $data->reference_number)->where('status', '!=', 'Created GRN')->update(['status' => 'Created GRN']);
+                PurchaseRequisitions::where('id', $data->reference_number)->where('status', '!=', 'Created GRN')->update(['status' => 'Created GRN']);
             }
             // ROLLBACK OUTSTANDING ITEM PRODUCT
             $itemGRNs = GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)->whereIn('status', ['Open', 'Closed'])->get();
@@ -452,7 +458,7 @@ class GRNoteController extends Controller
                 'purchase_orders.po_number',
                 'master_suppliers.name')
             ->leftJoin('purchase_orders', 'good_receipt_notes.id_purchase_orders','purchase_orders.id')
-            ->leftJoin('master_suppliers', 'purchase_orders.id_master_suppliers', 'master_suppliers.id')
+            ->leftJoin('master_suppliers', 'good_receipt_notes.id_master_suppliers', 'master_suppliers.id')
             ->where('good_receipt_notes.id', $id)
             ->first();
             
@@ -498,6 +504,7 @@ class GRNoteController extends Controller
             })
             ->leftJoin('master_units', 'good_receipt_note_details.master_units_id', '=', 'master_units.id')
             ->where('good_receipt_note_details.id_good_receipt_notes', $id)
+            ->whereIn('good_receipt_note_details.status', ['Open', 'Closed'])
             ->orderBy('good_receipt_note_details.created_at')
             ->get();
 

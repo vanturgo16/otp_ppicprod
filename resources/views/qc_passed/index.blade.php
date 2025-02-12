@@ -92,6 +92,19 @@
                     searchable: true,
                     orderable: true,
                     className: 'align-top text-center',
+                    render: function(data, type, row) {
+                        if (data) {
+                            let parts = data.split('.');
+                            let integerPart = parts[0];
+                            let decimalPart = parts[1] || '';
+                            integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                            if (decimalPart) {
+                                return `${integerPart},${decimalPart}`;
+                            }
+                            return integerPart;
+                        }
+                        return '';
+                    }
                 },
                 {
                     data: 'unit_code',

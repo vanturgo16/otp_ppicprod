@@ -54,6 +54,20 @@
             content: " *";
             color: red;
         }
+        
+        .table-success-closed {
+            --bs-table-color: #000;
+            --bs-table-bg: #b4f0d8;
+            --bs-table-border-color: #bfd8ce;
+            --bs-table-striped-bg: #c9e4da;
+            --bs-table-striped-color: #000;
+            --bs-table-active-bg: #bfd8ce;
+            --bs-table-active-color: #000;
+            --bs-table-hover-bg: #c4ded4;
+            --bs-table-hover-color: #000;
+            color: var(--bs-table-color);
+            border-color: var(--bs-table-border-color);
+        }
     </style>
 
 </head>
@@ -195,6 +209,11 @@
                                     @can('PPIC_good-lote-number')
                                         <li class="{{ request()->is('ppic/grn-gln/*') ? 'mm-active' : '' }}">
                                             <a href="{{ route('grn_gln.index') }}" data-key="t-blog-grid">Good Lot Number</a>
+                                        </li>
+                                    @endcan
+                                    @can('PPIC_workOrder')
+                                        <li class="{{ request()->is('ppic/workOrder/*') ? 'mm-active' : '' }}">
+                                            <a href="{{ route('ppic.workOrder.index') }}" data-key="t-blog-grid">Work Order</a>
                                         </li>
                                     @endcan
                                 </ul>

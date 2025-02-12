@@ -93,6 +93,19 @@
                     searchable: true,
                     orderable: true,
                     className: 'align-top text-center',
+                    render: function(data, type, row) {
+                        if (data) {
+                            let parts = data.split('.');
+                            let integerPart = parts[0];
+                            let decimalPart = parts[1] || '';
+                            integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                            if (decimalPart) {
+                                return `${integerPart},${decimalPart}`;
+                            }
+                            return integerPart;
+                        }
+                        return '';
+                    }
                 },
                 {
                     data: 'unit_code',
@@ -109,7 +122,7 @@
                         if (data === 'Y') {
                             return '<span class="badge bg-success"><i class="bx bx-check"></i> QC Passed</span>';
                         } else {
-                            return '<span class="badge bg-secondary"><i class="bx bx-time"></i> No Need QC</span>';
+                            return '<span class="badge bg-info"><i class="bx bx-time"></i> No Need QC</span>';
                         }
                     }
                 },
@@ -118,6 +131,19 @@
                     searchable: true,
                     orderable: true,
                     className: 'align-top text-center',
+                    render: function(data, type, row) {
+                        if (data) {
+                            let parts = data.split('.');
+                            let integerPart = parts[0];
+                            let decimalPart = parts[1] || '';
+                            integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                            if (decimalPart) {
+                                return `${integerPart},${decimalPart}`;
+                            }
+                            return integerPart;
+                        }
+                        return '';
+                    }
                 },
                 {
                     data: 'lot_number',
@@ -162,15 +188,11 @@
             createdRow: function(row, data, dataIndex) {
                 let bgColor = '';
                 let darkColor = '#FAFAFA';
-                if (data.qc_passed === 'Y') {
+                if (data.lot_number) {
                     bgColor = 'table-success';
                     darkColor = '#CFEBE0';
                 }
-                if (data.qc_passed === 'N') {
-                    bgColor = 'table-danger';
-                    darkColor = '#FFCFCD';
-                }
-                if (data.qc_passed === null) {
+                if (data.lot_number === null) {
                     bgColor = 'table-secondary';
                     darkColor = '#DFE0E3';
                 }
