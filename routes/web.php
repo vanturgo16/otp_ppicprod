@@ -109,6 +109,7 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
                 Route::get('/', 'index')->name('grn_gln.index');
                 Route::post('/update/{id}', 'update')->name('grn_gln.update');
                 Route::get('/detail/{id}', 'detailLot')->name('grn_gln.detail');
+                Route::post('/detail/add/{id}', 'addDetailLot')->name('grn_gln.detail.add');
                 Route::post('/detail/update/{id}', 'updateDetailLot')->name('grn_gln.detail.update');
                 Route::post('/detail/delete/{id}', 'deleteDetailLot')->name('grn_gln.detail.delete');
                 Route::get('/barcode/{lot_number}', 'generateBarcode')->name('grn_gln.generateBarcode');

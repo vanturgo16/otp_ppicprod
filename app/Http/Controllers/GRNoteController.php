@@ -28,6 +28,7 @@ use App\Models\MstProductFG;
 use App\Models\MstToolAux;
 use App\Models\MstWip;
 use App\Models\PurchaseRequisitionsPrice;
+use App\Models\HistoryStocks;
 
 class GRNoteController extends Controller
 {
@@ -134,6 +135,11 @@ class GRNoteController extends Controller
                 PurchaseOrders::where('id', $request->id_purchase_orders)->update(['status' => 'Created GRN']);
             } else {
                 PurchaseRequisitions::where('id', $request->reference_number)->update(['status' => 'Created GRN']);
+            }
+            // Update Recent GRN Before This GRN With Same Reference Number to Closed
+            if(GoodReceiptNote::where('reference_number', $data->reference_number)->exists()){
+                GoodReceiptNote::where('reference_number', $data->reference_number)
+                    ->where('status', 'Posted')->latest('id')->limit(1)->update(['status' => 'Closed']);
             }
             // Store Data
             $storeData = GoodReceiptNote::create([
@@ -289,13 +295,24 @@ class GRNoteController extends Controller
         try{
             // Rollback Status PR / PO
             if($data->id_purchase_orders){
-                PurchaseOrders::where('id', $data->id_purchase_orders)->update(['status' => 'Posted']);
+                if(!GoodReceiptNote::where('id_purchase_orders', $data->id_purchase_orders)->where('id', '!=', $id)->exists()){
+                    PurchaseOrders::where('id', $data->id_purchase_orders)->update(['status' => 'Posted']);
+                }
             } else {
-                PurchaseRequisitionsPrice::where('id_purchase_requisitions', $data->reference_number)->update(['status' => 'Posted']);
+                if(!GoodReceiptNote::where('reference_number', $data->reference_number)->where('id', '!=', $id)->exists()){
+                    PurchaseRequisitionsPrice::where('id_purchase_requisitions', $data->reference_number)->update(['status' => 'Posted']);
+                }
             }
             // Delete
             GoodReceiptNote::where('id', $id)->delete();
             GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)->delete();
+            DetailGoodReceiptNoteDetail::where('id_grn', $id)->delete();
+
+            // Update Recent GRN Before This GRN With Same Reference Number to Posted
+            if(GoodReceiptNote::where('reference_number', $data->reference_number)->where('id', '!=', $id)->exists()){
+                GoodReceiptNote::where('reference_number', $data->reference_number)
+                    ->where('status', 'Closed')->latest('id')->limit(1)->update(['status' => 'Posted']);
+            }
 
             // Audit Log
             $this->auditLogsShort('Hapus Good Receipt Note ID ('.$id.')');
@@ -310,14 +327,68 @@ class GRNoteController extends Controller
     {
         $id = decrypt($id);
         $data = GoodReceiptNote::where('id', $id)->first();
+
+        // VALIDATION
+        if($data->qc_status == 'Y'){
+            // Check All Product GRN With Status Open / Close Has QC Passes
+            if(GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)
+                ->whereIn('status', ['Open', 'Closed'])
+                ->where(function ($query) {
+                    $query->where('qc_passed', '!=', 'Y')
+                        ->orWhereNull('qc_passed');
+                })->exists()){
+                return redirect()->back()->with(['fail' => 'Masih ada produk yang diterima belum lulus QC!']);
+            }
+        }
+        // Check All Product GRN With Status Open / Close Has Generate Lot Number
+        if(GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)->whereIn('status', ['Open', 'Closed'])->whereNull('lot_number')->exists()){
+            return redirect()->back()->with(['fail' => 'Masih ada produk yang diterima belum generate Lot Number!']);
+        }
+
         DB::beginTransaction();
         try{
-            // Update Status PR / PO
-            if($data->id_purchase_orders){
-                PurchaseOrders::where('id', $data->id_purchase_orders)->update(['status' => 'Closed']);
-            } else {
-                PurchaseRequisitionsPrice::where('id_purchase_requisitions', $data->reference_number)->update(['status' => 'Closed']);
+            // UPDATE STATUS SOURCE IF ALL PRODUCT CLOSE
+            if (!GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)
+                ->where(function ($query) {
+                    $query->where('status', 'Open')
+                        ->orWhereNull('status');
+                })->exists()){
+                if ($data->id_purchase_orders){
+                    // Update Outstanding Item PO
+                    PurchaseOrders::where('id', $data->id_purchase_orders)->update(['status' => 'Closed']);
+                } else {
+                    PurchaseRequisitions::where('id', $data->reference_number)->update(['status' => 'Closed']);
+                }
             }
+            // UPDATE OUTSTANDING ITEM PRODUCT
+            $itemGRNs = GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)->whereIn('status', ['Open', 'Closed'])->get();
+            foreach($itemGRNs as $item){
+                $detailPR = PurchaseRequisitionsDetail::where('id', $item->id_purchase_requisition_details)->first();
+                $outstanding = (float) $detailPR->outstanding_qty - (float) $item->receipt_qty;
+                $outstanding = rtrim(rtrim(sprintf("%.3f", $outstanding), '0'), '.');
+
+                if ($data->id_purchase_orders){
+                    // IF Source PO Update Item Product PO Also
+                    PurchaseOrderDetails::where('id_purchase_requisition_details', $item->id_purchase_requisition_details)->update([
+                        'outstanding_qty' => $outstanding, 'status' => $item->status
+                    ]);
+                }
+                PurchaseRequisitionsDetail::where('id', $item->id_purchase_requisition_details)->update([
+                    'outstanding_qty' => $outstanding, 'status' => $item->status
+                ]);
+
+                // INSERT HISTORY STOCK
+                HistoryStocks::create([
+                    'id_good_receipt_notes_details' => $item->id,
+                    'type_product' => $item->type_product,
+                    'id_master_products' => $item->id_master_products,
+                    'qty' => $item->receipt_qty,
+                    'type_stock' => 'IN',
+                    'date' => DB::raw('CURRENT_DATE()')
+                ]);
+            }
+            
+            // UPDATE GRN
             GoodReceiptNote::where('id', $id)->update(['status' => 'Posted']);
 
             // Audit Log
@@ -335,12 +406,34 @@ class GRNoteController extends Controller
         $data = GoodReceiptNote::where('id', $id)->first();
         DB::beginTransaction();
         try{
-            // Update Status PR / PO
+            // ROLLBACK STATUS SOURCE
             if($data->id_purchase_orders){
-                PurchaseOrders::where('id', $data->id_purchase_orders)->update(['status' => 'Created GRN']);
+                PurchaseOrders::where('id', $data->id_purchase_orders)->where('status', '!=', 'Created GRN')->update(['status' => 'Created GRN']);
             } else {
-                PurchaseRequisitionsPrice::where('id_purchase_requisitions', $data->reference_number)->update(['status' => 'Created GRN']);
+                PurchaseRequisitions::where('id_purchase_requisitions', $data->reference_number)->where('status', '!=', 'Created GRN')->update(['status' => 'Created GRN']);
             }
+            // ROLLBACK OUTSTANDING ITEM PRODUCT
+            $itemGRNs = GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)->whereIn('status', ['Open', 'Closed'])->get();
+            foreach($itemGRNs as $item){
+                $detailPR = PurchaseRequisitionsDetail::where('id', $item->id_purchase_requisition_details)->first();
+                $outstanding = (float) $detailPR->outstanding_qty + (float) $item->receipt_qty;
+                $outstanding = rtrim(rtrim(sprintf("%.3f", $outstanding), '0'), '.');
+
+                if ($data->id_purchase_orders){
+                    // IF Source PO Update Item Product PO Also
+                    PurchaseOrderDetails::where('id_purchase_requisition_details', $item->id_purchase_requisition_details)->update([
+                        'outstanding_qty' => $outstanding
+                    ]);
+                }
+                PurchaseRequisitionsDetail::where('id', $item->id_purchase_requisition_details)->update([
+                    'outstanding_qty' => $outstanding
+                ]);
+
+                // DELETE HISTORY STOCK
+                HistoryStocks::where('id_good_receipt_notes_details', $item->id)->delete();
+            }
+
+            // UPDATE STATUS GRN
             GoodReceiptNote::where('id', $id)->update(['status' => 'Un Posted']);
 
             // Audit Log
@@ -417,13 +510,12 @@ class GRNoteController extends Controller
     {
         $id = decrypt($id);
         $request->validate([
-            'receipt_qty' => 'required|gt:0',
+            'receipt_qty' => 'required',
             'outstanding_qty' => 'required',
         ], [
             'receipt_qty.required' => 'Receipt Qty harus diisi.',
-            'receipt_qty.gt' => 'Receipt Qty harus lebih dari 0.',
             'outstanding_qty.required' => 'Outstanding Qty harus diisi.',
-        ]);        
+        ]);
 
         $dataBefore = GoodReceiptNoteDetail::where('id', $id)->first();
         $dataBefore->receipt_qty = str_replace(['.', ','], ['', '.'], $request->receipt_qty);
@@ -437,6 +529,9 @@ class GRNoteController extends Controller
                     $status = 'Closed';
                 } else {
                     $status = 'Open';
+                }
+                if($request->receipt_qty == 0){
+                    $status = null;
                 }
                 GoodReceiptNoteDetail::where('id', $id)->update([
                     'receipt_qty' => str_replace(['.', ','], ['', '.'], $request->receipt_qty),
@@ -457,7 +552,6 @@ class GRNoteController extends Controller
             return redirect()->back()->with(['info' => 'Tidak Ada Yang Dirubah, Data Sama Dengan Sebelumnya', 'scrollTo' => 'tableItem']);
         }
     }
-
 
     public function getPODetails(Request $request)
     {

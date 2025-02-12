@@ -173,9 +173,17 @@
                     bgColor = 'table-success';
                     darkColor = '#CFEBE0';
                 }
+                if (data.status === 'Closed') {
+                    bgColor = 'table-success-closed';
+                    darkColor = '#a6eed1';
+                }
                 if (data.status === 'Hold') {
                     bgColor = 'table-secondary';
                     darkColor = '#DFE0E3';
+                }
+                if (data.status === 'Un Posted') {
+                    bgColor = 'table-warning';
+                    darkColor = '#FFF3CB';
                 }
                 if (bgColor) {
                     $(row).addClass(bgColor);
@@ -253,8 +261,9 @@
                 <select id="filterStatus">
                     <option value="All">-- Semua Status --</option>
                     <option value="Hold">Hold</option>
-                    <option value="Posted">Posted</option>
                     <option value="Un Posted">Un Posted</option>
+                    <option value="Posted">Posted</option>
+                    <option value="Closed">Closed</option>
                 </select>
             </label>
         `;

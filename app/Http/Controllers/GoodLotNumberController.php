@@ -146,11 +146,11 @@ class GoodLotNumberController extends Controller
         try {
             // Update data
             GoodReceiptNoteDetail::where('id', $id)->update([
-                'qty_generate_barcode' => rtrim(rtrim(sprintf("%.3f", $totalGenerateQty), '0'), '.'),
+                'qty_generate_barcode' => $totalGenerateQty,
                 'lot_number' => $lotNumber,
             ]);
             // Create new data
-            DetailGoodReceiptNoteDetail::insert([
+            DetailGoodReceiptNoteDetail::create([
                 'id_grn' => $data->id_good_receipt_notes,
                 'id_grn_detail' => $id,
                 'lot_number' => $lotNumber,
@@ -218,20 +218,160 @@ class GoodLotNumberController extends Controller
             ->where('good_receipt_note_details.id', $id)
             ->first();
 
+        $statusGRN = GoodReceiptNote::where('id', $data->id_good_receipt_notes)->first()->status;
 
         //Audit Log
         $this->auditLogsShort('View List Detail Lot Number Product GRN Detail ID (' . $id . ')');
-        return view('gl_number.detail.index', compact('id', 'data'));
+        return view('gl_number.detail.index', compact('id', 'data', 'statusGRN'));
+    }
+    public function addDetailLot(Request $request, $id)
+    {
+        $id = decrypt($id);
+        
+        // Validate request
+        $request->validate([
+            'lot_number' => 'required',
+            'qty' => 'required',
+        ], [
+            'lot_number.required' => 'Lot Number Masih Kosong.',
+            'qty.required' => 'Qty harus diisi.',
+        ]);
+
+        // Check Ext. Lot Number
+        if($request->ext_lot_number){
+            if (DetailGoodReceiptNoteDetail::where('id_grn_detail', $id)->where('ext_lot_number', $request->ext_lot_number)->exists()){
+                return redirect()->back()->with(['fail' => 'Ext. Lot Number Sudah Ada!']);
+            }
+        }
+        
+        $data = GoodReceiptNoteDetail::where('id', $id)->first();
+
+        $generateQty = (float) $data->qty_generate_barcode; 
+        $requestQty = (float) str_replace(['.', ','], ['', '.'], $request->qty);
+
+        $totalGenerateQty = $generateQty + $requestQty;
+        $receiptQty = (float) $data->receipt_qty;
+        if($totalGenerateQty > $receiptQty){
+            $restQty = (float) $data->receipt_qty - (float) $data->qty_generate_barcode;
+            $restQty = rtrim(rtrim(sprintf("%.3f", $restQty), '0'), '.');
+            return redirect()->back()->with(['fail' => 'Qty tidak boleh melebihi sisa generated qty (' . $restQty . ')']);
+        }
+        $totalGenerateQty = rtrim(rtrim(sprintf("%.3f", $totalGenerateQty), '0'), '.');
+        $lotNumber = $data->lot_number;
+
+        DB::beginTransaction();
+        try {
+            // Update data
+            GoodReceiptNoteDetail::where('id', $id)->create([
+                'qty_generate_barcode' => $totalGenerateQty
+            ]);
+            // Create new data
+            DetailGoodReceiptNoteDetail::create([
+                'id_grn' => $data->id_good_receipt_notes,
+                'id_grn_detail' => $id,
+                'lot_number' => $lotNumber,
+                'ext_lot_number' => $request->ext_lot_number,
+                'qty' => $requestQty,
+                'qty_out' => 0,
+            ]);
+
+            // Audit Log
+            $this->auditLogsShort('Generate Lot Number GRN Detail ID (' . $id . ')');
+            DB::commit();
+            return redirect()->back()->with(['success' => 'Berhasil Tambah Generate Lot Number Produk']);
+        } catch (Exception $e) {
+            DB::rollback();
+            return redirect()->back()->with(['fail' => 'Gagal Tambah Generate Lot Number Produk!']);
+        }
     }
     public function updateDetailLot(Request $request, $id)
     {
         $id = decrypt($id);
+        $request->validate([
+            'qty' => 'required',
+        ], [
+            'qty.required' => 'Qty masih kosong.',
+        ]);
 
+        $dataBefore = DetailGoodReceiptNoteDetail::where('id', $id)->first();
+
+        // Check Ext. Lot Number
+        if($request->ext_lot_number){
+            if (DetailGoodReceiptNoteDetail::where('id_grn_detail', $dataBefore->id_grn_detail)->where('id', '!=', $id)->where('ext_lot_number', $request->ext_lot_number)->exists()){
+                return redirect()->back()->with(['fail' => 'Ext. Lot Number Sudah Ada!']);
+            }
+        }
+
+        // Check Qty
+        $dataGrnDetail = GoodReceiptNoteDetail::where('id', $dataBefore->id_grn_detail)->first();
+        $generateQty = (float) $dataGrnDetail->qty_generate_barcode;
+        $qtyBefore = (float) $dataBefore->qty;
+        $basicGenerateQty = $generateQty - $qtyBefore;
+        
+        $requestQty = (float) str_replace(['.', ','], ['', '.'], $request->qty);
+        $totalGenerateQty = $basicGenerateQty + $requestQty;
+
+        $receiptQty = (float) $dataGrnDetail->receipt_qty;
+        if($totalGenerateQty > $receiptQty){
+            $restQty = $receiptQty - $basicGenerateQty;
+            $restQty = rtrim(rtrim(sprintf("%.3f", $restQty), '0'), '.');
+            return redirect()->back()->with(['fail' => 'Qty tidak boleh melebihi sisa generated qty (' . $restQty . ')']);
+        }
+
+        // Compare With Data Before
+        $dataBefore->ext_lot_number = $request->ext_lot_number;
+        $dataBefore->qty = $request->qty;
+
+        if($dataBefore->isDirty()){
+            DB::beginTransaction();
+            try{
+                // Update data
+                GoodReceiptNoteDetail::where('id', $dataBefore->id_grn_detail)->update([
+                    'qty_generate_barcode' => rtrim(rtrim(sprintf("%.3f", $totalGenerateQty), '0'), '.')
+                ]);
+                // Update ITEM
+                DetailGoodReceiptNoteDetail::where('id', $id)->update([
+                    'ext_lot_number' => $request->ext_lot_number,
+                    'qty' => $requestQty,
+                ]);
+    
+                // Audit Log
+                $this->auditLogsShort('Update Generate Lot Number GRN Detail ID ('. $id . ')');
+                DB::commit();
+                return redirect()->back()->with(['success' => 'Berhasil Perbaharui Data Generate Lot Number GRN Detail']);
+            } catch (Exception $e) {
+                DB::rollback();
+                return redirect()->back()->with(['fail' => 'Gagal Perbaharui Data Generate Lot Number GRN Detail!']);
+            }
+        } else {
+            return redirect()->back()->with(['info' => 'Tidak Ada Yang Dirubah, Data Sama Dengan Sebelumnya']);
+        }
     }
     public function deleteDetailLot($id)
     {
         $id = decrypt($id);
-        
+        $dataBefore = DetailGoodReceiptNoteDetail::where('id', $id)->first();
+        $dataGrnDetail = GoodReceiptNoteDetail::where('id', $dataBefore->id_grn_detail)->first();
+        $updatedGenBarcode = (float) $dataGrnDetail->qty_generate_barcode - (float) $dataBefore->qty;
+        $updatedGenBarcode = rtrim(rtrim(sprintf("%.3f", $updatedGenBarcode), '0'), '.');
+
+        DB::beginTransaction();
+        try{
+            // Update Generated Qty
+            GoodReceiptNoteDetail::where('id', $dataBefore->id_grn_detail)->update([
+                'qty_generate_barcode' => $updatedGenBarcode
+            ]);
+            // Delete Data
+            DetailGoodReceiptNoteDetail::where('id', $id)->delete();
+
+            // Audit Log
+            $this->auditLogsShort('Delete Generate Lot Number GRN Detail ID ('. $id . ')');
+            DB::commit();
+            return redirect()->back()->with(['success' => 'Berhasil Delete Data Generate Lot Number GRN Detail']);
+        } catch (Exception $e) {
+            DB::rollback();
+            return redirect()->back()->with(['fail' => 'Gagal Delete Data Generate Lot Number GRN Detail!']);
+        }
     }
     public function generateBarcode(Request $request, $lot_number)
     {

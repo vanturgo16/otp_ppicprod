@@ -15,7 +15,6 @@
             </div>
             <form action="{{ route('grn_gln.detail.update', encrypt($data->id)) }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                <input type="hidden" name="decision" value="reset">
                 <div class="modal-body p-4">
                     <div class="row mb-4 field-wrapper required-field">
                         <label class="col-sm-5 col-form-label">Lot Number</label>
@@ -91,5 +90,24 @@
         if (!$(this).valid()) return false;
         btn.prop("disabled", true).html('<i class="mdi mdi-loading mdi-spin label-icon"></i> Please Wait...');
         return true;
+    });
+</script>
+
+<script>
+    function formatNumberInput(event) {
+        let input = event.target;
+        let value = input.value.replace(/[^0-9,.]/g, "");
+        value = value.replace(/\./g, "");
+        let parts = value.split(",");
+        let integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        if (parts.length > 1) {
+            let decimalPart = parts[1].substring(0, 3); // Limit to 3 decimal places
+            input.value = integerPart + "," + decimalPart;
+        } else {
+            input.value = integerPart;
+        }
+    }
+    document.querySelectorAll(".number-format").forEach(input => {
+        input.addEventListener("input", formatNumberInput);
     });
 </script>
