@@ -189,7 +189,7 @@
                                         '<td><input type="number" class="form-control weight" data-id="' + response.id + '" name="weight" value="' + response.weight + '" readonly></td>' +
                                         '<td><input type="number" class="form-control pcs" data-id="' + response.id + '" name="pcs" value="' + response.pcs +
                                         '" readonly></td>' :
-                                        '<td>' + response.no_box +'</td>' + // Kolom kosong jika bukan "bag"
+                                        '<td></td>' + // Kolom kosong jika bukan "bag"
                                         '<td></td>' + // Kolom kosong untuk weight
                                         '<td></td>' // Kolom kosong untuk pcs
                                     ) +
