@@ -21,13 +21,11 @@ use App\Models\PurchaseRequisitions;
 use App\Models\MstUnits;
 use App\Models\PurchaseRequisitionsDetail;
 use App\Models\DetailGoodReceiptNoteDetail;
-use App\Models\ReportMaterialUseDeatail;
 
 use App\Models\MstRawMaterial;
 use App\Models\MstProductFG;
 use App\Models\MstToolAux;
 use App\Models\MstWip;
-use App\Models\PurchaseRequisitionsPrice;
 use App\Models\HistoryStocks;
 
 class GRNoteController extends Controller
@@ -300,7 +298,7 @@ class GRNoteController extends Controller
                 }
             } else {
                 if(!GoodReceiptNote::where('reference_number', $data->reference_number)->where('id', '!=', $id)->exists()){
-                    PurchaseRequisitionsPrice::where('id_purchase_requisitions', $data->reference_number)->update(['status' => 'Posted']);
+                    PurchaseRequisitions::where('id', $data->reference_number)->update(['status' => 'Posted']);
                 }
             }
             // Delete

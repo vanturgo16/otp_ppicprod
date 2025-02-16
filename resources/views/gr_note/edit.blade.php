@@ -95,7 +95,7 @@
                     <div class="row mb-4 field-wrapper">
                         <label class="col-sm-3 col-form-label">Note</label>
                         <div class="col-sm-9">
-                            <textarea name="note" rows="3" cols="50" class="form-control" placeholder="Note.. (Opsional)">{{ $data->note }}</textarea>
+                            <textarea name="remarks" rows="3" cols="50" class="form-control" placeholder="Note.. (Opsional)">{{ $data->remarks }}</textarea>
                         </div>
                     </div>
                 </div>

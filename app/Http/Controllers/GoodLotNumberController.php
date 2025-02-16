@@ -262,7 +262,7 @@ class GoodLotNumberController extends Controller
         DB::beginTransaction();
         try {
             // Update data
-            GoodReceiptNoteDetail::where('id', $id)->create([
+            GoodReceiptNoteDetail::where('id', $id)->update([
                 'qty_generate_barcode' => $totalGenerateQty
             ]);
             // Create new data
