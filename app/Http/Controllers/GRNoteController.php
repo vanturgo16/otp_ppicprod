@@ -235,8 +235,7 @@ class GRNoteController extends Controller
             })
             ->leftJoin('master_tool_auxiliaries', function ($join) {
                 $join->on('good_receipt_note_details.id_master_products', '=', 'master_tool_auxiliaries.id')
-                    ->on('good_receipt_note_details.type_product', '=', DB::raw('"TA"'))
-                    ->orOn('good_receipt_note_details.type_product', '=', DB::raw('"Other"'));
+                        ->whereIn('good_receipt_note_details.type_product', ['TA', 'Other']);
             })
             ->leftJoin('master_units', 'good_receipt_note_details.master_units_id', '=', 'master_units.id')
             ->where('good_receipt_note_details.id_good_receipt_notes', $id)
