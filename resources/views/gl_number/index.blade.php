@@ -11,15 +11,7 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">List Good Receipt Note (GRN)</h5>
-                            <div>
-                                <a href="{{ route('grn.add', 'PR') }}" class="btn btn-sm btn-primary waves-effect btn-label waves-light" title="Tambah GRN dari PR">
-                                    <i class="mdi mdi-plus label-icon"></i> Tambah GRN dari <b>(PR)</b>
-                                </a>
-                                <a href="{{ route('grn.add', 'PO') }}" class="btn btn-sm btn-success waves-effect btn-label waves-light" title="Tambah GRN dari PO">
-                                    <i class="mdi mdi-plus label-icon"></i> Tambah GRN dari <b>(PO)</b>
-                                </a>
-                            </div>
+                            <h5 class="mb-0">List <b>Lot Number</b> Product GRN</h5>
                         </div>
                     </div>
                     <div class="card-body">
@@ -28,14 +20,13 @@
                                 <tr>
                                     <th class="align-middle text-center">No.</th>
                                     <th class="align-middle text-center">Receipt Number</th>
-                                    <th class="align-middle text-center">Reference Number</th>
-                                    <th class="align-middle text-center">Purchase Order</th>
-                                    <th class="align-middle text-center">Date</th>
-                                    <th class="align-middle text-center">External Doc Number</th>
-                                    <th class="align-middle text-center">Suppliers</th>
-                                    <th class="align-middle text-center">QC Check</th>
-                                    <th class="align-middle text-center">Type</th>
-                                    <th class="align-middle text-center">Total Product</th>
+                                    <th class="align-middle text-center">Product</th>
+                                    <th class="align-middle text-center">Receipt Qty</th>
+                                    <th class="align-middle text-center">Units</th>
+                                    <th class="align-middle text-center">Qc Passed</th>
+                                    <th class="align-middle text-center">Total Generated Lot Qty</th>
+                                    <th class="align-middle text-center">Lot Number</th>
+                                    <th class="align-middle text-center">Note</th>
                                     <th class="align-middle text-center">Status</th>
                                     <th class="align-middle text-center">Action</th>
                                 </tr>
@@ -50,7 +41,7 @@
 
 <script>
     $(document).ready(function() {
-        var url = '{!! route('grn.index') !!}';
+        var url = '{!! route('grn_gln.index') !!}';
         var dataTable = $('#server-side-table').DataTable({
             scrollX: true,
             responsive: false,
@@ -85,66 +76,94 @@
                     name: 'receipt_number',
                     orderable: true,
                     searchable: true,
-                    className: 'align-top freeze-column',
+                    className: 'align-top fw-bold freeze-column',
+                },
+                {
+                    data: 'product_desc',
+                    name: 'product_desc',
+                    orderable: true,
+                    searchable: true,
+                    className: 'align-top',
                     render: function(data, type, row) {
-                        let source = row.id_purchase_orders === null ? 'PR' : 'PO';
-                        return '<b>' + data + '</b><br><small>Sumber: ' + source + '</small>';
+                        return '<b>' + row.type_product + '</b><br>' + data;
                     },
                 },
                 {
-                    data: 'request_number',
-                    name: 'request_number',
-                    orderable: true,
+                    data: 'receipt_qty',
                     searchable: true,
-                    className: 'align-top'
+                    orderable: true,
+                    className: 'align-top text-center',
+                    render: function(data, type, row) {
+                        if (data) {
+                            let parts = data.split('.');
+                            let integerPart = parts[0];
+                            let decimalPart = parts[1] || '';
+                            integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                            if (decimalPart) {
+                                return `${integerPart},${decimalPart}`;
+                            }
+                            return integerPart;
+                        }
+                        return '';
+                    }
                 },
                 {
-                    data: 'po_number',
-                    name: 'po_number',
-                    orderable: true,
-                    searchable: true,
-                    className: 'align-top'
-                },
-                {
-                    data: 'date',
+                    data: 'unit_code',
                     searchable: true,
                     orderable: true,
                     className: 'align-top text-center',
                 },
                 {
-                    data: 'external_doc_number',
-                    name: 'external_doc_number',
-                    orderable: true,
+                    data: 'qc_passed',
                     searchable: true,
-                    className: 'align-top'
+                    orderable: true,
+                    className: 'align-top text-center',
+                    render: function(data, type, row) {
+                        if (data === 'Y') {
+                            return '<span class="badge bg-success"><i class="bx bx-check"></i> QC Passed</span>';
+                        } else {
+                            return '<span class="badge bg-info"><i class="bx bx-time"></i> No Need QC</span>';
+                        }
+                    }
                 },
                 {
-                    data: 'supplier_name',
-                    name: 'supplier_name',
-                    orderable: true,
+                    data: 'qty_generate_barcode',
                     searchable: true,
-                    className: 'align-top'
+                    orderable: true,
+                    className: 'align-top text-center',
+                    render: function(data, type, row) {
+                        if (data) {
+                            let parts = data.split('.');
+                            let integerPart = parts[0];
+                            let decimalPart = parts[1] || '';
+                            integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                            if (decimalPart) {
+                                return `${integerPart},${decimalPart}`;
+                            }
+                            return integerPart;
+                        }
+                        return '';
+                    }
                 },
                 {
-                    data: 'qc_status',
-                    name: 'qc_status',
-                    orderable: true,
+                    data: 'lot_number',
                     searchable: true,
-                    className: 'align-top text-center'
+                    orderable: true,
+                    className: 'align-top text-center',
                 },
                 {
-                    data: 'type',
-                    name: 'type',
+                    data: 'note',
+                    name: 'note',
                     orderable: true,
                     searchable: true,
-                    className: 'align-top text-center fw-bold'
-                },
-                {
-                    data: 'count',
-                    name: 'count',
-                    orderable: true,
-                    searchable: true,
-                    className: 'align-top text-center'
+                    className: 'align-top',
+                    render: function (data, type, row) {
+                        if (!data) { return ''; }
+                        if (data.length > 100) {
+                            return `<span class="note-tooltip" title="${data}">${data.substring(0, 70)}...</span>`;
+                        }
+                        return data;
+                    }
                 },
                 {
                     data: 'status',
@@ -153,8 +172,8 @@
                     searchable: true,
                     className: 'align-top text-center',
                     render: function(data, type, row) {
-                        let badgeColor = data === 'Hold' ? 'secondary' : 
-                                        data === 'Un Posted' ? 'warning' : 'success';
+                        let badgeColor = data === 'Open' ? 'info' : 
+                                        data === 'Closed' ? 'success' : 'primary';
                         return `<span class="badge bg-${badgeColor}" style="font-size: smaller; width: 100%">${data}</span>`;
                     },
                 },
@@ -163,27 +182,19 @@
                     name: 'action',
                     orderable: false,
                     searchable: false,
-                    className: 'align-top text-center freeze-column',
+                    className: 'align-top freeze-column',
                 },
             ],
             createdRow: function(row, data, dataIndex) {
                 let bgColor = '';
                 let darkColor = '#FAFAFA';
-                if (data.status === 'Posted') {
+                if (data.lot_number) {
                     bgColor = 'table-success';
                     darkColor = '#CFEBE0';
                 }
-                if (data.status === 'Closed') {
-                    bgColor = 'table-success-closed';
-                    darkColor = '#a6eed1';
-                }
-                if (data.status === 'Hold') {
+                if (data.lot_number === null) {
                     bgColor = 'table-secondary';
                     darkColor = '#DFE0E3';
-                }
-                if (data.status === 'Un Posted') {
-                    bgColor = 'table-warning';
-                    darkColor = '#FFF3CB';
                 }
                 if (bgColor) {
                     $(row).addClass(bgColor);
@@ -260,10 +271,8 @@
             <label>
                 <select id="filterStatus">
                     <option value="All">-- Semua Status --</option>
-                    <option value="Hold">Hold</option>
-                    <option value="Un Posted">Un Posted</option>
-                    <option value="Posted">Posted</option>
-                    <option value="Closed">Closed</option>
+                    <option value="Open">Open</option>
+                    <option value="Close">Close</option>
                 </select>
             </label>
         `;

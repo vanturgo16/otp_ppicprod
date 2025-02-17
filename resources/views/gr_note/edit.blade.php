@@ -49,46 +49,23 @@
                         </div>
                     </div>
                     @if($source == 'PO')
-                        <div class="row mb-4 field-wrapper required-field">
-                            <label class="col-sm-3 col-form-label">
-                                Purchase Orders (PO)
-                                <i class="mdi mdi-information-outline info-change-po" data-bs-toggle="tooltip" data-bs-placement="top" title="Mengubah Purchase Order akan memperbarui item produk sesuai Purchase Order."></i>
-                            </label>
-                            <div class="col-sm-9">
-                                <select class="form-select input-select2" name="id_purchase_orders" id="" style="width: 100%" required>
-                                    <option value="">Pilih Purchase Orders</option>
-                                    @foreach ($postedPO as $item)
-                                        <option value="{{ $item->id }}" {{ $item->id == $data->id_purchase_orders ? 'selected' : '' }}>{{ $item->po_number }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                    <div class="row mb-4 field-wrapper required-field">
+                        <label class="col-sm-3 col-form-label">Purchase Orders (PO)</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control custom-bg-gray" value="{{ $data->po_number }}" placeholder="Otomatis Terisi.." readonly required>
                         </div>
+                    </div>
                     @endif
                     <div class="row mb-4 field-wrapper required-field">
-                        <label class="col-sm-3 col-form-label">
-                            Reference Number (PR)
-                            @if($source == 'PR')
-                                <i class="mdi mdi-information-outline info-change-pr" data-bs-toggle="tooltip" data-bs-placement="top" title="Mengubah Nomor Referensi akan memperbarui item produk sesuai Purchase Request."></i>
-                            @endif
-                        </label>
+                        <label class="col-sm-3 col-form-label">Reference Number (PR)</label>
                         <div class="col-sm-9">
-                            <select class="form-select input-select2 @if($source == 'PO') readonly-select2 @endif" name="reference_number" id="" style="width: 100%" required>
-                                <option value="">@if($source == 'PO') Otomatis Terisi.. @else Pilih Reference Number @endif</option>
-                                @foreach ($postedPRs as $item)
-                                    <option value="{{ $item->id }}" {{ $item->id == $data->reference_number ? 'selected' : '' }}>{{ $item->request_number }}</option>
-                                @endforeach
-                            </select>
+                            <input type="text" class="form-control custom-bg-gray" value="{{ $data->request_number }}" placeholder="Otomatis Terisi.." readonly required>
                         </div>
                     </div>
                     <div class="row mb-4 field-wrapper required-field">
                         <label class="col-sm-3 col-form-label">Suppliers</label>
                         <div class="col-sm-9">
-                            <select class="form-select input-select2 readonly-select2" name="id_master_suppliers" style="width: 100%" required>
-                                <option value="">Pilih Suppliers</option>
-                                @foreach ($suppliers as $item)
-                                    <option value="{{ $item->id }}" {{ $item->id == $data->id_master_suppliers ? 'selected' : '' }}>{{ $item->name }}</option>
-                                @endforeach
-                            </select>
+                            <input type="text" class="form-control custom-bg-gray" value="{{ $data->supplier_name }}" placeholder="Otomatis Terisi.." readonly required>
                         </div>
                     </div>
                     <div class="row mb-4 field-wrapper required-field">
@@ -118,7 +95,7 @@
                     <div class="row mb-4 field-wrapper">
                         <label class="col-sm-3 col-form-label">Note</label>
                         <div class="col-sm-9">
-                            <textarea name="note" rows="3" cols="50" class="form-control" placeholder="Note.. (Opsional)">{{ $data->note }}</textarea>
+                            <textarea name="remarks" rows="3" cols="50" class="form-control" placeholder="Note.. (Opsional)">{{ $data->remarks }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -146,24 +123,17 @@
                 <table class="table table-bordered dt-responsive w-100" style="font-size: small" id="tableItem">
                     <thead>
                         <tr>
-                            <th class="align-middle text-center" rowspan="2" style="background-color: #6C7AE0; color:#ffff; border-bottom: 4px solid #e2e2e2;">No.</th>
-                            <th class="align-middle text-center" rowspan="2" style="background-color: #6C7AE0; color:#ffff; border-bottom: 4px solid #e2e2e2;">Product</th>
-                            <th class="align-middle text-center" colspan="6" style="background-color: #6C7AE0; color:#ffff;">Detail Price</th>
-                            <th class="align-middle text-center" rowspan="2" style="background-color: #6C7AE0; color:#ffff; border-bottom: 4px solid #e2e2e2;">Qty</th>
-                            <th class="align-middle text-center" rowspan="2" style="background-color: #6C7AE0; color:#ffff; border-bottom: 4px solid #e2e2e2;">Receipt Qty</th>
-                            <th class="align-middle text-center" rowspan="2" style="background-color: #6C7AE0; color:#ffff; border-bottom: 4px solid #e2e2e2;">Outstanding Qty</th>
-                            <th class="align-middle text-center" rowspan="2" style="background-color: #6C7AE0; color:#ffff; border-bottom: 4px solid #e2e2e2;">Units</th>
-                            <th class="align-middle text-center" rowspan="2" style="background-color: #6C7AE0; color:#ffff; border-bottom: 4px solid #e2e2e2;">Status</th>
-                            <th class="align-middle text-center" rowspan="2" style="background-color: #6C7AE0; color:#ffff; border-bottom: 4px solid #e2e2e2;">Note</th>
-                            <th class="align-middle text-center" rowspan="2" style="background-color: #6C7AE0; color:#ffff; border-bottom: 4px solid #e2e2e2;">Aksi</th>
-                        </tr>
-                        <tr>
-                            <th class="align-middle text-center" style="background-color: #6C7AE0; color:#ffff; border-bottom: 4px solid #e2e2e2;">Price</th>
-                            <th class="align-middle text-center" style="background-color: #6C7AE0; color:#ffff; border-bottom: 4px solid #e2e2e2;">Sub Total</th>
-                            <th class="align-middle text-center" style="background-color: #6C7AE0; color:#ffff; border-bottom: 4px solid #e2e2e2;">Discount</th>
-                            <th class="align-middle text-center" style="background-color: #6C7AE0; color:#ffff; border-bottom: 4px solid #e2e2e2;">Amount</th>
-                            <th class="align-middle text-center" style="background-color: #6C7AE0; color:#ffff; border-bottom: 4px solid #e2e2e2;">Tax</th>
-                            <th class="align-middle text-center" style="background-color: #6C7AE0; color:#ffff; border-bottom: 4px solid #e2e2e2;">Total Amount</th>
+                            <th class="align-middle text-center" style="background-color: #6C7AE0; color:#ffff; border-bottom: 4px solid #e2e2e2;">No.</th>
+                            <th class="align-middle text-center" style="background-color: #6C7AE0; color:#ffff; border-bottom: 4px solid #e2e2e2;">Product</th>
+                            <th class="align-middle text-center" style="background-color: #6C7AE0; color:#ffff; border-bottom: 4px solid #e2e2e2;">Qty</th>
+                            <th class="align-middle text-center" style="background-color: #6C7AE0; color:#ffff; border-bottom: 4px solid #e2e2e2;">Receipt Qty</th>
+                            <th class="align-middle text-center" style="background-color: #6C7AE0; color:#ffff; border-bottom: 4px solid #e2e2e2;">Outstanding Qty</th>
+                            <th class="align-middle text-center" style="background-color: #6C7AE0; color:#ffff; border-bottom: 4px solid #e2e2e2;">Units</th>
+                            <th class="align-middle text-center" style="background-color: #6C7AE0; color:#ffff; border-bottom: 4px solid #e2e2e2;">Status</th>
+                            <th class="align-middle text-center" style="background-color: #6C7AE0; color:#ffff; border-bottom: 4px solid #e2e2e2;">Note</th>
+                            @if (in_array($data->status, ['Hold', 'Un Posted']))
+                                <th class="align-middle text-center" style="background-color: #6C7AE0; color:#ffff; border-bottom: 4px solid #e2e2e2;">Aksi</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody>
@@ -174,136 +144,172 @@
                                     <b>{{ $item->type_product }}</b>
                                     <br>{!! implode('<br>', array_map(fn($chunk) => implode(' ', $chunk), array_chunk(explode(' ', $item->product_desc), 10))) !!}  {{-- max 10 word one line --}}
                                 </td>
-                                <td class="text-end">
-                                    {{ $item->price ? (strpos($item->price, '.') === false ? number_format($item->price, 0, ',', '.') : number_format($item->price, 3, ',', '.')) : '0' }}
+                                <td class="text-center">
+                                    <b>
+                                        {{ $item->qty 
+                                            ? (strpos(strval($item->qty), '.') !== false 
+                                                ? rtrim(rtrim(number_format($item->qty, 3, ',', '.'), '0'), ',') 
+                                                : number_format($item->qty, 0, ',', '.')) 
+                                            : '0' }}
+                                    </b>
                                 </td>
-                                <td class="text-end">
-                                    {{ $item->sub_total ? (strpos($item->sub_total, '.') === false ? number_format($item->sub_total, 0, ',', '.') : number_format($item->sub_total, 3, ',', '.')) : '0' }}
+                                <td class="text-center">
+                                    {{ $item->receipt_qty 
+                                        ? (strpos(strval($item->receipt_qty), '.') !== false 
+                                            ? rtrim(rtrim(number_format($item->receipt_qty, 3, ',', '.'), '0'), ',') 
+                                            : number_format($item->receipt_qty, 0, ',', '.')) 
+                                        : '0' }}
                                 </td>
-                                <td class="text-end">
-                                    {{ $item->discount ? (strpos($item->discount, '.') === false ? number_format($item->discount, 0, ',', '.') : number_format($item->discount, 3, ',', '.')) : '0' }}
+                                <td class="text-center">
+                                    {{ $item->outstanding_qty 
+                                        ? (strpos(strval($item->outstanding_qty), '.') !== false 
+                                            ? rtrim(rtrim(number_format($item->outstanding_qty, 3, ',', '.'), '0'), ',') 
+                                            : number_format($item->outstanding_qty, 0, ',', '.')) 
+                                        : '0' }}
                                 </td>
-                                <td class="text-end">
-                                    {{ $item->amount ? (strpos($item->amount, '.') === false ? number_format($item->amount, 0, ',', '.') : number_format($item->amount, 3, ',', '.')) : '0' }}
-                                </td>
-                                <td class="text-end">
-                                    @if($item->tax == 'N')
-                                        <b>N</b>
-                                    @elseif($item->tax == null)
-                                        0
-                                    @else
-                                        {{ $item->tax_value ? (strpos($item->tax_value, '.') === false ? number_format($item->tax_value, 0, ',', '.') : number_format($item->tax_value, 3, ',', '.')) : '0' }}
-                                        <br><span class="badge bg-info" 
-                                            title="{{ $item->tax_rate }}% Dari {{ $item->amount ? (strpos($item->amount, '.') === false ? number_format($item->amount, 0, ',', '.') : number_format($item->amount, 3, ',', '.')) : '0' }}">
-                                            ({{ $item->tax_rate }}%)
+                                <td class="text-center">{{ $item->unit_code }}</td>
+                                <td class="text-center">
+                                    @if ($item->status)
+                                        <span class="badge bg-{{ $item->status === 'Open' ? 'info' : 'success' }}">{{ ucfirst($item->status) }}</span>
+                                    @endif
+                                    @if ($item->qc_passed)
+                                        <br>
+                                        <span class="badge bg-{{ $item->qc_passed === 'Y' ? 'success' : 'danger' }}">
+                                            <i class="fas fa-{{ $item->qc_passed === 'Y' ? 'check' : 'times' }}"></i>
+                                            {{ $item->qc_passed === 'Y' ? 'QC Passed' : 'QC Not Passed' }}
                                         </span>
                                     @endif
+                                    @if ($item->lot_number)
+                                        <br>
+                                        <span class="badge bg-info">{{ $item->lot_number }}</span>
+                                    @endif
                                 </td>
-                                <td class="text-end">
-                                    {{ $item->total_amount ? (strpos($item->total_amount, '.') === false ? number_format($item->total_amount, 0, ',', '.') : number_format($item->total_amount, 3, ',', '.')) : '0' }}
-                                </td>
-                                <td class="text-center"><b>{{ $item->qty }}</b></td>
-                                <td class="text-center">{{ $item->receipt_qty }}</td>
-                                <td class="text-center">{{ $item->outstanding_qty }}</td>
-                                <td class="text-center">{{ $item->unit_code }}</td>
-                                <td class="text-center">{{ $item->status }}</td>
                                 <td>
                                     <span title="{{ strlen($item->note) > 70 ? $item->note : '' }}">
                                         {{ strlen($item->note) > 70 ? substr($item->note, 0, 70) . '...' : $item->note }}
                                     </span>
                                 </td>
-                                <td class="align-top text-center">
-                                    <button type="button" class="btn btn-sm btn-info my-half" data-bs-toggle="modal" data-bs-target="#update{{ $item->id }}">
-                                        <i class="bx bx-edit-alt"  title="Confirm Qty"></i> Confirm Qty</i>
-                                    </button>
-                                </td>
+                                @if (in_array($data->status, ['Hold', 'Un Posted']))
+                                    <td class="align-top text-center">
+                                        @if($item->qc_passed == 'Y' || $item->lot_number)
+                                            -
+                                        @else
+                                            <button type="button" class="btn btn-sm {{ $item->status ? 'btn-info' : 'btn-primary' }} my-half" 
+                                                    data-bs-toggle="modal" data-bs-target="#update{{ $item->id }}"><i class="bx bx-edit-alt" title="Confirm Qty"></i> 
+                                                    @if($item->status) Re - @endif Confirm Qty
+                                            </button>
+                                        @endif
+                                    </td>
+                                @endif
                             </tr>
                             {{-- Modal Edit --}}
-                            <div class="modal fade" id="update{{ $item->id }}" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-top modal-lg" role="document">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="staticBackdropLabel">Confirm Qty</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <form action="{{ route('grn.updateItem', encrypt($item->id)) }}" method="POST" enctype="multipart/form-data" id="formUpdate{{ $item->id }}">
-                                            @csrf
-                                            <div class="modal-body p-4" style="max-height: 65vh; overflow-y: auto;">
-                                                <div class="container">
-                                                    <div class="row mb-2 field-wrapper required-field">
-                                                        <label class="col-sm-3 col-form-label">Product</label>
-                                                        <div class="col-sm-9">
-                                                            <input type="text" class="form-control custom-bg-gray" placeholder="Product.." value="{{ $item->product_desc }}" readonly>
+                            @if (in_array($data->status, ['Hold', 'Un Posted']))
+                                <div class="modal fade" id="update{{ $item->id }}" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-top modal-lg" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="staticBackdropLabel">Confirm Qty</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <form action="{{ route('grn.updateItem', encrypt($item->id)) }}" method="POST" enctype="multipart/form-data" id="formUpdate{{ $item->id }}">
+                                                @csrf
+                                                <div class="modal-body p-4" style="max-height: 65vh; overflow-y: auto;">
+                                                    <div class="container">
+                                                        <div class="row mb-2 field-wrapper required-field">
+                                                            <label class="col-sm-3 col-form-label">Product</label>
+                                                            <div class="col-sm-9">
+                                                                <input type="text" class="form-control custom-bg-gray" placeholder="Product.." value="{{ $item->product_desc }}" readonly>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <br>
-                                                    <div class="row mb-2 field-wrapper required-field">
-                                                        <label class="col-sm-3 col-form-label">Qty</label>
-                                                        <div class="col-sm-9">
-                                                            <input type="number" class="form-control custom-bg-gray" name="qty" id="qty" placeholder="Qty.." value="{{ $item->qty }}" readonly required>
+                                                        <br>
+                                                        <div class="row mb-2 field-wrapper required-field">
+                                                            <label class="col-sm-3 col-form-label">Qty</label>
+                                                            <div class="col-sm-9">
+                                                                <input type="text" class="form-control custom-bg-gray" name="qty" id="qty" placeholder="Qty.." 
+                                                                    value="{{ $item->qty 
+                                                                    ? (strpos(strval($item->qty), '.') !== false 
+                                                                        ? rtrim(rtrim(number_format($item->qty, 3, ',', '.'), '0'), ',') 
+                                                                        : number_format($item->qty, 0, ',', '.')) 
+                                                                    : '0' }}"
+                                                                    readonly required>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="row mb-2 field-wrapper required-field">
-                                                        <label class="col-sm-3 col-form-label">Receipt Qty</label>
-                                                        <div class="col-sm-9">
-                                                            <input type="number" class="form-control" name="receipt_qty" id="receipt_qty" placeholder="Masukkan Receipt Qty.." value="{{ $item->receipt_qty }}" required>
+                                                        <div class="row mb-2 field-wrapper required-field">
+                                                            <label class="col-sm-3 col-form-label">Receipt Qty</label>
+                                                            <div class="col-sm-9">
+                                                                <input type="text" class="form-control number-format" name="receipt_qty" id="receipt_qty" placeholder="Masukkan Receipt Qty.." 
+                                                                    value="{{ $item->receipt_qty 
+                                                                    ? (strpos(strval($item->receipt_qty), '.') !== false 
+                                                                        ? rtrim(rtrim(number_format($item->receipt_qty, 3, ',', '.'), '0'), ',') 
+                                                                        : number_format($item->receipt_qty, 0, ',', '.')) 
+                                                                    : '0' }}"
+                                                                    required>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="row mb-2 field-wrapper required-field">
-                                                        <label class="col-sm-3 col-form-label">Outstanding Qty</label>
-                                                        <div class="col-sm-9">
-                                                            <input type="number" class="form-control custom-bg-gray" name="outstanding_qty" id="outstanding_qty" placeholder="Outstanding.. (Terisi Otomatis)" value="{{ $item->outstanding_qty }}" readonly required>
+                                                        <div class="row mb-2 field-wrapper required-field">
+                                                            <label class="col-sm-3 col-form-label">Outstanding Qty</label>
+                                                            <div class="col-sm-9">
+                                                                <input type="text" class="form-control custom-bg-gray" name="outstanding_qty" id="outstanding_qty" placeholder="Outstanding.. (Terisi Otomatis)" 
+                                                                    value="{{ $item->outstanding_qty 
+                                                                    ? (strpos(strval($item->outstanding_qty), '.') !== false 
+                                                                        ? rtrim(rtrim(number_format($item->outstanding_qty, 3, ',', '.'), '0'), ',') 
+                                                                        : number_format($item->outstanding_qty, 0, ',', '.')) 
+                                                                    : '0' }}"
+                                                                    readonly required>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="row mb-2 field-wrapper required-field">
-                                                        <label class="col-sm-3 col-form-label">Units</label>
-                                                        <div class="col-sm-9">
-                                                            <input type="text" class="form-control custom-bg-gray" placeholder="Masukkan Units.." value="{{ $item->unit_code }}" readonly>
+                                                        <div class="row mb-2 field-wrapper required-field">
+                                                            <label class="col-sm-3 col-form-label">Units</label>
+                                                            <div class="col-sm-9">
+                                                                <input type="text" class="form-control custom-bg-gray" placeholder="Masukkan Units.." value="{{ $item->unit_code }}" readonly>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <br>
-                                                    <div class="row mb-2 field-wrapper required-field">
-                                                        <label class="col-sm-3 col-form-label">Status</label>
-                                                        <div class="col-sm-9">
-                                                            <select class="form-select input-select2" name="status" style="width: 100%" required>
-                                                                <option value="">Pilih Status</option>
-                                                                <option value="Open" {{ $item->status == 'Open' ? 'selected' : '' }}>Open</option>
-                                                                <option value="Close" {{ $item->status == 'Close' ? 'selected' : '' }}>Close</option>
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                    <div class="row mb-2 field-wrapper">
-                                                        <label class="col-sm-3 col-form-label">Note</label>
-                                                        <div class="col-sm-9">
-                                                            <textarea name="note" rows="4" cols="50" class="form-control" placeholder="Note.. (Opsional)">{{ $item->note }}</textarea>
+                                                        <br>
+                                                        <div class="row mb-2 field-wrapper">
+                                                            <label class="col-sm-3 col-form-label">Note</label>
+                                                            <div class="col-sm-9">
+                                                                <textarea name="note" rows="4" cols="50" class="form-control" placeholder="Note.. (Opsional)">{{ $item->note }}</textarea>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                                                <button type="submit" class="btn btn-info waves-effect btn-label waves-light" id="btnFormUpdate{{ $item->id }}">
-                                                    <i class="mdi mdi-sync label-icon"></i>Update
-                                                </button>
-                                            </div>
-                                        </form>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                                                    <button type="submit" class="btn btn-info waves-effect btn-label waves-light" id="btnFormUpdate{{ $item->id }}">
+                                                        <i class="mdi mdi-sync label-icon"></i>Update
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            @endif
                         @endforeach
                         <script>
                             $(document).ready(function () {
+                                function formatPrice(value) {
+                                    let num = parseFloat(value.replace(/\./g, '').replace(',', '.')) || 0;
+                                    return num;
+                                }
+                                function formatPriceDisplay(value) {
+                                    let formatted = value.toFixed(3).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                                    if (formatted.endsWith(',000')) {
+                                        formatted = formatted.slice(0, -4);
+                                    }
+                                    return formatted;
+                                }
+
                                 $('input[name="receipt_qty"]').on('input', function () {
                                     let receiptInput = $(this);
                                     let modal = receiptInput.closest('.modal');
-                                    let qty = parseInt(modal.find('input[name="qty"]').val()) || 0;
-                                    let receiptQty = parseInt(receiptInput.val()) || 0;
+                                    let qty = formatPrice(modal.find('input[name="qty"]').val()) || 0;
+                                    let receiptQty = formatPrice(receiptInput.val()) || 0;
                                     if (receiptQty > qty) {
-                                        receiptInput.val(qty);
+                                        receiptInput.val(formatPriceDisplay(qty));
                                         receiptQty = qty;
                                     }
                                     let outstandingQty = qty - receiptQty;
-                                    modal.find('input[name="outstanding_qty"]').val(outstandingQty);
+                                    modal.find('input[name="outstanding_qty"]').val(formatPriceDisplay(outstandingQty));
                                 });
                             });
 
@@ -329,79 +335,5 @@
         </div>
     </div>
 </div>
-
-<script>
-    $(document).ready(function() {
-        $('[data-bs-toggle="tooltip"]').tooltip();
-
-        $('select[name="id_purchase_orders"]').change(function() {
-
-            $('.info-change-po').tooltip('show');
-            setTimeout(function () {
-                $('.info-change-po').tooltip('hide');
-            }, 3000);
-
-            var idPO = $(this).val();
-            if (idPO) {
-                $.ajax({
-                    url: "{{ route('grn.getPODetails') }}",
-                    method: 'GET',
-                    data: { idPO: idPO },
-                    success: function(response) {
-                        if (response.success) {
-                            $('select[name="reference_number"]').val(response.data.reference_number).trigger('change');
-                            $('select[name="id_master_suppliers"]').val(response.data.id_master_suppliers).trigger('change');
-                            $('input[name="qc_status"]').val(response.data.qc_check);
-                            $('input[name="type"]').val(response.data.type);
-                        } else {
-                            alert('No data found for this data po.');
-                        }
-                    },
-                    error: function() {
-                        alert('Error fetching data. Please try again.');
-                    }
-                });
-            } else {
-                $('select[name="reference_number"]').val('').trigger('change');
-                $('select[name="id_master_suppliers"]').val('').trigger('change');
-                $('input[name="qc_status"]').val('');
-                $('input[name="type"]').val('');
-            }
-        });
-
-        $('select[name="reference_number"]').change(function() {
-
-            $('.info-change-pr').tooltip('show');
-            setTimeout(function () {
-                $('.info-change-pr').tooltip('hide');
-            }, 3000);
-
-            var referenceId = $(this).val();
-            if (referenceId) {
-                $.ajax({
-                    url: "{{ route('grn.getPRDetails') }}",
-                    method: 'GET',
-                    data: { reference_id: referenceId },
-                    success: function(response) {
-                        if (response.success) {
-                            $('select[name="id_master_suppliers"]').val(response.data.id_master_suppliers).trigger('change');
-                            $('input[name="qc_status"]').val(response.data.qc_check);
-                            $('input[name="type"]').val(response.data.type);
-                        } else {
-                            alert('No data found for this reference number.');
-                        }
-                    },
-                    error: function() {
-                        alert('Error fetching data. Please try again.');
-                    }
-                });
-            } else {
-                $('select[name="id_master_suppliers"]').val('').trigger('change');
-                $('input[name="qc_status"]').val('');
-                $('input[name="type"]').val('');
-            }
-        });
-    });
-</script>
 
 @endsection

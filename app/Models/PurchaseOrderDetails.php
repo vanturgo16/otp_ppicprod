@@ -5,11 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class DetailGoodReceiptNoteDetail extends Model
+class PurchaseOrderDetails extends Model
 {
     use HasFactory;
-    protected $table = 'detail_good_receipt_note_details';
-    public $timestamps = false;
+    protected $table = 'purchase_order_details';
     protected $guarded=[
         'id'
     ];
