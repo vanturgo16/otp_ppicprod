@@ -536,12 +536,12 @@
     <!-- FORM LOAD JS -->
     <script src="{{ asset('assets/js/formLoad.js') }}"></script>
 
-    {{-- <script>
+    <script>
         $(document).ready(function() {
             $('body').addClass('sidebar-enable');
             $('body').attr('data-sidebar-size', 'sm');
         });
-    </script> --}}
+    </script>
     {{-- @if (request()->is('ppic/*')) --}}
     <script>
         let baseRoute = '{{ url('') }}';
