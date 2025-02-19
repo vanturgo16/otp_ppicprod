@@ -9,9 +9,11 @@ use Illuminate\Http\Request;
 use App\Models\MstWorkCenters;
 use App\Models\ppic\workOrder;
 use App\Traits\AuditLogsTrait;
+use App\Exports\ExportWorkOrder;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\Marketing\salesOrder;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Models\MstProcessProductions;
 use App\Models\ppic\workOrderDetails;
 use Illuminate\Support\Facades\Crypt;
@@ -116,7 +118,7 @@ class workOrderController extends Controller
                     return $data->product_code . ' - ' . $data->description . ' | Perforasi: ' . $perforasi;
                 })
                 ->addColumn('description_needed', function ($data) {
-                    $perforasi_needed = $data->pc_needed == null ? '' : ($data->perforasi_needed == null ? '-' : ' | Perforasi: ' . $data->perforasi_needed);
+                    $perforasi_needed = $data->pc_needed == null ? '' : ($data->perforasi_needed == null ? ' | Perforasi: -' : ' | Perforasi: ' . $data->perforasi_needed);
                     return $data->pc_needed . ' - ' . $data->dsc . $perforasi_needed;
                 })
                 ->addColumn('status', function ($data) {
@@ -1067,5 +1069,65 @@ class workOrderController extends Controller
         // echo json_encode($work_order);
         // exit;
         return view('ppic.work_order.print', compact('salesOrder', 'product', 'work_order_details', 'process_prod', 'work_order'));
+    }
+
+    public  function getStatus()
+    {
+        $status = workOrder::select('status')->groupBy('status')->orderBy('status', 'asc')->get();
+
+        return response()->json($status);
+    }
+
+    public function exportData(Request $request)
+    {
+        $data = $this->fetchWorkOrderData(
+            $request->start_date,
+            $request->end_date,
+            $request->status
+        );
+
+        return Excel::download(new ExportWorkOrder($data), 'work_order_' . $request->start_date . ' s.d. ' . $request->end_date . '_' . $request->status . '.xlsx');
+        // return response()->json($data);
+    }
+
+    private function fetchWorkOrderData($startDate, $endDate, $status)
+    {
+        $query = DB::table('work_orders as a')
+            // ->join('master_group_subs as i', 'a.id_master_process_productions', '=', 'i.id')
+            // ->join('master_process_productions as b', 'i.group_sub_code', '=', 'b.process_code')
+            ->join('master_process_productions as b', 'a.id_master_process_productions', '=', 'b.id')
+            ->leftJoin('master_work_centers as c', 'a.id_master_work_centers', '=', 'c.id')
+            ->join('sales_orders as d', 'a.id_sales_orders', '=', 'd.id')
+            ->join(
+                \DB::raw(
+                    '(SELECT id, product_code, description, id_master_units, \'FG\' as type_product, perforasi FROM master_product_fgs WHERE status = \'Active\' UNION ALL SELECT id, wip_code as product_code, description, id_master_units, \'WIP\' as type_product, perforasi FROM master_wips WHERE status = \'Active\') e'
+                ),
+                function ($join) {
+                    $join->on('a.id_master_products', '=', 'e.id');
+                    $join->on('a.type_product', '=', 'e.type_product');
+                }
+            )
+            ->join('master_units as f', 'a.id_master_units', '=', 'f.id')
+            ->leftJoin('master_units as g', 'a.id_master_units_needed', '=', 'g.id')
+            ->leftJoin(
+                \DB::raw(
+                    '(SELECT id, product_code as pc_needed, description as dsc, id_master_units, \'FG\' as type_product, perforasi as perforasi_needed FROM master_product_fgs WHERE status = \'Active\' UNION ALL SELECT id, wip_code as pc_needed, description as dsc, id_master_units, \'WIP\' as type_product, perforasi FROM master_wips WHERE status = \'Active\') h'
+                ),
+                function ($join) {
+                    $join->on('a.id_master_products_material', '=', 'h.id');
+                    $join->on('a.type_product_material', '=', 'h.type_product');
+                }
+            )
+            ->leftJoin('sales_orders as i', 'a.id_sales_orders', '=', 'i.id')
+            ->select('a.id', 'a.wo_number', 'd.so_number', 'a.type_product', 'a.id_master_products', 'a.id_master_process_productions', 'b.process', 'c.work_center', 'a.qty', 'a.id_master_units', 'a.type_product_material', 'a.id_master_products_material', 'a.qty_needed', 'a.id_master_units_needed', 'a.note', 'a.status', 'e.product_code', 'e.description', 'f.unit_code as unit', 'g.unit_code as unit_needed', 'h.pc_needed', 'h.dsc', 'e.perforasi', 'h.perforasi_needed', 'i.date');
+
+        if ($status !== 'All Status') {
+            $query->where('a.status', $status);
+        }
+        $query->whereBetween('i.date', [$startDate, $endDate]);
+        $query->orderBy('i.date', 'desc');
+        // $query->orderBy('a.id', 'asc');
+
+        return $query->get();
     }
 }
