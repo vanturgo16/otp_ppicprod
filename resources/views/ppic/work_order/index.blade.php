@@ -80,6 +80,10 @@
                                 data-search = "Closed" id="wo_closed" onclick="searchByStatus(this)">
                                 <i class="mdi mdi-file-multiple label-icon"></i> WO Closed
                             </a>
+                            <button type="button" class="btn btn-dark waves-effect btn-label waves-dark"
+                                id="modalExportData">
+                                <i class="mdi mdi-export label-icon"></i> Export Data
+                            </button>
                         </div>
                         <div class="card-body">
                             <input type="hidden" name="_token" id="csrf-token" value="{{ Session::token() }}" />
@@ -183,8 +187,8 @@
                     <div class="modal-body">
                         <div class="row">
                             <div class="col">
-                                <select class="form-control data-select2" name="id_sales_orders" id="salesOrderSelectPrint"
-                                    style="width: 100%" required>
+                                <select class="form-control data-select2" name="id_sales_orders"
+                                    id="salesOrderSelectPrint" style="width: 100%" required>
                                     <option value="">** Please select a Sales Orders</option>
                                 </select>
                             </div>
@@ -193,6 +197,54 @@
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-primary waves-effect btn-label waves-light">
                             <i class="mdi mdi-printer label-icon"></i> Print
+                        </button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Static Backdrop Modal Export Data -->
+    <div class="modal fade" id="exportData" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+        role="dialog" aria-labelledby="exportDataLabel" aria-hidden="true">
+        <form action="{{ route('ppic.workOrder.exportData') }}" method="POST">
+            @csrf
+            @method('GET')
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exportDataLabel">Export Data Work Order</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row mb-2">
+                            <label for="start_date" class="col-sm-3 col-form-label">Start Date</label>
+                            <div class="col-sm-9">
+                                <input type="date" class="form-control" name="start_date" id="start_date"
+                                    value="{{ date('Y-m-d') }}" required>
+                            </div>
+                        </div>
+                        <div class="row mb-2">
+                            <label for="end_date" class="col-sm-3 col-form-label">End Date</label>
+                            <div class="col-sm-9">
+                                <input type="date" class="form-control" name="end_date" id="end_date"
+                                    value="{{ date('Y-m-d') }}" required>
+                            </div>
+                        </div>
+                        <div class="row mb-2">
+                            <label for="status" class="col-sm-3 col-form-label">Status</label>
+                            <div class="col-sm-9">
+                                <select class="form-control data-select2" name="status" id="statusSelectOption"
+                                    style="width: 100%" required>
+                                    <option value="">** Please select a Status</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary waves-effect btn-label waves-light">
+                            <i class="mdi mdi-export label-icon"></i> Export
                         </button>
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
                     </div>
@@ -233,7 +285,7 @@
                 ],
                 aaSorting: [
                     [1, 'desc']
-                ], // start to sort data in second column 
+                ], // start to sort data in second column
                 ajax: {
                     url: baseRoute + '/ppic/workOrder/',
                     data: function(d) {

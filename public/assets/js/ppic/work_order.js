@@ -231,7 +231,7 @@ $(document).ready(function () {
         });
     });
 
-    $('#table-list-wo').css('min-height','250px');
+    $('#table-list-wo').css('min-height', '250px');
 
 });
 
@@ -692,3 +692,36 @@ function searchByStatus(button = null) {
     // Perbarui tampilan DataTable
     dataTable.draw();
 }
+
+$('#modalExportData').on('click', function () {
+    $.ajax({
+        url: '/ppic/workOrder/get-status',
+        type: 'GET',
+        data: {},
+        success: function (response) {
+            // console.log(response);
+            // Bersihkan konten dropdown sebelum menambahkan opsi baru
+            $('.data-select2').select2("destroy");
+            $('#statusSelectOption').empty();
+
+            // Iterasi melalui respons untuk membuat opsi dropdown
+            $('#statusSelectOption').append($('<option></option>').attr('value', 'All Status').text('All Status'));
+            response.forEach(function (item) {
+                // Buat elemen option
+                var option = $('<option></option>').attr('value', item.status).text(item.status);
+
+                // Tambahkan opsi ke dropdown
+                $('#statusSelectOption').append(option);
+            });
+            $('.data-select2').select2({
+                width: 'resolve', // need to override the changed default
+                theme: "classic",
+                dropdownParent: $("#exportData")
+            });
+            $('#exportData').modal('show');
+        },
+        error: function (xhr, status, error) {
+            console.error(xhr.responseText);
+        }
+    });
+});

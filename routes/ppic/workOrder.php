@@ -39,6 +39,8 @@ Route::group(
       Route::put('/update-wo-detail', 'updateWODetail')->name('ppic.workOrder.updateWODetail');
       Route::post('/delete-wo-detail', 'deleteWODetail')->name('ppic.workOrder.deleteWODetail');
       Route::get('/get-data-sales-order', 'getDataSalesOrder')->name('ppic.workOrder.getDataSalesOrder');
+      Route::get('/get-status', 'getStatus')->name('ppic.workOrder.getStatus');
+      Route::get('/export-data', 'exportData')->name('ppic.workOrder.exportData');
     });
   }
 );
