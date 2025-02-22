@@ -17,6 +17,7 @@ use App\Models\GoodReceiptNoteDetail;
 use App\Models\GoodReceiptNoteDetailSmt;
 use App\Models\MstSupplier;
 use App\Models\PurchaseOrders;
+use App\Models\PurchaseOrderDetails;
 use App\Models\PurchaseRequisitions;
 use App\Models\MstUnits;
 use App\Models\PurchaseRequisitionsDetail;
