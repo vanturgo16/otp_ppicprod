@@ -22,3 +22,16 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
+
+<!--validasi form with $validate-->
+@if (count($errors)>0)
+<div class="alert alert-danger alert-dismissible alert-label-icon label-arrow fade show" role="alert">
+    <i class="mdi mdi-block-helper label-icon"></i><strong>Saved Data Failed !</strong>
+    <ul class="mb-0">
+        @foreach ($errors->all() as $error)
+            <li>{{ $error }}</li>
+        @endforeach
+    </ul>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+@endif

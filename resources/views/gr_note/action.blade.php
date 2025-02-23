@@ -28,6 +28,8 @@
                         <div class="text-center">
                             Apakah Anda Yakin Untuk <b>Menghapus</b> Data?
                             <br><b>"{{ $data->receipt_number }}"</b>
+                            <br><br>
+                            Lot Number Yang Sudah Tergenerate / Terpecah Akan Terhapus
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -89,7 +91,7 @@
 @endif
 
 
-@if(in_array($data->status, ['Hold', 'Posted', 'Un Posted']))
+@if(in_array($data->status, ['Hold', 'Un Posted', 'Posted', 'Closed']))
     <a href="{{ route('grn.print', ['lang' => 'en', 'id' => encrypt($data->id)]) }}" class="btn btn-sm btn-info waves-effect waves-light my-half">
         <i class="bx bx-printer" title="Print in English"></i>
     </a>
