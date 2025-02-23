@@ -177,8 +177,8 @@ class WarehouseController extends Controller
                 DB::raw('COALESCE(master_product_fgs.description, master_wips.description, master_tool_auxiliaries.description, master_raw_materials.description) as description'),
                 DB::raw('COALESCE(master_product_fgs.id, master_wips.id, master_tool_auxiliaries.id, master_raw_materials.id ) as product_id'),
                 DB::raw('COALESCE(master_product_fgs.stock, master_wips.stock, master_tool_auxiliaries.stock, master_raw_materials.stock) as stock'),
-                DB::raw('COALESCE(report_bag_production_result_details.wrap_pcs, 1) as pcs'),
-                'report_bag_production_results.weight_starting'
+                DB::raw('COALESCE(rbp.total_amount_result, 1) as total_amount_result'),
+                DB::raw('COALESCE(rbp.total_weight_starting, 0) as total_weight_starting')
             )
             ->leftJoin('master_product_fgs', function ($join) {
                 $join->on('barcodes.id_master_products', '=', 'master_product_fgs.id')
@@ -196,16 +196,21 @@ class WarehouseController extends Controller
                 $join->on('barcodes.id_master_products', '=', 'master_raw_materials.id')
                     ->where('barcodes.type_product', 'RAW');
             })
-            ->leftJoin('report_bag_production_result_details', 'barcode_detail.barcode_number', '=', 'report_bag_production_result_details.barcode')
-            ->leftJoin('report_bag_production_results', 'report_bag_production_result_details.id_report_bags', '=', 'report_bag_production_results.id_report_bags')
+            ->leftJoin(
+                DB::raw('(SELECT barcode, SUM(amount_result) as total_amount_result, SUM(weight_starting) as total_weight_starting 
+                     FROM report_bag_production_results 
+                     GROUP BY barcode) as rbp'),
+                'barcode_detail.barcode_number',
+                '=',
+                'rbp.barcode'
+            )
             ->first();
-
 
         if ($barcodeRecord && strpos($barcodeRecord->status, 'In Stock') !== false) {
             $exists = true;
             $productName = $barcodeRecord->description;
             $isBag = stripos($barcodeRecord->status, 'bag') !== false;
-            $pcs = $barcodeRecord->pcs;
+            $pcs = $barcodeRecord->total_amount_result;
 
             $newStock = $barcodeRecord->stock - ($isBag ? $pcs : 1);
             if ($newStock < 0) {
@@ -220,7 +225,7 @@ class WarehouseController extends Controller
                 'barcode' => $barcode,
                 'id_packing_lists' => $packingListId,
                 'number_of_box' => $numberOfBox,
-                'weight' => $isBag ? $barcodeRecord->weight_starting : '',
+                'weight' => $isBag ? $barcodeRecord->total_weight_starting : '',
                 'pcs' => ($barcodeRecord->type_product === 'AUX' || $barcodeRecord->type_product === 'RAW')
                     ? $barcodeRecord->qty  // Gunakan qty dari barcode untuk AUX dan RAW
                     : ($isBag ? $pcs : 1),
@@ -277,7 +282,7 @@ class WarehouseController extends Controller
             'sales_order_id' => $barcodeRecord->sales_order_id,
             'pcs' => $pcs,
             'changeSo' => $changeSo,
-            'weight' => $isBag ? $barcodeRecord->weight_starting : '',
+            'weight' => $isBag ? $barcodeRecord->total_weight_starting : '',
             'no_box' => $numberOfBox
         ]);
     }
