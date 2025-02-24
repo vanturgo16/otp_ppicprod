@@ -43,7 +43,7 @@
                                     <th>Change SO</th>
                                     <th>Barcode</th>
                                     <th>Product Name</th>
-                                    <th>Number Of Box</th>
+                                    <th>Waste</th>
                                     <th>Weight</th>
                                     <th>PCS</th>
                                 </tr>
