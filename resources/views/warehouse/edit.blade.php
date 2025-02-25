@@ -76,7 +76,7 @@
                                         <th>Change SO</th>
                                         <th>Barcode</th>
                                         <th>Product Name</th>
-                                        <th>Number Of Box</th>
+                                        <th>Wrap</th>
                                         <th>Weight</th>
                                         <th>PCS</th>
                                         <th>Action</th>
@@ -93,7 +93,7 @@
                                         @if (stripos($detail->sts_start, 'bag'))
                                         <td><input type="number" class="form-control number_of_box"
                                                 data-id="{{ $detail->id }}" name="number_of_box"
-                                                value="{{ $detail->no_box }}"></td>
+                                                value="{{ $detail->total_wrap }}"></td>
                                         <td><input type="number" class="form-control weight" data-id="{{ $detail->id }}"
                                                 name="weight" value="{{ $detail->weight }}"></td>
                                         <td><input type="number" class="form-control pcs" data-id="{{ $detail->id }}"

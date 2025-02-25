@@ -283,17 +283,33 @@ class DeliveryNoteController extends Controller
         return response()->json($details);
     }
 
-    public function getCustomerAddresses($customerId, $type)
+    public function getCustomerAddresses($customerId)
     {
         $addresses = DB::table('master_customer_addresses')
-            ->where('id_master_customers', $customerId)
-            ->where(function ($query) use ($type) {
-                $query->where('type_address', $type)
-                    ->orWhere('type_address', 'Same As (Invoice, Shipping)');
-            })
+        ->where('id_master_customers', $customerId)
+            ->select('id', 'type_address', 'address')
             ->get();
+
+        // Cari alamat utama yang bukan "same as"
+        $mainAddress = $addresses->firstWhere(function ($address) {
+            return stripos($address->type_address, 'same as') === false;
+        });
+
+        // Loop dan ubah alamat "same as" jadi alamat utama
+        foreach ($addresses as $address) {
+            if (stripos($address->type_address, 'same as') !== false && $mainAddress) {
+                $address->address = $mainAddress->address;
+            }
+        }
+        // dd($addresses);
+
         return response()->json($addresses);
     }
+
+
+
+
+
 
 
 

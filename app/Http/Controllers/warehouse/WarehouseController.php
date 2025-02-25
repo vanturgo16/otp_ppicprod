@@ -178,6 +178,7 @@ class WarehouseController extends Controller
                 DB::raw('COALESCE(master_product_fgs.id, master_wips.id, master_tool_auxiliaries.id, master_raw_materials.id ) as product_id'),
                 DB::raw('COALESCE(master_product_fgs.stock, master_wips.stock, master_tool_auxiliaries.stock, master_raw_materials.stock) as stock'),
                 DB::raw('COALESCE(rbp.total_amount_result, 1) as total_amount_result'),
+                DB::raw('COALESCE(rbp.total_wrap, 0) as total_wrap'),
                 DB::raw('COALESCE(rbp.total_weight_starting, 0) as total_weight_starting')
             )
             ->leftJoin('master_product_fgs', function ($join) {
@@ -197,13 +198,17 @@ class WarehouseController extends Controller
                     ->where('barcodes.type_product', 'RAW');
             })
             ->leftJoin(
-                DB::raw('(SELECT barcode, SUM(amount_result) as total_amount_result, SUM(weight_starting) as total_weight_starting 
-                     FROM report_bag_production_results 
-                     GROUP BY barcode) as rbp'),
+                DB::raw('(SELECT barcode, 
+                     SUM(amount_result) as total_amount_result, 
+                     SUM(weight_starting) as total_weight_starting, 
+                     SUM(wrap) as total_wrap
+              FROM report_bag_production_results 
+              GROUP BY barcode) as rbp'),
                 'barcode_detail.barcode_number',
                 '=',
                 'rbp.barcode'
             )
+
             ->first();
 
         if ($barcodeRecord && strpos($barcodeRecord->status, 'In Stock') !== false) {
@@ -217,14 +222,12 @@ class WarehouseController extends Controller
                 return response()->json(['exists' => false, 'status' => false, 'message' => 'Stok tidak mencukupi']);
             }
 
-            $numberOfBox = DB::table('packing_list_details')
-                ->where('id_packing_lists', $packingListId)
-                ->count() + 1;
+            
 
             $insertedId = DB::table('packing_list_details')->insertGetId([
                 'barcode' => $barcode,
+                'total_wrap' => $barcodeRecord->total_wrap,
                 'id_packing_lists' => $packingListId,
-                'number_of_box' => $numberOfBox,
                 'weight' => $isBag ? $barcodeRecord->total_weight_starting : '',
                 'pcs' => ($barcodeRecord->type_product === 'AUX' || $barcodeRecord->type_product === 'RAW')
                     ? $barcodeRecord->qty  // Gunakan qty dari barcode untuk AUX dan RAW
@@ -282,8 +285,8 @@ class WarehouseController extends Controller
             'sales_order_id' => $barcodeRecord->sales_order_id,
             'pcs' => $pcs,
             'changeSo' => $changeSo,
-            'weight' => $isBag ? $barcodeRecord->total_weight_starting : '',
-            'no_box' => $numberOfBox
+            'wrap' =>  $barcodeRecord->total_wrap,
+            'weight' => $isBag ? $barcodeRecord->total_weight_starting : ''
         ]);
     }
 
@@ -443,8 +446,7 @@ class WarehouseController extends Controller
             ->select(
                 'packing_list_details.*',
                 'barcodes.type_product',
-                DB::raw('COALESCE(master_wips.description, master_product_fgs.description, master_tool_auxiliaries.description, master_raw_materials.description) as product_description'),
-                'packing_list_details.number_of_box as no_box'
+                DB::raw('COALESCE(master_wips.description, master_product_fgs.description, master_tool_auxiliaries.description, master_raw_materials.description) as product_description')
             )
             ->get();
 

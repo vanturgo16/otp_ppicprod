@@ -43,7 +43,7 @@
                                     <th>Change SO</th>
                                     <th>Barcode</th>
                                     <th>Product Name</th>
-                                    <th>Number Of Box</th>
+                                    <th>Wrap</th>
                                     <th>Weight</th>
                                     <th>PCS</th>
                                 </tr>
@@ -54,7 +54,7 @@
                                     <td>{{ $detail->change_so }}</td>
                                     <td>{{ $detail->barcode }}</td>
                                     <td>{{ $detail->description }}</td>
-                                    <td>{{ $detail->number_of_box }}</td>
+                                    <td>{{ $detail->total_wrap }}</td>
                                     <td>{{ $detail->weight }}</td>
                                     <td>{{ $detail->pcs }}</td>
                                 </tr>
