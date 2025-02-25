@@ -73,7 +73,7 @@
                                             <th>Change SO</th>
                                             <th>Barcode</th>
                                             <th>Product Name</th>
-                                            <th>Waste</th>
+                                            <th>Wrap</th>
                                             <th>Weight</th>
                                             <th>PCS</th>
                                             <th>Action</th>
@@ -184,7 +184,7 @@
                                     '<td>' + $('#barcode').val() + '</td>' +
                                     '<td>' + (response.product_name || '') + '</td>' +
                                     (response.is_bag ?
-                                        '<td><input type="number" class="form-control number_of_box" data-id="' + response.id + '" name="number_of_box" value="' + response.waste +
+                                        '<td><input type="number" class="form-control number_of_box" data-id="' + response.id + '" name="number_of_box" value="' + response.wrap +
                                         '" readonly></td>' +
                                         '<td><input type="number" class="form-control weight" data-id="' + response.id + '" name="weight" value="' + response.weight + '" readonly></td>' +
                                         '<td><input type="number" class="form-control pcs" data-id="' + response.id + '" name="pcs" value="' + response.pcs +

@@ -178,7 +178,7 @@ class WarehouseController extends Controller
                 DB::raw('COALESCE(master_product_fgs.id, master_wips.id, master_tool_auxiliaries.id, master_raw_materials.id ) as product_id'),
                 DB::raw('COALESCE(master_product_fgs.stock, master_wips.stock, master_tool_auxiliaries.stock, master_raw_materials.stock) as stock'),
                 DB::raw('COALESCE(rbp.total_amount_result, 1) as total_amount_result'),
-                DB::raw('COALESCE(rbp.total_waste, 0) as total_waste'),
+                DB::raw('COALESCE(rbp.total_wrap, 0) as total_wrap'),
                 DB::raw('COALESCE(rbp.total_weight_starting, 0) as total_weight_starting')
             )
             ->leftJoin('master_product_fgs', function ($join) {
@@ -201,7 +201,7 @@ class WarehouseController extends Controller
                 DB::raw('(SELECT barcode, 
                      SUM(amount_result) as total_amount_result, 
                      SUM(weight_starting) as total_weight_starting, 
-                     SUM(waste) as total_waste
+                     SUM(wrap) as total_wrap
               FROM report_bag_production_results 
               GROUP BY barcode) as rbp'),
                 'barcode_detail.barcode_number',
@@ -226,7 +226,7 @@ class WarehouseController extends Controller
 
             $insertedId = DB::table('packing_list_details')->insertGetId([
                 'barcode' => $barcode,
-                'number_of_box' => $barcodeRecord->total_waste,
+                'total_wrap' => $barcodeRecord->total_wrap,
                 'id_packing_lists' => $packingListId,
                 'weight' => $isBag ? $barcodeRecord->total_weight_starting : '',
                 'pcs' => ($barcodeRecord->type_product === 'AUX' || $barcodeRecord->type_product === 'RAW')
@@ -285,7 +285,7 @@ class WarehouseController extends Controller
             'sales_order_id' => $barcodeRecord->sales_order_id,
             'pcs' => $pcs,
             'changeSo' => $changeSo,
-            'waste' =>  $barcodeRecord->total_waste,
+            'wrap' =>  $barcodeRecord->total_wrap,
             'weight' => $isBag ? $barcodeRecord->total_weight_starting : ''
         ]);
     }
