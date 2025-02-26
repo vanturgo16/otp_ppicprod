@@ -652,6 +652,7 @@ class WarehouseController extends Controller
                 'master_units.unit',
                 'packing_list_details.pcs',
                 'packing_list_details.weight',
+                'packing_list_details.total_wrap',
                 DB::raw('COALESCE(blow_results.blow_weight, sf_results.sf_weight, master_raw_materials.weight ) as production_weight')
             )
             ->leftJoin('master_product_fgs', function ($join) {
