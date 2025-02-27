@@ -14,12 +14,14 @@ class BarcodeController extends Controller
 
     public function index(Request $request)
     {
-        // Ambil nilai start_date, end_date, dan work_center dari request
-        $start_date = $request->input('start_date');
-        $end_date = $request->input('end_date');
-        $work_center = $request->input('work_center');
-
-        // Buat query dengan filter tanggal dan work_center, tanpa nomor di belakang
+        // Ambil input dari request dan bersihkan dengan trim()
+        $start_date = trim($request->input('start_date'));
+        $end_date = trim($request->input('end_date'));
+        $work_center = trim($request->input('work_center'));
+        $so_number = trim($request->input('so_number'));
+        $wo_number = trim($request->input('wo_number'));
+    
+        // Query data
         $results = DB::table('barcodes as a')
             ->leftJoin('sales_orders as b', 'a.id_sales_orders', '=', 'b.id')
             ->join('work_orders as c', 'a.id_work_orders', '=', 'c.id')
@@ -28,13 +30,16 @@ class BarcodeController extends Controller
             ->leftJoin('master_customers as f', 'a.id_master_customers', '=', 'f.id')
             ->leftJoin('barcode_detail as g', 'a.id', '=', 'g.id_barcode')
             ->select(
-                'a.*',
+                'a.id', 
                 'b.so_number',
                 'c.wo_number',
                 'e.work_center_code',
                 DB::raw("SUBSTRING_INDEX(e.work_center, ' ', 2) as work_center"),
                 'f.name as name_cust',
-                DB::raw("COUNT(g.id) as barcode_count")
+                DB::raw("COUNT(g.id) as barcode_count"),
+                'a.created_at',
+                'a.shift',
+                'a.staff'
             )
             ->when($start_date, function ($query, $start_date) {
                 return $query->whereDate('a.created_at', '>=', $start_date);
@@ -42,19 +47,32 @@ class BarcodeController extends Controller
             ->when($end_date, function ($query, $end_date) {
                 return $query->whereDate('a.created_at', '<=', $end_date);
             })
+            ->when($so_number, function ($query, $so_number) {
+                return $query->where('b.so_number', 'like', "%{$so_number}%");
+            })
+            ->when($wo_number, function ($query, $wo_number) {
+                return $query->where('c.wo_number', 'like', "%{$wo_number}%");
+            })
+            ->when($work_center, function ($query, $work_center) {
+                return $query->where('e.work_center', 'like', "%{$work_center}%");
+            })
             ->groupBy(
                 'a.id',
                 'b.so_number',
                 'c.wo_number',
                 'e.work_center_code',
                 'f.name',
-                DB::raw("SUBSTRING_INDEX(e.work_center, ' ', 2)")
+                'a.created_at',
+                'a.shift',
+                'a.staff'
             )
-            ->get();
-
-        // Mengirim hasil query ke view barcode.index
+            ->orderBy('a.created_at', 'desc')
+            ->paginate(10);
+    
         return view('barcode.index', compact('results'));
     }
+    
+    
 
     public function create()
     {
