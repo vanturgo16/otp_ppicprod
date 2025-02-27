@@ -37,18 +37,18 @@
 
                     <thead>
                     <tr>
-                        <th>No</th>
-                        <th>Sales Orders</th>
-                        <th>Barcode Number</th>
-                        <th>Status </th>
+                        <th style="background-color: #007bff;color: white;">No</th>
+                        <th style="background-color: #007bff;color: white;">Sales Orders</th>
+                        <th style="background-color: #007bff;color: white;">Barcode Number</th>
+                        <th style="background-color: #007bff;color: white;">Status </th>
 
-                        <th>Description</th>
-                        <th>Work Centers</th>
-                        <th>Group</th>
+                        <th style="background-color: #007bff;color: white;">Description</th>
+                        <th style="background-color: #007bff;color: white;">Work Centers</th>
+                        <th style="background-color: #007bff;color: white;">Group</th>
                        
                        
                        
-                        <th>Action</th>
+                        <th style="background-color: #007bff;color: white;">Action</th>
                     </tr>
                     </thead>
 
