@@ -35,14 +35,21 @@
         }
 
         .header-center {
-            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             width: 40%;
+            
         }
 
         .header-right {
-            text-align: right;
+            display: flex;
+            justify-content: end;
             width: 30%;
             font-size: 10px;
+            margin-bottom: 0;
+            margin-top: 60px;
+            padding-right: 110px;
         }
 
         .header h1 {
@@ -56,14 +63,18 @@
             line-height: 1.5;
             font-size: 12px;
         }
+        .header .cont-title{
+            text-align: center;
+        }
 
         .header .title {
             font-size: 14px;
             font-weight: bold;
+            border-bottom: 2px solid;
         }
 
         .info-table {
-            width: 100%;
+            min-width: 60%;
             margin-bottom: 20px;
             table-layout: fixed;
         }
@@ -115,13 +126,22 @@
             position: absolute;
             top: 100px;
             right: 0;
-            width: 30%;
+            width: 20%;
             text-align: left;
             font-size: 12px;
+            border: solid 2px;
+            padding: 0;
         }
+
+
 
         .kepada-yth p {
             margin: 0;
+
+        }
+
+        .total {
+            font-size: 14px;
         }
     </style>
 </head>
@@ -130,21 +150,25 @@
     <div class="container">
         <div class="header">
             <div class="header-left">
-                <img src="https://production.olefinatifaplas.my.id/assets/images/icon-otp.png" alt="" height="60" width="60">
+                <img src="https://production.olefinatifaplas.my.id/assets/images/icon-otp.png" alt=""
+                    height="60" width="60">
                 <div>
                     <h1>PT OLEFINA TIFAPLAS POLIKEMINDO</h1>
-                    <p>Jl. Raya Serang KM 16.8 Desa Telaga, Kec. Cikupa Tangerang, 15710<br>
-                        Phone: 02159663657 Fax: 0
+
+                    <p>JL. Raya Serang KM 16.8 Cikupa - Tangerang<br>
+                        Tlp. (021)59663567
                     </p>
                 </div>
             </div>
             <div class="header-center">
-                <p class="title">SURAT PENGANTAR</p>
-                <p><strong>{{ $prefix }}{{ str_replace('DN', '', $deliveryNote->dn_number) }}</strong></p>
+                <div class="cont-title">
+                    <p class="title">SURAT PENGANTAR</p>
+                    <p><strong>{{ $prefix }}{{ str_replace('DN', '', $deliveryNote->dn_number) }}</strong></p>
+                </div>
             </div>
             <div class="header-right">
                 <p>FM-SM-PPIC-09, Rev. 0, 01 September 2021</p>
-                <p>Tanggal Cetak: {{ date('d/m/Y') }}</p>
+
             </div>
         </div>
 
@@ -165,18 +189,8 @@
                 <td></td>
             </tr>
             <tr>
-                <td>Cust. Product Code</td>
-                <td>: -</td>
-                <td></td>
-            </tr>
-            <tr>
                 <td>Shipping Address</td>
-                <td>: {{ $shippingAddress->address }}</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>Invoice Address</td>
-                <td>: {{ $invoiceAddress->address }}</td>
+                <td>: {{ $shippingAddress->address }} {{ $shippingAddress->postal_code }}</td>
                 <td></td>
             </tr>
         </table>
@@ -184,14 +198,17 @@
         <div class="kepada-yth">
             <p>Kepada Yth,</p>
             <p>{{ $deliveryNote->customer_name }}</p>
-            <p>-</p>
-            <p>-</p>
+            {{-- invoice addres: --}}
+            <p>{{ $invoiceAddress->address }}</p>
+            <p>{{ $invoiceAddress->postal_code }}</p>
         </div>
 
         <table class="main-table">
             <thead>
                 <tr>
+                    <th>No.</th>
                     <th>Description</th>
+                    <th>Cust. Product Code</th>
                     <!-- <th>Perforasi</th> -->
                     <th>Qty</th>
                     <th>Unit</th>
@@ -200,20 +217,32 @@
                 </tr>
             </thead>
             <tbody>
+                @php
+                    $no = 1;
+                @endphp
                 @foreach ($packingListDetails as $detail)
-                <tr>
-                    <td>{{ $detail->product_description }}</td>
-                    <!-- <td>{{ $detail->perforasi }}</td> -->
-                    <td>{{ $detail->qty }}</td>
-                    <td>{{ $detail->unit_name }}</td>
-                    <td>{{ $detail->weight }} KG</td>
-                    <td>{{ $detail->remark }}</td>
-                </tr>
+                    <tr>
+                        <td>{{ $no++ }}</td>
+                        <td>{{ $detail->product_description }}</td>
+                        <td>{{ $detail->product_name }}</td>
+                        <!-- <td>{{ $detail->perforasi }}</td> -->
+                        <td>{{ $detail->qty }}</td>
+                        <td>{{ $detail->unit_name }}</td>
+                        <td>{{ $detail->weight }} KG</td>
+                        <td>{{ $detail->remark }}</td>
+
+                    </tr>
                 @endforeach
+                <tr>
+                    <td style="text-align: center" colspan="3"><strong>TOTAL</strong></td>
+                    <td>{{ $totalQty }} </td>
+                    <td></td>
+                    <td>{{ $totalWeight }} KG</td>
+                    <td></td>
+                </tr>
+
             </tbody>
         </table>
-
-        <p class="note">Total Weight: {{ $totalWeight }} KG</p>
         <p class="note">Note: {{ $deliveryNote->note }}</p>
 
         <table class="signatures">

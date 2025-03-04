@@ -80,6 +80,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            border: 1px solid;
         }
 
         .main-table th,
@@ -120,7 +121,6 @@
         }
 
         @media print {
-
             .main-table th,
             .main-table td {
                 border: 1px solid black;
@@ -188,10 +188,11 @@
                         </thead>
                         <tbody>
                             @php
-                                $totalRoll = 0;
+                                $subtotals = [];
                                 $totalWeight = 0;
                                 $totalWrap = 0;
                             @endphp
+
                             @foreach ($details as $index => $detail)
                                 <tr>
                                     <td>{{ $index + 1 }}</td>
@@ -200,18 +201,26 @@
                                     <td>{{ $detail->barcode_number }}</td>
                                     <td>{{ $detail->so_number }}</td>
                                     <td>{{ $detail->pcs . ' ' . $detail->unit }}</td>
-                                    <td>{{ stripos($detail->sts_start, 'bag') ? $detail->weight : $detail->production_weight }}
-                                        KG</td>
+                                    <td>{{ stripos($detail->sts_start, 'bag') ? $detail->weight : $detail->production_weight }} KG</td>
                                     @if (stripos($detail->sts_start, 'bag') !== false)
                                         <td>{{ $detail->total_wrap }}</td>
                                     @endif
+
                                     @php
-                                        $totalRoll += $detail->pcs;
+                                        // Subtotal per unit
+                                        if (!isset($subtotals[$detail->unit])) {
+                                            $subtotals[$detail->unit] = 0;
+                                        }
+                                        $subtotals[$detail->unit] += $detail->pcs;
+
+                                        // Total berat dan wrap
                                         $totalWeight += stripos($detail->sts_start, 'bag')
                                             ? $detail->weight
                                             : $detail->production_weight;
-                                        $totalWrap +=
-                                            stripos($detail->sts_start, 'bag') !== false ? $detail->total_wrap : 0;
+
+                                        if (stripos($detail->sts_start, 'bag') !== false) {
+                                            $totalWrap += $detail->total_wrap;
+                                        }
                                     @endphp
                                 </tr>
                             @endforeach
@@ -219,15 +228,19 @@
                     </table>
                 </div>
             </div>
+
             <div class="row mt-4">
                 <div class="col-12" style="float: right; text-align: right;">
-                    <p><strong>Subtotal:</strong> {{ $totalRoll }} {{ $detail->unit }}</p>
+                    @foreach ($subtotals as $unit => $subtotal)
+                        <p><strong>Subtotal ({{ $unit }}):</strong> {{ number_format($subtotal) }} {{ $unit }}</p>
+                    @endforeach
                     <p><strong>Total Berat:</strong> {{ number_format($totalWeight, 2) }} KG</p>
                     @if ($totalWrap > 0)
                         <p><strong>Total Wrap:</strong> {{ number_format($totalWrap) }}</p>
                     @endif
                 </div>
             </div>
+
             <div class="signature-row">
                 <div class="signature">
                     <p>Dibuat Oleh,</p>
