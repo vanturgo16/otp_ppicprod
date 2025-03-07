@@ -445,6 +445,7 @@ class DeliveryNoteController extends Controller
                 'master_salesmen.name as salesman_name'
             )
             ->first();
+            
 
         // Mengambil data quantity dan weight dari delivery_note_details dengan left join berdasarkan type_product
         $packingListDetails = DB::table('delivery_note_details')
@@ -488,26 +489,50 @@ class DeliveryNoteController extends Controller
             )
             ->where('delivery_note_details.id_delivery_notes', $id)
             ->get();
+            // dd($packingListDetails);
+
 
         // Menghitung total weight
         $totalWeight = $packingListDetails->sum('weight');
+        //total qty
+        $totalQty = $packingListDetails->sum('qty');
 
         // Mengambil alamat shipping dan invoice dari master_customer_addresses
-        $shippingAddress = DB::table('master_customer_addresses')
-            ->where('id', $deliveryNote->id_master_customer_address_shipping)
-            ->select('address')
-            ->first();
+        $idMs = DB::table('delivery_notes')
+        ->where('delivery_notes.id', $id)
+        ->select('id_master_customers')
+        ->first();
+        // dd($idMs);
 
-        $invoiceAddress = DB::table('master_customer_addresses')
+
+        $Address = DB::table('master_customer_addresses')
+        ->where('id_master_customers', $idMs->id_master_customers)
+        ->select('type_address', 'address', 'postal_code')
+        ->first();
+
+        $sameAs = stripos($Address->type_address, 'Same As') !== false;
+
+        if ($sameAs) {
+            $invoiceAddress = $Address;
+            $shippingAddress = $Address;
+        } else {
+            $invoiceAddress = DB::table('master_customer_addresses')
             ->where('id', $deliveryNote->id_master_customer_address_invoice)
-            ->select('address')
-            ->first();
+                ->select('address', 'postal_code')
+                ->first();
+            $shippingAddress = DB::table('master_customer_addresses')
+            ->where('id', $deliveryNote->id_master_customer_address_shipping)
+                ->select('address', 'postal_code')
+                ->first();
+        }
+
 
         // Data untuk dicetak
         $data = [
             'deliveryNote' => $deliveryNote,
             'packingListDetails' => $packingListDetails,
             'totalWeight' => $totalWeight,
+            'totalQty' => $totalQty,
             'shippingAddress' => $shippingAddress,
             'invoiceAddress' => $invoiceAddress,
             'prefix' => $prefix,
