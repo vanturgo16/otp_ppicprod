@@ -45,7 +45,7 @@
                                 <b>
                                     {{ $data->receipt_qty 
                                         ? (strpos(strval($data->receipt_qty ), '.') !== false 
-                                            ? rtrim(rtrim(number_format($data->receipt_qty , 3, ',', '.'), '0'), ',') 
+                                            ? rtrim(rtrim(number_format($data->receipt_qty , 6, ',', '.'), '0'), ',') 
                                             : number_format($data->receipt_qty , 0, ',', '.')) 
                                         : '0' }}
                                 </b>
@@ -53,7 +53,7 @@
                                 <b>
                                     {{ $data->qty_generate_barcode 
                                         ? (strpos(strval($data->qty_generate_barcode ), '.') !== false 
-                                            ? rtrim(rtrim(number_format($data->qty_generate_barcode , 3, ',', '.'), '0'), ',') 
+                                            ? rtrim(rtrim(number_format($data->qty_generate_barcode , 6, ',', '.'), '0'), ',') 
                                             : number_format($data->qty_generate_barcode , 0, ',', '.'))
                                         : '0' }}
                                 </b>)
@@ -180,9 +180,23 @@
             {
                 data: 'qty',
                 name: 'qty',
-                orderable: true,
                 searchable: true,
-                className: 'align-top'
+                orderable: true,
+                className: 'align-top',
+                render: function(data, type, row) {
+                    if (data) {
+                        let number = parseFloat(data).toString(); // Convert to string without rounding
+                        let parts = number.split('.'); // Split integer and decimal parts
+                        let integerPart = parts[0];
+                        let decimalPart = parts[1] || '';
+
+                        // Add dots as thousands separator
+                        integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+                        return decimalPart ? `${integerPart},${decimalPart}` : integerPart;
+                    }
+                    return '';
+                }
             },
             {
                 data: 'generate_barcode',

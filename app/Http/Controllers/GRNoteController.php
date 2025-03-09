@@ -368,7 +368,7 @@ class GRNoteController extends Controller
             foreach($itemGRNs as $item){
                 $detailPR = PurchaseRequisitionsDetail::where('id', $item->id_purchase_requisition_details)->first();
                 $outstanding = (float) $detailPR->outstanding_qty - (float) $item->receipt_qty;
-                $outstanding = rtrim(rtrim(sprintf("%.3f", $outstanding), '0'), '.');
+                $outstanding = rtrim(rtrim(sprintf("%.6f", $outstanding), '0'), '.');
 
                 if ($data->id_purchase_orders){
                     // IF Source PO Update Item Product PO Also
@@ -421,7 +421,7 @@ class GRNoteController extends Controller
             foreach($itemGRNs as $item){
                 $detailPR = PurchaseRequisitionsDetail::where('id', $item->id_purchase_requisition_details)->first();
                 $outstanding = (float) $detailPR->outstanding_qty + (float) $item->receipt_qty;
-                $outstanding = rtrim(rtrim(sprintf("%.3f", $outstanding), '0'), '.');
+                $outstanding = rtrim(rtrim(sprintf("%.6f", $outstanding), '0'), '.');
 
                 if ($data->id_purchase_orders){
                     // IF Source PO Update Item Product PO Also
@@ -520,16 +520,21 @@ class GRNoteController extends Controller
             'receipt_qty.required' => 'Receipt Qty harus diisi.',
             'outstanding_qty.required' => 'Outstanding Qty harus diisi.',
         ]);
+        if($request->outstanding_qty == '0,'){
+            $outstanding_qty = 0;
+        } else {
+            $outstanding_qty = $request->outstanding_qty;
+        }
 
         $dataBefore = GoodReceiptNoteDetail::where('id', $id)->first();
         $dataBefore->receipt_qty = str_replace(['.', ','], ['', '.'], $request->receipt_qty);
-        $dataBefore->outstanding_qty = str_replace(['.', ','], ['', '.'], $request->outstanding_qty);
+        $dataBefore->outstanding_qty = str_replace(['.', ','], ['', '.'], $outstanding_qty);
         $dataBefore->note = $request->note;
 
         if($dataBefore->isDirty()){
             DB::beginTransaction();
             try{
-                if($request->outstanding_qty == 0){
+                if($outstanding_qty == 0){
                     $status = 'Closed';
                 } else {
                     $status = 'Open';
@@ -539,7 +544,7 @@ class GRNoteController extends Controller
                 }
                 GoodReceiptNoteDetail::where('id', $id)->update([
                     'receipt_qty' => str_replace(['.', ','], ['', '.'], $request->receipt_qty),
-                    'outstanding_qty' => str_replace(['.', ','], ['', '.'], $request->outstanding_qty),
+                    'outstanding_qty' => str_replace(['.', ','], ['', '.'], $outstanding_qty),
                     'status' => $status,
                     'note' => $request->note,
                 ]);

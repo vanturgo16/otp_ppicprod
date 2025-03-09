@@ -34,7 +34,7 @@
                             <input type="text" name="qty" class="form-control number-format"
                             value="{{ $data->qty 
                                 ? (strpos(strval($data->qty ), '.') !== false 
-                                    ? rtrim(rtrim(number_format($data->qty , 3, ',', '.'), '0'), ',') 
+                                    ? rtrim(rtrim(number_format($data->qty , 6, ',', '.'), '0'), ',') 
                                     : number_format($data->qty , 0, ',', '.')) 
                                 : '0' }}" 
                             placeholder="Input Qty.." required>
@@ -101,7 +101,7 @@
         let parts = value.split(",");
         let integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
         if (parts.length > 1) {
-            let decimalPart = parts[1].substring(0, 3); // Limit to 3 decimal places
+            let decimalPart = parts[1].substring(0, 6); // Limit to 6 decimal places
             input.value = integerPart + "," + decimalPart;
         } else {
             input.value = integerPart;

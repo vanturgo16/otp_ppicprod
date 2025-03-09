@@ -95,7 +95,8 @@
                     className: 'align-top text-center',
                     render: function(data, type, row) {
                         if (data) {
-                            let parts = data.split('.');
+                            let number = parseFloat(data).toString(); // Convert to string without rounding
+                            let parts = number.split('.');
                             let integerPart = parts[0];
                             let decimalPart = parts[1] || '';
                             integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
@@ -133,7 +134,8 @@
                     className: 'align-top text-center',
                     render: function(data, type, row) {
                         if (data) {
-                            let parts = data.split('.');
+                            let number = parseFloat(data).toString(); // Convert to string without rounding
+                            let parts = number.split('.');
                             let integerPart = parts[0];
                             let decimalPart = parts[1] || '';
                             integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');

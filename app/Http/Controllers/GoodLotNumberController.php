@@ -135,10 +135,10 @@ class GoodLotNumberController extends Controller
         $receiptQty = (float) $data->receipt_qty;
         if($totalGenerateQty > $receiptQty){
             $restQty = (float) $data->receipt_qty - (float) $data->qty_generate_barcode;
-            $restQty = rtrim(rtrim(sprintf("%.3f", $restQty), '0'), '.');
+            $restQty = rtrim(rtrim(sprintf("%.6f", $restQty), '0'), '.');
             return redirect()->back()->with(['fail' => 'Qty tidak boleh melebihi sisa generated qty (' . $restQty . ')']);
         }
-        $totalGenerateQty = rtrim(rtrim(sprintf("%.3f", $totalGenerateQty), '0'), '.');
+        $totalGenerateQty = rtrim(rtrim(sprintf("%.6f", $totalGenerateQty), '0'), '.');
         $lotNumber = $data->lot_number ?: $this->genLotNumber();
 
         DB::beginTransaction();
@@ -251,10 +251,10 @@ class GoodLotNumberController extends Controller
         $receiptQty = (float) $data->receipt_qty;
         if($totalGenerateQty > $receiptQty){
             $restQty = (float) $data->receipt_qty - (float) $data->qty_generate_barcode;
-            $restQty = rtrim(rtrim(sprintf("%.3f", $restQty), '0'), '.');
+            $restQty = rtrim(rtrim(sprintf("%.6f", $restQty), '0'), '.');
             return redirect()->back()->with(['fail' => 'Qty tidak boleh melebihi sisa generated qty (' . $restQty . ')']);
         }
-        $totalGenerateQty = rtrim(rtrim(sprintf("%.3f", $totalGenerateQty), '0'), '.');
+        $totalGenerateQty = rtrim(rtrim(sprintf("%.6f", $totalGenerateQty), '0'), '.');
         $lotNumber = $data->lot_number;
 
         DB::beginTransaction();
@@ -312,7 +312,7 @@ class GoodLotNumberController extends Controller
         $receiptQty = (float) $dataGrnDetail->receipt_qty;
         if($totalGenerateQty > $receiptQty){
             $restQty = $receiptQty - $basicGenerateQty;
-            $restQty = rtrim(rtrim(sprintf("%.3f", $restQty), '0'), '.');
+            $restQty = rtrim(rtrim(sprintf("%.6f", $restQty), '0'), '.');
             return redirect()->back()->with(['fail' => 'Qty tidak boleh melebihi sisa generated qty (' . $restQty . ')']);
         }
 
@@ -325,7 +325,7 @@ class GoodLotNumberController extends Controller
             try{
                 // Update data
                 GoodReceiptNoteDetail::where('id', $dataBefore->id_grn_detail)->update([
-                    'qty_generate_barcode' => rtrim(rtrim(sprintf("%.3f", $totalGenerateQty), '0'), '.')
+                    'qty_generate_barcode' => rtrim(rtrim(sprintf("%.6f", $totalGenerateQty), '0'), '.')
                 ]);
                 // Update ITEM
                 DetailGoodReceiptNoteDetail::where('id', $id)->update([
@@ -351,7 +351,7 @@ class GoodLotNumberController extends Controller
         $dataBefore = DetailGoodReceiptNoteDetail::where('id', $id)->first();
         $dataGrnDetail = GoodReceiptNoteDetail::where('id', $dataBefore->id_grn_detail)->first();
         $updatedGenBarcode = (float) $dataGrnDetail->qty_generate_barcode - (float) $dataBefore->qty;
-        $updatedGenBarcode = rtrim(rtrim(sprintf("%.3f", $updatedGenBarcode), '0'), '.');
+        $updatedGenBarcode = rtrim(rtrim(sprintf("%.6f", $updatedGenBarcode), '0'), '.');
 
         DB::beginTransaction();
         try{

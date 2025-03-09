@@ -660,7 +660,7 @@
             let parts = value.split(",");
             let integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
             if (parts.length > 1) {
-                let decimalPart = parts[1].substring(0, 3); // Limit to 3 decimal places
+                let decimalPart = parts[1].substring(0, 6); // Limit to 6 decimal places
                 input.value = integerPart + "," + decimalPart;
             } else {
                 input.value = integerPart;

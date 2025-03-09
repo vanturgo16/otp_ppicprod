@@ -148,7 +148,7 @@
                                     <b>
                                         {{ $item->qty 
                                             ? (strpos(strval($item->qty), '.') !== false 
-                                                ? rtrim(rtrim(number_format($item->qty, 3, ',', '.'), '0'), ',') 
+                                                ? rtrim(rtrim(number_format($item->qty, 6, ',', '.'), '0'), ',') 
                                                 : number_format($item->qty, 0, ',', '.')) 
                                             : '0' }}
                                     </b>
@@ -156,14 +156,14 @@
                                 <td class="text-center">
                                     {{ $item->receipt_qty 
                                         ? (strpos(strval($item->receipt_qty), '.') !== false 
-                                            ? rtrim(rtrim(number_format($item->receipt_qty, 3, ',', '.'), '0'), ',') 
+                                            ? rtrim(rtrim(number_format($item->receipt_qty, 6, ',', '.'), '0'), ',') 
                                             : number_format($item->receipt_qty, 0, ',', '.')) 
                                         : '0' }}
                                 </td>
                                 <td class="text-center">
                                     {{ $item->outstanding_qty 
                                         ? (strpos(strval($item->outstanding_qty), '.') !== false 
-                                            ? rtrim(rtrim(number_format($item->outstanding_qty, 3, ',', '.'), '0'), ',') 
+                                            ? rtrim(rtrim(number_format($item->outstanding_qty, 6, ',', '.'), '0'), ',') 
                                             : number_format($item->outstanding_qty, 0, ',', '.')) 
                                         : '0' }}
                                 </td>
@@ -228,7 +228,7 @@
                                                                 <input type="text" class="form-control custom-bg-gray" name="qty" id="qty" placeholder="Qty.." 
                                                                     value="{{ $item->qty 
                                                                     ? (strpos(strval($item->qty), '.') !== false 
-                                                                        ? rtrim(rtrim(number_format($item->qty, 3, ',', '.'), '0'), ',') 
+                                                                        ? rtrim(rtrim(number_format($item->qty, 6, ',', '.'), '0'), ',') 
                                                                         : number_format($item->qty, 0, ',', '.')) 
                                                                     : '0' }}"
                                                                     readonly required>
@@ -240,7 +240,7 @@
                                                                 <input type="text" class="form-control number-format" name="receipt_qty" id="receipt_qty" placeholder="Masukkan Receipt Qty.." 
                                                                     value="{{ $item->receipt_qty 
                                                                     ? (strpos(strval($item->receipt_qty), '.') !== false 
-                                                                        ? rtrim(rtrim(number_format($item->receipt_qty, 3, ',', '.'), '0'), ',') 
+                                                                        ? rtrim(rtrim(number_format($item->receipt_qty, 6, ',', '.'), '0'), ',') 
                                                                         : number_format($item->receipt_qty, 0, ',', '.')) 
                                                                     : '0' }}"
                                                                     required>
@@ -252,7 +252,7 @@
                                                                 <input type="text" class="form-control custom-bg-gray" name="outstanding_qty" id="outstanding_qty" placeholder="Outstanding.. (Terisi Otomatis)" 
                                                                     value="{{ $item->outstanding_qty 
                                                                     ? (strpos(strval($item->outstanding_qty), '.') !== false 
-                                                                        ? rtrim(rtrim(number_format($item->outstanding_qty, 3, ',', '.'), '0'), ',') 
+                                                                        ? rtrim(rtrim(number_format($item->outstanding_qty, 6, ',', '.'), '0'), ',') 
                                                                         : number_format($item->outstanding_qty, 0, ',', '.')) 
                                                                     : '0' }}"
                                                                     readonly required>
@@ -292,11 +292,19 @@
                                     return num;
                                 }
                                 function formatPriceDisplay(value) {
-                                    let formatted = value.toFixed(3).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-                                    if (formatted.endsWith(',000')) {
-                                        formatted = formatted.slice(0, -4);
+                                    let formatted = value.toFixed(6).replace('.', ','); // Convert decimal separator
+                                    let parts = formatted.split(",");
+
+                                    // Apply thousands separator only to the integer part
+                                    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+                                    // Remove unnecessary trailing zeros after the comma
+                                    if (parts[1]) {
+                                        parts[1] = parts[1].replace(/0+$/, ""); // Remove trailing zeros
+                                        if (parts[1] === "") return parts[0]; // If decimal part is empty, return only integer part
                                     }
-                                    return formatted;
+
+                                    return parts.join(",");
                                 }
 
                                 $('input[name="receipt_qty"]').on('input', function () {
