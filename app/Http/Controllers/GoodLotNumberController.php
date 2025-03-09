@@ -36,6 +36,8 @@ class GoodLotNumberController extends Controller
     // QC PASSED DATA
     public function index(Request $request)
     {
+        $idUpdated = $request->get('idUpdated');
+
         $datas = GoodReceiptNoteDetail::select('good_receipt_notes.receipt_number',
                 DB::raw('
                     CASE 
@@ -83,6 +85,22 @@ class GoodLotNumberController extends Controller
         }
         $datas = $datas->orderBy('good_receipt_notes.created_at', 'desc')->get();
 
+        // Get Page Number
+        $page_number = 1;
+        if ($idUpdated) {
+            $page_size = 5;
+            $item = $datas->firstWhere('id', $idUpdated);
+            if ($item) {
+                $index = $datas->search(function ($value) use ($idUpdated) {
+                    return $value->id == $idUpdated;
+                });
+                $page_number = (int) ceil(($index + 1) / $page_size);
+            } else {
+                $page_number = 1;
+            }
+        }
+
+
         // Datatables
         if ($request->ajax()) {
             $genLotNumber = $this->genLotNumber();
@@ -95,7 +113,7 @@ class GoodLotNumberController extends Controller
 
         // Audit Log
         $this->auditLogsShort('View List Good Lot Number Product GRN');
-        return view('gl_number.index');
+        return view('gl_number.index', compact('idUpdated', 'page_number'));
     }
 
     public function genLotNumber()
@@ -160,10 +178,10 @@ class GoodLotNumberController extends Controller
             // Audit Log
             $this->auditLogsShort('Generate Lot Number GRN Detail ID (' . $id . ')');
             DB::commit();
-            return redirect()->back()->with(['success' => 'Berhasil Tambah Generate Lot Number Produk']);
+            return redirect()->route('grn_gln.index', ['idUpdated' => $id])->with(['success' => 'Berhasil Tambah Generate Lot Number Produk']);
         } catch (Exception $e) {
             DB::rollback();
-            return redirect()->back()->with(['fail' => 'Gagal Tambah Generate Lot Number Produk!']);
+            return redirect()->route('grn_gln.index', ['idUpdated' => $id])->with(['fail' => 'Gagal Tambah Generate Lot Number Produk!']);
         }
     }
 

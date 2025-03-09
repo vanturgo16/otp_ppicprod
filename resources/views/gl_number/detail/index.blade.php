@@ -8,9 +8,16 @@
             <div class="col-12">
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                     <div class="page-title-left">
-                        <a href="{{ route('grn_gln.index') }}" class="btn btn-light waves-effect btn-label waves-light">
+                        <form action="{{ route('grn_gln.index') }}" method="GET" id="resetForm" enctype="multipart/form-data">
+                            @csrf
+                            <input type="hidden" name="idUpdated" value="{{ $data->id }}">
+                            <button type="submit" class="btn btn-light waves-effect btn-label waves-light">
+                                <i class="mdi mdi-arrow-left label-icon"></i> Back To List Lot Number Product GRN 
+                            </button>
+                        </form>
+                        {{-- <a href="{{ route('grn_gln.index') }}" class="btn btn-light waves-effect btn-label waves-light">
                             <i class="mdi mdi-arrow-left label-icon"></i> Back To List Lot Number Product GRN
-                        </a>
+                        </a> --}}
                     </div>
                     <div class="page-title-right">
                         <ol class="breadcrumb m-0">

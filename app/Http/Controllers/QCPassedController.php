@@ -36,6 +36,8 @@ class QCPassedController extends Controller
     // QC PASSED DATA
     public function index(Request $request)
     {
+        $idUpdated = $request->get('idUpdated');
+
         $datas = GoodReceiptNoteDetail::select('good_receipt_notes.receipt_number',
                 DB::raw('
                     CASE 
@@ -75,6 +77,22 @@ class QCPassedController extends Controller
         }
         $datas = $datas->orderBy('good_receipt_notes.created_at', 'desc')->get();
 
+        // Get Page Number
+        $page_number = 1;
+        if ($idUpdated) {
+            $page_size = 5;
+            $item = $datas->firstWhere('id', $idUpdated);
+            if ($item) {
+                $index = $datas->search(function ($value) use ($idUpdated) {
+                    return $value->id == $idUpdated;
+                });
+                $page_number = (int) ceil(($index + 1) / $page_size);
+            } else {
+                $page_number = 1;
+            }
+        }
+
+
         // Datatables
         if ($request->ajax()) {
             return DataTables::of($datas)
@@ -85,7 +103,7 @@ class QCPassedController extends Controller
 
         //Audit Log
         $this->auditLogsShort('View List Good Receipt Note Product Need QC Passed');
-        return view('qc_passed.index');
+        return view('qc_passed.index', compact('idUpdated', 'page_number'));
     }
 
     public function update(Request $request, $id)
@@ -119,10 +137,10 @@ class QCPassedController extends Controller
             // Audit Log
             $this->auditLogsShort('Update QC GRN Detail ID (' . $id . ')');
             DB::commit();
-            return redirect()->back()->with(['success' => 'Berhasil QC GRN Detail']);
+            return redirect()->route('grn_qc.index', ['idUpdated' => $id])->with(['success' => 'Berhasil QC GRN Detail']);
         } catch (Exception $e) {
             DB::rollback();
-            return redirect()->back()->with(['fail' => 'Gagal QC GRN Detail!']);
+            return redirect()->route('grn_qc.index', ['idUpdated' => $id])->with(['fail' => 'Gagal QC GRN Detail!']);
         }
     }
 

@@ -36,6 +36,8 @@ class GRNoteController extends Controller
     // GRN DATA
     public function index(Request $request)
     {
+        $idUpdated = $request->get('idUpdated');
+
         $datas = GoodReceiptNote::select('good_receipt_notes.id', 'good_receipt_notes.receipt_number', 'good_receipt_notes.date', 'good_receipt_notes.type', 'good_receipt_notes.status',
                 'good_receipt_notes.id_purchase_orders', 'good_receipt_notes.external_doc_number', 'good_receipt_notes.qc_status',
                 'purchase_requisitions.request_number', 'purchase_orders.po_number', 'master_suppliers.name as supplier_name',
@@ -53,6 +55,21 @@ class GRNoteController extends Controller
 
         $datas = $datas->orderBy('good_receipt_notes.created_at', 'desc')->get();
 
+        // Get Page Number
+        $page_number = 1;
+        if ($idUpdated) {
+            $page_size = 5;
+            $item = $datas->firstWhere('id', $idUpdated);
+            if ($item) {
+                $index = $datas->search(function ($value) use ($idUpdated) {
+                    return $value->id == $idUpdated;
+                });
+                $page_number = (int) ceil(($index + 1) / $page_size);
+            } else {
+                $page_number = 1;
+            }
+        }
+
         // Datatables
         if ($request->ajax()) {
             return DataTables::of($datas)
@@ -63,7 +80,7 @@ class GRNoteController extends Controller
 
         //Audit Log
         $this->auditLogsShort('View List Good Receipt Note');
-        return view('gr_note.index');
+        return view('gr_note.index', compact('idUpdated', 'page_number'));
     }
     public function add($source)
     {
@@ -315,10 +332,10 @@ class GRNoteController extends Controller
             // Audit Log
             $this->auditLogsShort('Hapus Good Receipt Note ID ('.$id.')');
             DB::commit();
-            return redirect()->back()->with(['success' => 'Berhasil Hapus Data GRN']);
+            return redirect()->route('grn.index', ['idUpdated' => $id])->with(['success' => 'Berhasil Hapus Data GRN']);
         } catch (Exception $e) {
             DB::rollback();
-            return redirect()->back()->with(['fail' => 'Gagal Hapus Data GRN!']);
+            return redirect()->route('grn.index', ['idUpdated' => $id])->with(['fail' => 'Gagal Hapus Data GRN!']);
         }
     }
     public function posted($id)
@@ -398,10 +415,10 @@ class GRNoteController extends Controller
             // Audit Log
             $this->auditLogsShort('Posted GRN ('.$id.')');
             DB::commit();
-            return redirect()->back()->with(['success' => 'Berhasil Posted Data GRN']);
+            return redirect()->route('grn.index', ['idUpdated' => $id])->with(['success' => 'Berhasil Posted Data GRN']);
         } catch (Exception $e) {
             DB::rollback();
-            return redirect()->back()->with(['fail' => 'Gagal Posted Data GRN!']);
+            return redirect()->route('grn.index', ['idUpdated' => $id])->with(['fail' => 'Gagal Posted Data GRN!']);
         }
     }
     public function unposted($id)
@@ -443,10 +460,10 @@ class GRNoteController extends Controller
             // Audit Log
             $this->auditLogsShort('Un-Posted GRN ('.$id.')');
             DB::commit();
-            return redirect()->back()->with(['success' => 'Berhasil Un-Posted Data GRN']);
+            return redirect()->route('grn.index', ['idUpdated' => $id])->with(['success' => 'Berhasil Un-Posted Data GRN']);
         } catch (Exception $e) {
             DB::rollback();
-            return redirect()->back()->with(['fail' => 'Gagal Un-Posted Data GRN!']);
+            return redirect()->route('grn.index', ['idUpdated' => $id])->with(['fail' => 'Gagal Un-Posted Data GRN!']);
         }
     }
     public function print($lang, $id)
