@@ -437,16 +437,18 @@ class GRNoteController extends Controller
             $itemGRNs = GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)->whereIn('status', ['Open', 'Closed'])->get();
             foreach($itemGRNs as $item){
                 $detailPR = PurchaseRequisitionsDetail::where('id', $item->id_purchase_requisition_details)->first();
-                $outstanding = (float) $detailPR->outstanding_qty + (float) $item->receipt_qty;
+                $outstanding = (float) $detailPR->outstanding_qty + (float) $detailPR->cancel_qty + (float) $item->receipt_qty;
                 $outstanding = rtrim(rtrim(sprintf("%.6f", $outstanding), '0'), '.');
 
                 if ($data->id_purchase_orders){
                     // IF Source PO Update Item Product PO Also
                     PurchaseOrderDetails::where('id_purchase_requisition_details', $item->id_purchase_requisition_details)->update([
+                        'cancel_qty' => null,
                         'outstanding_qty' => $outstanding
                     ]);
                 }
                 PurchaseRequisitionsDetail::where('id', $item->id_purchase_requisition_details)->update([
+                    'cancel_qty' => null,
                     'outstanding_qty' => $outstanding
                 ]);
 
