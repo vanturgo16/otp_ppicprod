@@ -76,30 +76,44 @@ class DeliveryNoteController extends Controller
         return $buttons;
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $currentDate = now()->format('ym');
+
+        // Ambil jenis DN dari request
+        $jenisDn = $request->input('jenis-dn', 'Regular'); // Default ke Regular jika belum dipilih
+
+        // Tentukan prefix sesuai jenis DN
+        $prefix = match ($jenisDn) {
+            'Export' => 'DE',
+            'Sample' => 'DS',
+            'Return' => 'DR',
+            default => 'DN',
+        };
+
+        // Ambil last DN yang sesuai dengan prefix dan bulan saat ini
         $lastDn = DB::table('delivery_notes')
-            ->where('dn_number', 'like', 'DN' . $currentDate . '%')
+            ->where('dn_number', 'like', $prefix . $currentDate . '%')
             ->orderBy('dn_number', 'desc')
             ->first();
 
         if ($lastDn) {
-            $lastDnNumber = $lastDn->dn_number;
-            $lastSequence = intval(substr($lastDnNumber, -6));
+            $lastSequence = intval(substr($lastDn->dn_number, -6));
             $nextSequence = $lastSequence + 1;
         } else {
             $nextSequence = 1;
         }
 
-        $dnNumber = 'DN' . $currentDate . str_pad($nextSequence, 6, '0', STR_PAD_LEFT);
+        $dnNumber = $prefix . $currentDate . str_pad($nextSequence, 6, '0', STR_PAD_LEFT);
+
         $packingLists = DB::table('packing_lists')->select('id', 'packing_number')->get();
         $vehicles = DB::table('master_vehicles')->select('id', 'vehicle_number')->get();
         $salesmen = DB::table('master_salesmen')->select('id', 'name')->get();
         $customers = DB::table('master_customers')->select('id', 'name')->get();
 
-        return view('delivery_notes.create', compact('dnNumber', 'packingLists', 'vehicles', 'salesmen', 'customers'));
+        return view('delivery_notes.create', compact('dnNumber', 'packingLists', 'vehicles', 'salesmen', 'customers', 'jenisDn'));
     }
+
 
     public function store(Request $request)
     {
@@ -116,6 +130,8 @@ class DeliveryNoteController extends Controller
                 'id_master_customer_address_invoice' => 'required',
                 'note' => 'nullable|string',
             ]);
+            // dd($validatedData);
+
 
             // Insert data ke tabel delivery_notes
             $deliveryNoteId = DB::table('delivery_notes')->insertGetId([
@@ -130,6 +146,8 @@ class DeliveryNoteController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
+
 
             DB::commit();
 
@@ -283,11 +301,13 @@ class DeliveryNoteController extends Controller
         return response()->json($details);
     }
 
-    public function getCustomerAddresses($customerId)
+    public function getCustomerAddressesBySo($soNo)
     {
-        $addresses = DB::table('master_customer_addresses')
-        ->where('id_master_customers', $customerId)
-            ->select('id', 'type_address', 'address')
+        // Ambil alamat berdasarkan SO Number
+        $addresses = DB::table('sales_orders')
+            ->join('master_customer_addresses', 'sales_orders.id_master_customer_addresses', '=', 'master_customer_addresses.id')
+            ->where('sales_orders.so_number', $soNo)
+            ->select('master_customer_addresses.id', 'master_customer_addresses.type_address', 'master_customer_addresses.address')
             ->get();
 
         // Cari alamat utama yang bukan "same as"
@@ -301,17 +321,9 @@ class DeliveryNoteController extends Controller
                 $address->address = $mainAddress->address;
             }
         }
-        // dd($addresses);
 
-        return response()->json($addresses);
+        return response()->json($addresses );
     }
-
-
-
-
-
-
-
 
     public function show($id)
     {
@@ -489,7 +501,7 @@ class DeliveryNoteController extends Controller
             )
             ->where('delivery_note_details.id_delivery_notes', $id)
             ->get();
-            // dd($packingListDetails);
+            // dd($id,$type,$prefix,$deliveryNote,$packingListDetails);
 
 
         // Menghitung total weight
@@ -556,6 +568,22 @@ class DeliveryNoteController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+
+    public function getSoNumberByCustomer($customerId)
+    {
+        //cek apakah status dn posted
+        
+        $soNo = DB::table('sales_orders')
+            ->where('sales_orders.id_master_customers', $customerId)
+            ->where('status', 'Posted')
+            ->select('id', 'so_number') // ambil id juga buat value option-nya
+            ->get();
+    
+
+        return response()->json($soNo);
+    }
+
     public function getPackingListsByCustomer($customerId)
     {
         $packingLists = DB::table('packing_lists')

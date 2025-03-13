@@ -210,6 +210,7 @@ class WarehouseController extends Controller
             )
 
             ->first();
+            // dd($barcodeRecord, $customerId);
 
         if ($barcodeRecord && strpos($barcodeRecord->status, 'In Stock') !== false) {
             $exists = true;
