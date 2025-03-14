@@ -18,6 +18,7 @@ class DeliveryNoteController extends Controller
         if ($request->ajax()) {
             $start_date = $request->input('start_date');
             $end_date = $request->input('end_date');
+            $transaction_type = $request->input('transaction_type');
 
             $query = DB::table('delivery_notes')
                 ->leftJoin('delivery_note_details', 'delivery_notes.id', '=', 'delivery_note_details.id_delivery_notes')
@@ -34,6 +35,10 @@ class DeliveryNoteController extends Controller
                 )
                 ->groupBy('delivery_notes.id')
                 ->orderBy('delivery_notes.created_at', 'desc');
+
+            if (!empty($transaction_type)) {
+                $query->where('delivery_notes.jenis_dn', $transaction_type);
+            }
 
             if ($start_date && $end_date) {
                 $query->whereBetween('delivery_notes.date', [$start_date, $end_date]);
@@ -81,7 +86,7 @@ class DeliveryNoteController extends Controller
         $currentDate = now()->format('ym');
 
         // Ambil jenis DN dari request
-        $jenisDn = $request->input('jenis-dn', 'Regular'); // Default ke Regular jika belum dipilih
+        $jenisDn = $request->input('jenis_dn', 'Regular'); // Default ke Regular jika belum dipilih
 
         // Tentukan prefix sesuai jenis DN
         $prefix = match ($jenisDn) {
@@ -105,6 +110,8 @@ class DeliveryNoteController extends Controller
         }
 
         $dnNumber = $prefix . $currentDate . str_pad($nextSequence, 6, '0', STR_PAD_LEFT);
+        // Insert data ke dalam tabel delivery_notes
+       
 
         $packingLists = DB::table('packing_lists')->select('id', 'packing_number')->get();
         $vehicles = DB::table('master_vehicles')->select('id', 'vehicle_number')->get();
@@ -117,12 +124,14 @@ class DeliveryNoteController extends Controller
 
     public function store(Request $request)
     {
+        // dd($request->all());
         DB::beginTransaction();
 
         try {
             // Validasi input
             $validatedData = $request->validate([
                 'dn_number' => 'required|unique:delivery_notes,dn_number',
+                'jenis_dn' => 'required',
                 'date' => 'required|date',
                 'id_master_customer' => 'required',
                 'id_master_vehicle' => 'required',
@@ -131,11 +140,13 @@ class DeliveryNoteController extends Controller
                 'note' => 'nullable|string',
             ]);
             // dd($validatedData);
+           
 
 
             // Insert data ke tabel delivery_notes
             $deliveryNoteId = DB::table('delivery_notes')->insertGetId([
                 'dn_number' => $validatedData['dn_number'],
+                'jenis_dn' => $validatedData['jenis_dn'],
                 'date' => $validatedData['date'],
                 'id_master_customers' => $validatedData['id_master_customer'],
                 'id_master_vehicles' => $validatedData['id_master_vehicle'],
@@ -146,6 +157,7 @@ class DeliveryNoteController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+            // dd($deliveryNoteId);
 
 
 
@@ -303,27 +315,44 @@ class DeliveryNoteController extends Controller
 
     public function getCustomerAddressesBySo($soNo)
     {
-        // Ambil alamat berdasarkan SO Number
-        $addresses = DB::table('sales_orders')
+        // Ambil type_address untuk cek apakah "same as"
+        $sameAs = DB::table('sales_orders')
             ->join('master_customer_addresses', 'sales_orders.id_master_customer_addresses', '=', 'master_customer_addresses.id')
             ->where('sales_orders.so_number', $soNo)
-            ->select('master_customer_addresses.id', 'master_customer_addresses.type_address', 'master_customer_addresses.address')
-            ->get();
+            ->select('master_customer_addresses.type_address', 'master_customer_addresses.address')
+            ->first();
 
-        // Cari alamat utama yang bukan "same as"
-        $mainAddress = $addresses->firstWhere(function ($address) {
-            return stripos($address->type_address, 'same as') === false;
-        });
+        // Jika SO tidak ditemukan, return response kosong
+        
 
-        // Loop dan ubah alamat "same as" jadi alamat utama
-        foreach ($addresses as $address) {
-            if (stripos($address->type_address, 'same as') !== false && $mainAddress) {
-                $address->address = $mainAddress->address;
-            }
+        if (stripos($sameAs->type_address, 'same as') !== false) {
+            // Jika type_address mengandung "same as", gunakan alamat yang sama untuk shipping & invoice
+            $shipping = $sameAs->address;
+            $invoice = $sameAs->address;
+        } else {
+            // Jika tidak "same as", cari alamat berdasarkan id_master_customers
+            $addresses = DB::table('master_customer_addresses')
+                ->where('id_master_customers', function ($query) use ($soNo) {
+                    $query->select('id_master_customers')
+                        ->from('sales_orders')
+                        ->where('so_number', $soNo)
+                        ->limit(1);
+                })
+                ->whereIn('type_address', ['Shipping', 'Invoice']) // Ambil yang bertipe shipping & invoice
+                ->pluck('address', 'type_address');
+
+            // Ambil alamat berdasarkan tipe
+            $shipping = $addresses['Shipping'] ?? null;
+            $invoice = $addresses['Invoice'] ?? null;
         }
 
-        return response()->json($addresses );
+        // Return JSON response
+        return response()->json([
+            'shipping' => $shipping,
+            'invoice' => $invoice
+        ]);
     }
+
 
     public function show($id)
     {
@@ -359,6 +388,16 @@ class DeliveryNoteController extends Controller
             )
             ->where('delivery_notes.id', $id)
             ->first();
+            
+
+        $salesOrders = DB::table('sales_orders')
+            ->where('id_master_customers', $deliveryNote->id_master_customers)
+            ->where('status', 'Posted') // Hanya ambil SO yang statusnya "Posted"
+            ->select('id', 'so_number') // Ambil ID dan nomor SO
+            ->get();
+
+
+
 
         $packingLists = DB::table('packing_lists')
             ->where('id_master_customers', $deliveryNote->id_master_customers)
@@ -371,6 +410,7 @@ class DeliveryNoteController extends Controller
             ->where('id_master_customers', $deliveryNote->id_master_customers)
             ->select('id', 'address')
             ->get();
+
 
         $deliveryNoteDetails = DB::table('delivery_note_details')
             ->join('packing_lists', 'delivery_note_details.id_packing_lists', '=', 'packing_lists.id')
@@ -388,7 +428,7 @@ class DeliveryNoteController extends Controller
             ->where('delivery_note_details.id_delivery_notes', $id)
             ->get();
 
-        return view('delivery_notes.edit', compact('deliveryNote', 'packingLists', 'vehicles', 'customerAddresses', 'deliveryNoteDetails'));
+        return view('delivery_notes.edit', compact('deliveryNote', 'packingLists', 'vehicles', 'customerAddresses', 'deliveryNoteDetails', 'salesOrders'));
     }
     public function update(Request $request, $id)
     {

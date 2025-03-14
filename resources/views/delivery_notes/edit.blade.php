@@ -41,6 +41,7 @@
                                 action="{{ route('delivery_notes.update', $deliveryNote->id) }}" method="POST">
                                 @csrf
                                 @method('PUT')
+                                
                                 <div class="mb-3">
                                     <label for="dn_number" class="form-label">Nomor DN</label>
                                     <input type="text" class="form-control" id="dn_number" name="dn_number"
@@ -55,6 +56,15 @@
                                     <label for="customer_name" class="form-label">Nama Customer</label>
                                     <input type="text" class="form-control" id="customer_name" name="customer_name"
                                         value="{{ old('customer_name', $deliveryNote->customer_name) }}" readonly>
+                                </div>
+                                 <div class="mb-3">
+                                    <label for="sales_order" class="form-label">No. So</label>
+                                    <select class="form-control select2" id="soNo" name="id_sales_order" required>
+                                         @foreach ($salesOrders as $so)
+                                            <option value="">
+                                                {{ $so->so_number }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
                                 <div class="mb-3">
                                     <label for="customer_address" class="form-label">Alamat Shipping</label>

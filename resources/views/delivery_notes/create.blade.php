@@ -24,15 +24,15 @@
                                 @csrf
                                 <div class="mb-3">
                                     <label for="jenis-dn" class="form-label">Pilih Jenis Delivery Note</label>
-                                    <select class="form-control" id="jenis-dn" name="jenis-dn" required
+                                    <select class="form-control" id="jenis-dn" name="jenis_dn" required
                                         onchange="this.form.submit()">
-                                        <option value="Regular" {{ request('jenis-dn') == 'Regular' ? 'selected' : '' }}>
+                                        <option value="Regular" {{ request('jenis_dn') == 'Regular' ? 'selected' : '' }}>
                                             Regular</option>
-                                        <option value="Export" {{ request('jenis-dn') == 'Export' ? 'selected' : '' }}>
+                                        <option value="Export" {{ request('jenis_dn') == 'Export' ? 'selected' : '' }}>
                                             Export</option>
-                                        <option value="Sample" {{ request('jenis-dn') == 'Sample' ? 'selected' : '' }}>
+                                        <option value="Sample" {{ request('jenis_dn') == 'Sample' ? 'selected' : '' }}>
                                             Sample</option>
-                                        <option value="Return" {{ request('jenis-dn') == 'Return' ? 'selected' : '' }}>
+                                        <option value="Return" {{ request('jenis_dn') == 'Return' ? 'selected' : '' }}>
                                             Return</option>
                                     </select>
                                 </div>
@@ -48,8 +48,7 @@
 
                                 <div class="mb-3">
                                     <label for="customer" class="form-label">Customer</label>
-                                    <select class="form-control select2" id="customers" name="id_master_customer"
-                                        required>
+                                    <select class="form-control select2" id="customers" name="id_master_customer" required>
                                         <option value="" selected disabled>** Pilih Customer</option>
                                         @foreach ($customers as $customer)
                                             <option value="{{ $customer->id }}">{{ $customer->name }}</option>
@@ -59,21 +58,21 @@
                                 <div class="mb-3">
                                     <label for="sales_order" class="form-label">No. So</label>
                                     <select class="form-control select2" id="soNo" name="id_sales_order" required>
-                                        <option value="" disabled selected>** Pilih No. SO</option>
+                                        <option value="" disabled selected>-</option>
                                     </select>
                                 </div>
                                 <div class="mb-3">
                                     <label for="customer_address" class="form-label">Alamat Shipping</label>
                                     <select class="form-control" id="addressShipping"
                                         name="id_master_customer_address_shipping" required>
-                                        <option value="" selected disabled>** Pilih Alamat Shipping</option>
+                                        <option value="" selected disabled>-</option>
                                     </select>
                                 </div>
                                 <div class="mb-3">
                                     <label for="invoice_address" class="form-label">Alamat Invoice</label>
                                     <select class="form-control" id="addressInvoice"
                                         name="id_master_customer_address_invoice" required>
-                                        <option value="" selected disabled>** Pilih Alamat Invoice</option>
+                                        <option value="" selected disabled>-</option>
                                     </select>
                                 </div>
 
@@ -165,9 +164,11 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
             $(document).ready(function() {
+                $('#customers').val('').trigger('change');
                 var today = new Date().toISOString().split('T')[0];
                 $('#date').val(today);
                 $('.select2').select2();
+               
 
                 $('#delivery-note-form').on('submit', function(e) {
                     e.preventDefault();
@@ -371,6 +372,9 @@
                 });
 
                 $('#customers').change(function() {
+                     $('#addressShipping, #addressInvoice')
+                                .empty()
+                                .append('<option value="">-</option>');
                     var customerId = $(this).val();
                     if (customerId) {
                         loadPackingLists(customerId);
@@ -392,6 +396,11 @@
                     $.ajax({
                         url: '{{ url('get-so-number-by-customer') }}/' + customerId,
                         method: 'GET',
+                        beforeSend: function() {
+                            $('#soNo')
+                                .empty()
+                                .append('<option value="">Loading...</option>');
+                        },
                         success: function(response) {
                             $('#soNo').empty().append(
                                 '<option value="" disabled selected>** Pilih No. SO</option>');
@@ -437,58 +446,44 @@
 
                 function loadCustomerAddresses(soNo) {
                     $.ajax({
-                        url: '{{ url('get-customer-addresses-by-so') }}/' + soNo,
+                        url: `{{ url('get-customer-addresses-by-so') }}/${soNo}`,
                         method: 'GET',
+                        beforeSend: function() {
+                            $('#addressShipping, #addressInvoice')
+                                .empty()
+                                .append('<option value="">Loading...</option>');
+                        },
                         success: function(response) {
                             // console.log("Response Data:", response);
+                            $('#addressShipping, #addressInvoice').empty();
 
-                            let shippingAddress = null;
-                            let invoiceAddress = null;
-
-
-                            // Kosongkan dropdown dulu
-                            $('#addressShipping, #addressInvoice')
-                                .empty();
-
-
-                            if (response.length === 0) {
-
+                            // Jika response kosong atau data tidak ditemukan
+                            if (!response || (!response.shipping && !response.invoice)) {
                                 $('#addressShipping').append(
-                                    '<option value="">No results found</option>');
-                                $('#addressInvoice').append(
-                                    '<option value="">No results found</option>');
+                                    '<option value="">No Shipping Address</option>');
+                                $('#addressInvoice').append('<option value="">No Invoice Address</option>');
                                 return;
                             }
-
-                            $.each(response, function(key, value) {
-                                let type = value.type_address.toLowerCase();
-
-                                if (type.includes('same as')) {
-                                    shippingAddress = value;
-                                    invoiceAddress = value;
-                                } else if (type.includes('shipping')) {
-                                    shippingAddress = value;
-                                } else if (type.includes('invoice')) {
-                                    invoiceAddress = value;
-                                }
-                            });
-
-
-                            // Tambahkan alamat ke dropdown Shipping
-                            if (shippingAddress) {
-                                $("#addressShipping")
-                                    .append('<option value="' + shippingAddress.id + '">' + shippingAddress.address + '</option>')
-                                    .val(shippingAddress.id)
+                            if (response.shipping) {
+                                $('#addressShipping')
+                                    .append(
+                                        `<option value="${response.shipping}">${response.shipping}</option>`
+                                        )
+                                    .val(response.shipping)
                                     .trigger('change');
+                            } else {
+                                $('#addressShipping').append(
+                                    '<option value="">No Shipping Address</option>');
                             }
-
-                            if (invoiceAddress) {
-                                $("#addressInvoice")
-                                    .append('<option value="' + invoiceAddress.id + '">' + invoiceAddress.address + '</option>')
-                                    .val(invoiceAddress.id)
+                            if (response.invoice) {
+                                $('#addressInvoice')
+                                    .append(
+                                        `<option value="${response.invoice}">${response.invoice}</option>`)
+                                    .val(response.invoice)
                                     .trigger('change');
+                            } else {
+                                $('#addressInvoice').append('<option value="">No Invoice Address</option>');
                             }
-
                         },
                         error: function(xhr) {
                             console.error(xhr.responseText);
@@ -500,6 +495,8 @@
                         }
                     });
                 }
+
+
             });
         </script>
     @endpush

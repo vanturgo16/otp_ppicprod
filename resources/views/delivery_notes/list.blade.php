@@ -45,26 +45,27 @@
                                 <h5 class="mb-0">Delivery Notes</h5>
                             </div>
                         </div>
-                        {{-- <div class="d-flex gap-2 p-3">
-                            <button class="btn btn-primary">
+
+                        <div class="d-flex gap-2 p-3">
+                            <button class="btn btn-primary btn-filter active" data-type="" id="reset-filter">
                                 <i class="fas fa-file-alt"></i> All Data
                             </button>
-                            <button class="btn btn-light border">
+                            <button class="btn btn-light border btn-filter" data-type="Reguler">
                                 <i class="fas fa-file"></i> DN (Reguler)
                             </button>
-                            <button class="btn btn-info text-white">
+                            <button class="btn btn-info text-white btn-filter" data-type="Sample">
                                 <i class="fas fa-file"></i> DN (Sample)
                             </button>
-                            <button class="btn btn-secondary">
+                            <button class="btn btn-secondary btn-filter" data-type="Export">
                                 <i class="fas fa-file"></i> DN (Export)
                             </button>
-                            <button class="btn btn-danger">
+                            <button class="btn btn-danger btn-filter" data-type="Retur">
                                 <i class="fas fa-file"></i> DN (Retur)
                             </button>
-                            <button class="btn btn-light border">
+                            <button class="btn btn-success border" id="export-data">
                                 <i class="fas fa-download"></i> Export Data
                             </button>
-                        </div> --}}
+                        </div>
                         <div class="card-body">
                             <div class="table-responsive">
                                 <table id="delivery_notes_table" class="table table-bordered dt-responsive nowrap w-100">
@@ -98,6 +99,7 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
             $(document).ready(function() {
+                let transactionType = '';
                 let dataTable = $('#delivery_notes_table').DataTable({
                     dom: 'Bfrtip',
                     buttons: [
@@ -121,6 +123,7 @@
                         data: function(d) {
                             d.start_date = $('#start_date').val();
                             d.end_date = $('#end_date').val();
+                            d.transaction_type = transactionType;
                         }
                     },
                     columns: [{
@@ -157,8 +160,8 @@
                             orderable: true
                         },
                         {
-                            data: 'transaction_type',
-                            name: 'transaction_type',
+                            data: 'jenis_dn',
+                            name: 'jenis_dn',
                             orderable: true
                         },
                         {
@@ -202,6 +205,7 @@
                     ],
                 });
 
+
                 function generateActionButtons(data) {
                     let buttons = ``;
                     if (data.status == 'Request') {
@@ -221,18 +225,12 @@
                     </button>
                 </form>`;
                         buttons += `<a href="/delivery_notes/${data.id}/print?type=DN" target="_blank" 
-   rel="noopener noreferrer" class="btn btn-sm btn-secondary">
-                <i class="bx bx-printer"></i> Print DN</a>`;
-                        buttons += `<a href="/delivery_notes/${data.id}/print?type=DR" target="_blank" 
-   rel="noopener noreferrer" class="btn btn-sm btn-secondary">
-                <i class="bx bx-printer"></i> Print DR</a>`;
-                        buttons += `<a href="/delivery_notes/${data.id}/print?type=DS" target="_blank" 
-   rel="noopener noreferrer" class="btn btn-sm btn-secondary">
-                <i class="bx bx-printer"></i> Print DS</a>`;
+   rel="noopener noreferrer" class="btn btn-sm btn-secondary ">
+                <i class="bx bx-printer"></i> Print Delivery Note</a>`;
                     }
 
                     buttons += `<a href="/print_packing_list/${data.id}" target="_blank" 
-   rel="noopener noreferrer" class="btn btn-sm btn-secondary">
+   rel="noopener noreferrer" class="btn btn-sm btn-secondary m-1">
                 <i class="bx bx-printer"></i> Print Packing List
             </a>`;
 
@@ -301,6 +299,17 @@
                             });
                         }
                     });
+                });
+                // Event listener untuk tombol filter
+                $('.btn-filter').on('click', function() {
+                    transactionType = $(this).data('type'); // Ambil data-type dari tombol
+                    dataTable.draw(); // Refresh DataTable
+                });
+
+                // Reset filter ke "All Data"
+                $('#reset-filter').on('click', function() {
+                    transactionType = '';
+                    dataTable.draw();
                 });
 
                 $('#filter').on('click', function() {
