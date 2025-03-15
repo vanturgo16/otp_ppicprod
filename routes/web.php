@@ -205,8 +205,9 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
         Route::put('delivery_notes/{id}/update', 'update')->name('delivery_notes.update');
         Route::get('delivery_notes/{id}/print', 'print')->name('delivery_notes.print');
         Route::put('delivery_notes/{packingListId}/update_remark', 'updateRemark')->name('delivery_note_details.updateRemark');
-        Route::get('get-customer-addresses/{customerId}/{type}', 'getCustomerAddresses')->name('get-customer-addresses');
         Route::delete('delivery_notes/{id}/delete_packing_list', 'deletePackingList');
         Route::get('print_packing_list/{id}', 'printPackingList')->name('print_packing_list');
+        Route::get('get-so-number-by-customer/{customerId}', 'getSoNumberByCustomer')->name('get-so-number-by-customer');
+        Route::get('get-customer-addresses-by-so/{soNo}', 'getCustomerAddressesBySo')->name('get-customer-addresses-by-so');
     });
 }); 

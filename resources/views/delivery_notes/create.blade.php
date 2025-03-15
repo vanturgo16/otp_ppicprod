@@ -23,41 +23,65 @@
                             <form id="delivery-note-form">
                                 @csrf
                                 <div class="mb-3">
+                                    <label for="jenis-dn" class="form-label">Pilih Jenis Delivery Note</label>
+                                    <select class="form-control" id="jenis-dn" name="jenis_dn" required
+                                        onchange="this.form.submit()">
+                                        <option value="Regular" {{ request('jenis_dn') == 'Regular' ? 'selected' : '' }}>
+                                            Regular</option>
+                                        <option value="Export" {{ request('jenis_dn') == 'Export' ? 'selected' : '' }}>
+                                            Export</option>
+                                        <option value="Sample" {{ request('jenis_dn') == 'Sample' ? 'selected' : '' }}>
+                                            Sample</option>
+                                        <option value="Return" {{ request('jenis_dn') == 'Return' ? 'selected' : '' }}>
+                                            Return</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
                                     <label for="dn_number" class="form-label">Nomor DN</label>
-                                    <input type="text" class="form-control" id="dn_number" name="dn_number" value="{{ $dnNumber }}" readonly>
+                                    <input type="text" class="form-control" id="dn_number" name="dn_number"
+                                        value="{{ $dnNumber }}" readonly>
                                 </div>
                                 <div class="mb-3">
                                     <label for="date" class="form-label">Tanggal</label>
                                     <input type="date" class="form-control" id="date" name="date" required>
                                 </div>
+
                                 <div class="mb-3">
                                     <label for="customer" class="form-label">Customer</label>
-                                    <select class="form-control select2" id="customer" name="id_master_customer" required>
+                                    <select class="form-control select2" id="customers" name="id_master_customer" required>
                                         <option value="" selected disabled>** Pilih Customer</option>
-                                        @foreach($customers as $customer)
-                                        <option value="{{ $customer->id }}">{{ $customer->name }}</option>
+                                        @foreach ($customers as $customer)
+                                            <option value="{{ $customer->id }}">{{ $customer->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
                                 <div class="mb-3">
+                                    <label for="sales_order" class="form-label">No. So</label>
+                                    <select class="form-control select2" id="soNo" name="id_sales_order" required>
+                                        <option value="" disabled selected>-</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
                                     <label for="customer_address" class="form-label">Alamat Shipping</label>
-                                    <select class="form-control select2" id="customer_address" name="id_master_customer_address_shipping" required>
-                                        <option value="" selected disabled>** Pilih Alamat Shipping</option>
+                                    <select class="form-control" id="addressShipping"
+                                        name="id_master_customer_address_shipping" required>
+                                        <option value="" selected disabled>-</option>
                                     </select>
                                 </div>
                                 <div class="mb-3">
                                     <label for="invoice_address" class="form-label">Alamat Invoice</label>
-                                    <select class="form-control select2" id="invoice_address" name="id_master_customer_address_invoice" required>
-                                        <option value="" selected disabled>** Pilih Alamat Invoice</option>
+                                    <select class="form-control" id="addressInvoice"
+                                        name="id_master_customer_address_invoice" required>
+                                        <option value="" selected disabled>-</option>
                                     </select>
                                 </div>
 
                                 <div class="mb-3">
                                     <label for="vehicle" class="form-label">Kendaraan</label>
-                                    <select class="form-control select2" id="vehicle" name="id_master_vehicle" required>
+                                    <select class="form-control" id="vehicle" name="id_master_vehicle" required>
                                         <option value="" selected disabled>** Pilih Kendaraan</option>
-                                        @foreach($vehicles as $vehicle)
-                                        <option value="{{ $vehicle->id }}">{{ $vehicle->vehicle_number }}</option>
+                                        @foreach ($vehicles as $vehicle)
+                                            <option value="{{ $vehicle->id }}">{{ $vehicle->vehicle_number }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -66,7 +90,8 @@
                                     <textarea class="form-control" id="note" name="note" rows="3"></textarea>
                                 </div>
                                 <button type="submit" class="btn btn-primary">Simpan</button>
-                                <button type="button" class="btn btn-secondary" id="kembali-btn" style="display: none;">Kembali</button>
+                                <button type="button" class="btn btn-secondary" id="kembali-btn"
+                                    style="display: none;">Kembali</button>
                             </form>
                         </div>
                     </div>
@@ -78,30 +103,36 @@
                                 <input type="hidden" id="delivery_note_id" name="delivery_note_id">
                                 <div class="mb-3">
                                     <label for="packing_list" class="form-label">Packing List</label>
-                                    <select class="form-control select2" id="packing_list" name="packing_list_id" required>
+                                    <select class="form-control select2" id="packing_list" name="packing_list_id"
+                                        required>
                                         <option value="" selected disabled>** Pilih Packing List</option>
                                         <!-- Options will be loaded dynamically -->
                                     </select>
                                 </div>
                                 <div class="mb-3">
                                     <label for="po_number" class="form-label">Nomor PO</label>
-                                    <input type="text" class="form-control" id="po_number" name="po_number" required readonly>
+                                    <input type="text" class="form-control" id="po_number" name="po_number" required
+                                        readonly>
                                 </div>
                                 <div class="mb-3">
                                     <label for="dn_type" class="form-label">Tipe DN</label>
-                                    <input type="text" class="form-control" id="dn_type" name="dn_type" required readonly>
+                                    <input type="text" class="form-control" id="dn_type" name="dn_type" required
+                                        readonly>
                                 </div>
                                 <div class="mb-3">
                                     <label for="type_product" class="form-label">Tipe Produk</label>
-                                    <input type="text" class="form-control" id="type_product" name="type_product" required readonly>
+                                    <input type="text" class="form-control" id="type_product" name="type_product"
+                                        required readonly>
                                 </div>
                                 <div class="mb-3">
                                     <label for="transaction_type" class="form-label">Tipe Transaksi</label>
-                                    <input type="text" class="form-control" id="transaction_type" name="transaction_type" required readonly>
+                                    <input type="text" class="form-control" id="transaction_type"
+                                        name="transaction_type" required readonly>
                                 </div>
                                 <div class="mb-3">
                                     <label for="salesman_name" class="form-label">Nama Salesman</label>
-                                    <input type="text" class="form-control" id="salesman_name" name="salesman_name" required readonly>
+                                    <input type="text" class="form-control" id="salesman_name" name="salesman_name"
+                                        required readonly>
                                 </div>
                                 <button type="submit" class="btn btn-primary">Tambah Packing List</button>
                             </form>
@@ -133,16 +164,18 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
             $(document).ready(function() {
+                $('#customers').val('').trigger('change');
                 var today = new Date().toISOString().split('T')[0];
                 $('#date').val(today);
                 $('.select2').select2();
+               
 
                 $('#delivery-note-form').on('submit', function(e) {
                     e.preventDefault();
                     var formData = $(this).serialize();
 
                     $.ajax({
-                        url: '{{ route("delivery_notes.store") }}',
+                        url: '{{ route('delivery_notes.store') }}',
                         method: 'POST',
                         data: formData,
                         success: function(response) {
@@ -184,7 +217,7 @@
 
                 function loadPackingListDetails(packingListId) {
                     $.ajax({
-                        url: '{{ url("getPackingListDetails") }}/' + packingListId,
+                        url: '{{ url('getPackingListDetails') }}/' + packingListId,
                         method: 'GET',
                         success: function(response) {
                             $('#po_number').val(response.po_number);
@@ -209,7 +242,8 @@
                     var formData = $(this).serialize();
 
                     $.ajax({
-                        url: '{{ url("delivery_notes") }}/' + $('#delivery_note_id').val() + '/store_packing_list',
+                        url: '{{ url('delivery_notes') }}/' + $('#delivery_note_id').val() +
+                            '/store_packing_list',
                         method: 'POST',
                         data: formData,
                         success: function(response) {
@@ -223,7 +257,8 @@
                                     '<td>' + response.dn_type + '</td>' +
                                     '<td>' + response.transaction_type + '</td>' +
                                     '<td>' + response.salesman_name + '</td>' +
-                                    '<td><input type="text" class="form-control packing-list-remark" data-id="' + packingListId + '" placeholder="Remark"></td>' +
+                                    '<td><input type="text" class="form-control packing-list-remark" data-id="' +
+                                    packingListId + '" placeholder="Remark"></td>' +
                                     '<td><button type="button" class="btn btn-danger btn-sm remove-packing-list">Hapus</button></td>' +
                                     '</tr>'
                                 );
@@ -232,7 +267,8 @@
                                 Swal.fire({
                                     icon: 'error',
                                     title: 'Error',
-                                    text: response.message || 'Gagal menambahkan packing list',
+                                    text: response.message ||
+                                        'Gagal menambahkan packing list',
                                 });
                             }
                         },
@@ -262,7 +298,8 @@
                     }).then((result) => {
                         if (result.isConfirmed) {
                             $.ajax({
-                                url: '{{ url("delivery_notes") }}/' + packingListId + '/delete_packing_list',
+                                url: '{{ url('delivery_notes') }}/' + packingListId +
+                                    '/delete_packing_list',
                                 method: 'DELETE',
                                 data: {
                                     _token: '{{ csrf_token() }}'
@@ -279,7 +316,8 @@
                                         Swal.fire({
                                             icon: 'error',
                                             title: 'Error',
-                                            text: response.message || 'Gagal menghapus packing list',
+                                            text: response.message ||
+                                                'Gagal menghapus packing list',
                                         });
                                     }
                                 },
@@ -301,7 +339,7 @@
                     var remark = $(this).val();
 
                     $.ajax({
-                        url: '{{ url("delivery_notes") }}/' + packingListId + '/update_remark',
+                        url: '{{ url('delivery_notes') }}/' + packingListId + '/update_remark',
                         method: 'PUT',
                         data: {
                             _token: '{{ csrf_token() }}',
@@ -333,23 +371,65 @@
                     });
                 });
 
-                $('#customer').change(function() {
+                $('#customers').change(function() {
+                     $('#addressShipping, #addressInvoice')
+                                .empty()
+                                .append('<option value="">-</option>');
                     var customerId = $(this).val();
                     if (customerId) {
                         loadPackingLists(customerId);
-                        loadCustomerAddresses(customerId, 'Shipping');
-                        loadCustomerAddresses(customerId, 'Invoice');
+                        loadSoNumbers(customerId);
+                    }
+                });
+                $('#soNo').change(function() {
+                    var soNo = $(this).val();
+                    // console.log(soNo);
+                    if (soNo) {
+                        loadCustomerAddresses(soNo);
                     }
                 });
 
+
+
+                //  SO Number
+                function loadSoNumbers(customerId) {
+                    $.ajax({
+                        url: '{{ url('get-so-number-by-customer') }}/' + customerId,
+                        method: 'GET',
+                        beforeSend: function() {
+                            $('#soNo')
+                                .empty()
+                                .append('<option value="">Loading...</option>');
+                        },
+                        success: function(response) {
+                            $('#soNo').empty().append(
+                                '<option value="" disabled selected>** Pilih No. SO</option>');
+                            $.each(response, function(index, so) {
+                                $('#soNo').append('<option value="' + so.so_number + '">' + so
+                                    .so_number +
+                                    '</option>');
+                            });
+                        },
+                        error: function() {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Gagal mengambil data SO',
+                            });
+                        }
+                    });
+                }
+
                 function loadPackingLists(customerId) {
                     $.ajax({
-                        url: '{{ url("getPackingListsByCustomer") }}/' + customerId,
+                        url: '{{ url('getPackingListsByCustomer') }}/' + customerId,
                         method: 'GET',
                         success: function(response) {
-                            $('#packing_list').empty().append('<option value="" selected disabled>** Pilih Packing List</option>');
+                            $('#packing_list').empty().append(
+                                '<option value="" selected disabled>** Pilih Packing List</option>');
                             $.each(response, function(key, value) {
-                                $('#packing_list').append('<option value="' + value.id + '">' + value.packing_number + '</option>');
+                                $('#packing_list').append('<option value="' + value.id + '">' +
+                                    value.packing_number + '</option>');
                             });
                         },
                         error: function(xhr) {
@@ -362,44 +442,50 @@
                         }
                     });
                 }
-                function loadCustomerAddresses(customerId) {
+
+
+                function loadCustomerAddresses(soNo) {
                     $.ajax({
-                        url: '{{ url("get-customer-addresses") }}/' + customerId + '/All',
+                        url: `{{ url('get-customer-addresses-by-so') }}/${soNo}`,
                         method: 'GET',
-                        success: function (response) {
-                            let shippingAddress = '';
-                            let invoiceAddress = '';
+                        beforeSend: function() {
+                            $('#addressShipping, #addressInvoice')
+                                .empty()
+                                .append('<option value="">Loading...</option>');
+                        },
+                        success: function(response) {
+                            // console.log("Response Data:", response);
+                            $('#addressShipping, #addressInvoice').empty();
 
-                            $('#customer_address, #invoice_address').empty(); // Kosongkan dulu dropdown
-
-                            $.each(response, function (key, value) {
-                                let address = value.address;
-                                let type = value.type_address.toLowerCase();
-
-                                // Jika "same as", maka buat alamat Invoice = Shipping
-                                if (type.includes('same as')) {
-                                    shippingAddress = address;
-                                    invoiceAddress = address;
-                                } else if (type === 'shipping') {
-                                    shippingAddress = address;
-                                } else if (type === 'invoice') {
-                                    invoiceAddress = address;
-                                }
-                            });
-
-                            // Tambahkan alamat ke dropdown Shipping
-                            if (shippingAddress) {
-                                $('#customer_address').append('<option value="' + shippingAddress + '">' + shippingAddress + '</option>')
-                                    .val(shippingAddress).trigger('change'); // Auto-select
+                            // Jika response kosong atau data tidak ditemukan
+                            if (!response || (!response.shipping && !response.invoice)) {
+                                $('#addressShipping').append(
+                                    '<option value="">No Shipping Address</option>');
+                                $('#addressInvoice').append('<option value="">No Invoice Address</option>');
+                                return;
                             }
-
-                            // Tambahkan alamat ke dropdown Invoice
-                            if (invoiceAddress) {
-                                $('#invoice_address').append('<option value="' + invoiceAddress + '">' + invoiceAddress + '</option>')
-                                    .val(invoiceAddress).trigger('change'); // Auto-select
+                            if (response.shipping) {
+                                $('#addressShipping')
+                                    .append(
+                                        `<option value="${response.shipping}">${response.shipping}</option>`
+                                        )
+                                    .val(response.shipping)
+                                    .trigger('change');
+                            } else {
+                                $('#addressShipping').append(
+                                    '<option value="">No Shipping Address</option>');
+                            }
+                            if (response.invoice) {
+                                $('#addressInvoice')
+                                    .append(
+                                        `<option value="${response.invoice}">${response.invoice}</option>`)
+                                    .val(response.invoice)
+                                    .trigger('change');
+                            } else {
+                                $('#addressInvoice').append('<option value="">No Invoice Address</option>');
                             }
                         },
-                        error: function (xhr) {
+                        error: function(xhr) {
                             console.error(xhr.responseText);
                             Swal.fire({
                                 icon: 'error',
@@ -411,11 +497,7 @@
                 }
 
 
-
-
-
             });
         </script>
-
     @endpush
 @endsection
