@@ -91,7 +91,7 @@
 </table>
 <b>Made In Indonesia</b>
 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-{{-- &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; --}}
+&nbsp; &nbsp; &nbsp; &nbsp; 
 
 <img class="qr-code" src="data:image/png;base64,{{ DNS2D::getBarcodePNG($barcode->barcode_number, 'QRCODE', 4, 4) }}" alt="QR Code" />
 
@@ -152,9 +152,12 @@
     .up-down-table td {
         width: 15px;
         height: 15px;
-        padding: 0;
+        /* padding: 1; */
+        text-align: center;
         border: 1px solid #000;
         font-size: 12px;
+        line-height: 15px;
+        margin-left: 1px;
     }
     
     .barcode-number, .joint {

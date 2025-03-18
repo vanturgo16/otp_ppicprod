@@ -41,7 +41,7 @@
                     <tr>
                         <td><strong>Size</strong></td>
                         <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
-                        <td class="value">{{ $barcode->width ?? '-' }} MM  &nbsp; X &nbsp;{{ $barcode->height ?? '' }} M
+                        <td class="value">{{ $barcode->width ?? '-' }} MM  &nbsp; X &nbsp;{{ $barcode->height ?? ($barcode->length ?? '') }} M
                             &nbsp;&nbsp;&nbsp;&nbsp; <strong>P:</strong>{{ $barcode->perforasi ?? '-' }}</td>
                     </tr>
                     <tr>
@@ -93,8 +93,7 @@
                 </table>
                 <b>Made In Indonesia</b>
                 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-                {{-- &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; --}}
-               
+                &nbsp; &nbsp; &nbsp; &nbsp; 
                 <img class="qr-code" src="data:image/png;base64,{{ DNS2D::getBarcodePNG($barcode->barcode_number, 'QRCODE', 4, 4) }}" alt="QR Code" />
 
             </div>
@@ -154,9 +153,12 @@
     .up-down-table td {
         width: 15px;
         height: 15px;
-        padding: 0;
+        padding: 1;
         border: 1px solid #000;
         font-size: 12px;
+        text-align: center;
+        line-height: 15px;
+        margin-left: 1px;
     }
     
     .barcode-number, .joint {
