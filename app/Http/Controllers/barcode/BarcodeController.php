@@ -282,21 +282,23 @@ class BarcodeController extends Controller
         ->join('work_orders as wo', 'b.id_work_orders', '=', 'wo.id')
         ->join(
             DB::raw('
-                (SELECT 
-                    id, product_code, description, id_master_units, type_product_code, 
-                    thickness, width, height, group_sub_code, \'FG\' AS type_product, perforasi, weight 
-                FROM master_product_fgs 
-                WHERE STATUS = \'Active\'
-                
-                UNION ALL 
-                
-                SELECT 
-                    id, wip_code AS product_code, description, id_master_units, type_product_code, 
-                    thickness, width, NULL AS height, group_sub_code, \'WIP\' AS type_product, perforasi, weight 
-                FROM master_wips 
-                WHERE STATUS = \'Active\'
-                ) mp
-            '), 
+            (SELECT 
+                id, wip_code AS product_code, description, id_master_units, type_product_code, 
+                thickness, width, length, NULL AS height, group_sub_code, 
+                \'WIP\' AS type_product, perforasi, weight 
+            FROM master_wips 
+            WHERE STATUS = \'Active\'
+            
+            UNION ALL 
+            
+            SELECT 
+                id, product_code, description, id_master_units, type_product_code, 
+                thickness, width, NULL AS length, height, group_sub_code, 
+                \'FG\' AS type_product, perforasi, weight 
+            FROM master_product_fgs 
+            WHERE STATUS = \'Active\'
+            ) mp
+        '),            
             function ($join) {
                 $join->on('b.id_master_products', '=', 'mp.id')
                      ->on('wo.type_product', '=', 'mp.type_product');
@@ -308,6 +310,7 @@ class BarcodeController extends Controller
             'bd.barcode_number',
             'bd.created_at as tgl_buat',
             'b.shift',
+            'b.id_master_products',
             'so.so_number',
             'wo.wo_number',
             'mwc.work_center_code',
@@ -317,13 +320,17 @@ class BarcodeController extends Controller
             'mp.thickness',
             'mp.perforasi',
             'mp.width',
-            DB::raw('IF(mp.type_product = "FG", mp.height, NULL) AS height')
+            'mp.length',
+            'mp.height'
         )
         ->where('bd.barcode_number', $id)
         ->first();
-        //  dd($barcode);
+        // Debugging untuk melihat apakah `length` muncul
+        // dd($barcode);
+    
         return view('barcode.print_satuan', compact('barcode'));
     }
+    
     
     public function print_standar($id)
     {

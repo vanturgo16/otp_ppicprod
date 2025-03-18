@@ -34,7 +34,7 @@
                         <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
                         <td  class="description">
                        
-                            {{ $barcode->description ?? '-' }}
+                           <b> {{ $barcode->description ?? '-' }}</b>
                        
                         </td>
                     </tr>
@@ -55,7 +55,7 @@
                         <td class="value">{{ $barcode->shift }} &nbsp; <strong>Machine: {{ $barcode->work_center_code }}</strong> &nbsp; <strong>Joint:</strong> <span class="joint">1</span> <span class="joint">2</span> <span class="joint">3</span></td>
                     </tr>
                     <tr>
-                        <td><strong>Up</strong></td>
+                        <td><strong>Left</strong></td>
                         <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
                         <td class="value">
                             <table class="up-down-table">
@@ -68,7 +68,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <td><strong>Down</strong></td>
+                        <td><strong>Right</strong></td>
                         <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
                         <td class="value">
                             <table class="up-down-table">
@@ -140,9 +140,9 @@
     }
 
     .value {
-        word-wrap: break-word; /* Buat memecah kata panjang */
-        
-    }
+    word-wrap: break-word; /* Buat memecah kata panjang */
+    font-weight: bold; /* Menjadikan teks tebal */
+}
     
     .company-name {
     text-align: left;
