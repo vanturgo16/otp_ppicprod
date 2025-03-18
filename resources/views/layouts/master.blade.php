@@ -10,12 +10,16 @@
 
     <link rel="shortcut icon" href="{{ asset('assets/images/icon-otp.png') }}">
     <!-- plugin css -->
-    <link href="{{ asset('assets/libs/admin-resources/jquery.vectormap/jquery-jvectormap-1.2.2.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('assets/libs/admin-resources/jquery.vectormap/jquery-jvectormap-1.2.2.css') }}"
+        rel="stylesheet" type="text/css" />
     <!-- DataTables -->
-    <link href="{{ asset('assets/libs/datatables.net-bs4/css/dataTables.bootstrap4.min.css') }}" rel="stylesheet" type="text/css" />
-    <link href="{{ asset('assets/libs/datatables.net-buttons-bs4/css/buttons.bootstrap4.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('assets/libs/datatables.net-bs4/css/dataTables.bootstrap4.min.css') }}" rel="stylesheet"
+        type="text/css" />
+    <link href="{{ asset('assets/libs/datatables.net-buttons-bs4/css/buttons.bootstrap4.min.css') }}" rel="stylesheet"
+        type="text/css" />
     <!-- Responsive datatable examples -->
-    <link href="{{ asset('assets/libs/datatables.net-responsive-bs4/css/responsive.bootstrap4.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('assets/libs/datatables.net-responsive-bs4/css/responsive.bootstrap4.min.css') }}"
+        rel="stylesheet" type="text/css" />
     <!-- preloader css -->
     <link rel="stylesheet" href="{{ asset('assets/css/preloader.min.css') }}" type="text/css" />
     <!-- Bootstrap Css -->
@@ -25,11 +29,13 @@
     <!-- App Css-->
     <link href="{{ asset('assets/css/app.min.css') }}" id="app-style" rel="stylesheet" type="text/css" />\
     <!-- choices css -->
-    <link href="{{ asset('assets/libs/choices.js/public/assets/styles/choices.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('assets/libs/choices.js/public/assets/styles/choices.min.css') }}" rel="stylesheet"
+        type="text/css" />
 
     {{-- Custom --}}
     <link href="{{ asset('assets/css/custom.css') }}" id="app-style" rel="stylesheet" type="text/css" />
-    <link href="{{ asset('assets/libs/choices.js/public/assets/styles/choices.min.css') }}" id="app-style" rel="stylesheet" type="text/css" />
+    <link href="{{ asset('assets/libs/choices.js/public/assets/styles/choices.min.css') }}" id="app-style"
+        rel="stylesheet" type="text/css" />
 
     {{-- Jquery --}}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -54,7 +60,7 @@
             content: " *";
             color: red;
         }
-        
+
         .table-success-closed {
             --bs-table-color: #000;
             --bs-table-bg: #b4f0d8;
@@ -83,24 +89,24 @@
                     <div class="navbar-brand-box">
 
                         <a href="https://sso.olefinatifaplas.my.id/menu" class="logo logo-dark">
-                        {{-- <a href="/dashboard" class="logo logo-dark"> --}}
+                            {{-- <a href="/dashboard" class="logo logo-dark"> --}}
 
-                            <span class="logo-sm">
-                                <img src="{{ asset('assets/images/icon-otp.png') }}" alt="" height="30">
-                            </span>
-                            <span class="logo-lg">
-                                <img src="{{ asset('assets/images/logo.png') }}" alt="" height="40">
-                            </span>
-                        </a>
+                                <span class="logo-sm">
+                                    <img src="{{ asset('assets/images/icon-otp.png') }}" alt="" height="30">
+                                </span>
+                                <span class="logo-lg">
+                                    <img src="{{ asset('assets/images/logo.png') }}" alt="" height="40">
+                                </span>
+                            </a>
 
-                        <a href="https://sso.olefinatifaplas.my.id/menu" class="logo logo-light">
-                            <span class="logo-sm">
-                                <img src="{{ asset('assets/images/icon-otp.png') }}" alt="" height="30">
-                            </span>
-                            <span class="logo-lg">
-                                <img src="{{ asset('assets/images/logo.png') }}" alt="" height="40">
-                            </span>
-                        </a>
+                            <a href="https://sso.olefinatifaplas.my.id/menu" class="logo logo-light">
+                                <span class="logo-sm">
+                                    <img src="{{ asset('assets/images/icon-otp.png') }}" alt="" height="30">
+                                </span>
+                                <span class="logo-lg">
+                                    <img src="{{ asset('assets/images/logo.png') }}" alt="" height="40">
+                                </span>
+                            </a>
                     </div>
 
                     <button type="button" class="btn btn-sm px-3 font-size-16 header-item" id="vertical-menu-btn">
@@ -111,7 +117,8 @@
                     {{-- <form class="app-search d-none d-lg-block">
                         <div class="position-relative">
                             <input type="text" class="form-control" placeholder="Search...">
-                            <button class="btn btn-primary" type="button"><i class="bx bx-search-alt align-middle"></i></button>
+                            <button class="btn btn-primary" type="button"><i
+                                    class="bx bx-search-alt align-middle"></i></button>
                         </div>
                     </form> --}}
                 </div>
@@ -120,18 +127,20 @@
 
                     {{-- <div class="dropdown d-inline-block d-lg-none ms-2">
                         <button type="button" class="btn header-item" id="page-header-search-dropdown"
-                        data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i data-feather="search" class="icon-lg"></i>
                         </button>
                         <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0"
                             aria-labelledby="page-header-search-dropdown">
-    
+
                             <form class="p-3">
                                 <div class="form-group m-0">
                                     <div class="input-group">
-                                        <input type="text" class="form-control" placeholder="Search ..." aria-label="Search Result">
+                                        <input type="text" class="form-control" placeholder="Search ..."
+                                            aria-label="Search Result">
 
-                                        <button class="btn btn-primary" type="submit"><i class="mdi mdi-magnify"></i></button>
+                                        <button class="btn btn-primary" type="submit"><i
+                                                class="mdi mdi-magnify"></i></button>
                                     </div>
                                 </div>
                             </form>
@@ -152,14 +161,18 @@
                     </div>
 
                     <div class="dropdown d-inline-block">
-                        <button type="button" class="btn header-item bg-light-subtle border-start border-end" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <img class="rounded-circle header-profile-user" src="{{ asset('assets/images/users/userbg.png') }}" alt="Header Avatar">
+                        <button type="button" class="btn header-item bg-light-subtle border-start border-end"
+                            id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true"
+                            aria-expanded="false">
+                            <img class="rounded-circle header-profile-user"
+                                src="{{ asset('assets/images/users/userbg.png') }}" alt="Header Avatar">
                             <span class="d-none d-xl-inline-block ms-1 fw-medium">{{ Auth::user()->name }}</span>
                             <i class="mdi mdi-chevron-down d-none d-xl-inline-block"></i>
                         </button>
                         <div class="dropdown-menu dropdown-menu-end">
                             <!-- item-->
-                            <a class="dropdown-item" href="" data-bs-toggle="modal" data-bs-target="#logout"><i class="mdi mdi-logout font-size-16 align-middle me-1"></i>
+                            <a class="dropdown-item" href="" data-bs-toggle="modal" data-bs-target="#logout"><i
+                                    class="mdi mdi-logout font-size-16 align-middle me-1"></i>
                                 Logout</a>
                         </div>
                     </div>
@@ -182,114 +195,115 @@
                             </a>
                         </li>
                         @can('PPIC_Barcode')
-                            <li>
-                                <a href="{{ route('barcode') }}">
-                                    <i data-feather="cpu"></i>
-                                    <span data-key="t-horizontal">Barcode</span>
-                                </a>
-                            </li>
+                        <li>
+                            <a href="{{ route('barcode') }}">
+                                <i data-feather="cpu"></i>
+                                <span data-key="t-horizontal">Barcode</span>
+                            </a>
+                        </li>
                         @endcan
 
                         @can('PPIC')
-                            <li class="{{ request()->is('ppic/*') ? 'mm-active' : '' }}">
-                                <a href="javascript: void(0);" class="has-arrow">
-                                    <i data-feather="briefcase"></i><span data-key="t-blog">PPIC</span>
-                                </a>
-                                <ul class="sub-menu" aria-expanded="false">
-                                    @can('PPIC_good-receipt-note')
-                                        <li class="{{ request()->is('ppic/grn/*') ? 'mm-active' : '' }}">
-                                            <a href="{{ route('grn.index') }}" data-key="t-blog-grid">Good Receipt Note</a>
-                                        </li>
-                                    @endcan
-                                    @can('PPIC_grn-qc')
-                                        <li class="{{ request()->is('ppic/grn-qc/*') ? 'mm-active' : '' }}">
-                                            <a href="{{ route('grn_qc.index') }}" data-key="t-blog-grid">GRN Need QC Passed</a>
-                                        </li>
-                                    @endcan
-                                    @can('PPIC_good-lote-number')
-                                        <li class="{{ request()->is('ppic/grn-gln/*') ? 'mm-active' : '' }}">
-                                            <a href="{{ route('grn_gln.index') }}" data-key="t-blog-grid">Good Lot Number</a>
-                                        </li>
-                                    @endcan
-                                    @can('PPIC_workOrder')
-                                        <li class="{{ request()->is('ppic/workOrder/*') ? 'mm-active' : '' }}">
-                                            <a href="{{ route('ppic.workOrder.index') }}" data-key="t-blog-grid">Work Order</a>
-                                        </li>
-                                    @endcan
-                                </ul>
-                            </li>
+                        <li class="{{ request()->is('ppic/*') ? 'mm-active' : '' }}">
+                            <a href="javascript: void(0);" class="has-arrow">
+                                <i data-feather="briefcase"></i><span data-key="t-blog">PPIC</span>
+                            </a>
+                            <ul class="sub-menu" aria-expanded="false">
+                                @can('PPIC_good-receipt-note')
+                                <li class="{{ request()->is('ppic/grn/*') ? 'mm-active' : '' }}">
+                                    <a href="{{ route('grn.index') }}" data-key="t-blog-grid">Good Receipt Note</a>
+                                </li>
+                                @endcan
+                                @can('PPIC_grn-qc')
+                                <li class="{{ request()->is('ppic/grn-qc/*') ? 'mm-active' : '' }}">
+                                    <a href="{{ route('grn_qc.index') }}" data-key="t-blog-grid">GRN Need QC Passed</a>
+                                </li>
+                                @endcan
+                                @can('PPIC_good-lote-number')
+                                <li class="{{ request()->is('ppic/grn-gln/*') ? 'mm-active' : '' }}">
+                                    <a href="{{ route('grn_gln.index') }}" data-key="t-blog-grid">Good Lot Number</a>
+                                </li>
+                                @endcan
+                                @can('PPIC_workOrder')
+                                <li class="{{ request()->is('ppic/workOrder/*') ? 'mm-active' : '' }}">
+                                    <a href="{{ route('ppic.workOrder.index') }}" data-key="t-blog-grid">Work Order</a>
+                                </li>
+                                @endcan
+                            </ul>
+                        </li>
 
-                            {{-- OLD PPIC MENU --}}
-                            {{-- <li class="{{ request()->is('ppic/*') ? 'mm-active' : '' }}">
-                                <a href="javascript: void(0);" class="has-arrow">
-                                    <i data-feather="briefcase"></i>
-                                    <span data-key="t-blog">PPIC</span>
-                                </a>
-                                <ul class="sub-menu" aria-expanded="false">
-                                    @can('PPIC_good-receipt-note')
-                                    <li><a href="/good-receipt-note" data-key="t-blog-grid">Good Receipt Note</a></li>
-                                    @endcan
+                        {{-- OLD PPIC MENU --}}
+                        {{-- <li class="{{ request()->is('ppic/*') ? 'mm-active' : '' }}">
+                            <a href="javascript: void(0);" class="has-arrow">
+                                <i data-feather="briefcase"></i>
+                                <span data-key="t-blog">PPIC</span>
+                            </a>
+                            <ul class="sub-menu" aria-expanded="false">
+                                @can('PPIC_good-receipt-note')
+                                <li><a href="/good-receipt-note" data-key="t-blog-grid">Good Receipt Note</a></li>
+                                @endcan
 
-                                    @can('PPIC_good-lote-number')
-                                    <li><a href="/good-lote-number" data-key="t-blog-grid">Good Lote Number</a></li>
-                                    @endcan
+                                @can('PPIC_good-lote-number')
+                                <li><a href="/good-lote-number" data-key="t-blog-grid">Good Lote Number</a></li>
+                                @endcan
 
-                                    @can('PPIC_grn-qc')
-                                    <li><a href="/grn-qc" data-key="t-blog-grid">GRN Need QC Passed</a></li>
-                                    @endcan
+                                @can('PPIC_grn-qc')
+                                <li><a href="/grn-qc" data-key="t-blog-grid">GRN Need QC Passed</a></li>
+                                @endcan
 
-                                    @can('PPIC_external-no-lot')
-                                    <li><a href="/external-no-lot" data-key="t-blog-grid">External No Lot</a></li>
-                                    @endcan
+                                @can('PPIC_external-no-lot')
+                                <li><a href="/external-no-lot" data-key="t-blog-grid">External No Lot</a></li>
+                                @endcan
 
-                                    @can('PPIC_workOrder')
-                                    <li><a href="{{ route('ppic.workOrder.index') }}" data-key="t-blog-grid">Word Order</a></li>
-                                    @endcan
-                                </ul>
-                            </li> --}}
+                                @can('PPIC_workOrder')
+                                <li><a href="{{ route('ppic.workOrder.index') }}" data-key="t-blog-grid">Word Order</a>
+                                </li>
+                                @endcan
+                            </ul>
+                        </li> --}}
                         @endcan
 
                         @can('Warehouse')
-                            {{-- <li class="{{ request()->is('ppic/*') ? 'mm-active' : '' }}"> --}}
-                            <li>
-                                <a href="javascript: void(0);" class="has-arrow">
-                                    <i data-feather="box"></i>
-                                    <span data-key="t-blog">Warehouse</span>
-                                </a>
-                                <ul class="sub-menu" aria-expanded="false">
-                                    @can('Warehouse_packing_list')
-                                    <li><a href="/packing-list" data-key="t-blog-grid">Packing List</a></li>
-                                    @endcan
+                        {{-- <li class="{{ request()->is('ppic/*') ? 'mm-active' : '' }}"> --}}
+                        <li>
+                            <a href="javascript: void(0);" class="has-arrow">
+                                <i data-feather="box"></i>
+                                <span data-key="t-blog">Warehouse</span>
+                            </a>
+                            <ul class="sub-menu" aria-expanded="false">
+                                @can('Warehouse_packing_list')
+                                <li><a href="/packing-list" data-key="t-blog-grid">Packing List</a></li>
+                                @endcan
 
-                                    @can('Warehouse_delivery_notes')
-                                    <li><a href="/delivery_notes" data-key="t-blog-grid">Delivery Note</a></li>
-                                    @endcan
+                                @can('Warehouse_delivery_notes')
+                                <li><a href="/delivery_notes" data-key="t-blog-grid">Delivery Note</a></li>
+                                @endcan
 
 
-                                </ul>
-                            </li>
+                            </ul>
+                        </li>
                         @endcan
 
                         @can('PPIC_user_management')
-                            <li class="{{ request()->is('user/*') ? 'mm-active' : '' }}">
-                                <a href="javascript: void(0);" class="has-arrow">
-                                    <i data-feather="users"></i>
-                                    <span data-key="t-blog">User Management</span>
-                                </a>
-                                <ul class="sub-menu" aria-expanded="false">
-                                    @can('PPIC_user.index')
-                                    <li><a href="/user" data-key="t-blog-grid">Users</a></li>
-                                    @endcan
+                        <li class="{{ request()->is('user/*') ? 'mm-active' : '' }}">
+                            <a href="javascript: void(0);" class="has-arrow">
+                                <i data-feather="users"></i>
+                                <span data-key="t-blog">User Management</span>
+                            </a>
+                            <ul class="sub-menu" aria-expanded="false">
+                                @can('PPIC_user.index')
+                                <li><a href="/user" data-key="t-blog-grid">Users</a></li>
+                                @endcan
 
-                                    @can('PPIC_permission.index')
-                                    <li><a href="/permission" data-key="t-blog-grid">Permissions</a></li>
-                                    @endcan
+                                @can('PPIC_permission.index')
+                                <li><a href="/permission" data-key="t-blog-grid">Permissions</a></li>
+                                @endcan
 
-                                    @can('PPIC_role.index')
-                                    <li><a href="/role" data-key="t-blog-grid">Account settings</a></li>
-                                    @endcan
-                                </ul>
-                            </li>
+                                @can('PPIC_role.index')
+                                <li><a href="/role" data-key="t-blog-grid">Account settings</a></li>
+                                @endcan
+                            </ul>
+                        </li>
                         @endcan
                     </ul>
                 </div>
@@ -326,7 +340,8 @@
         <!-- end main content-->
 
         {{-- Modal Logout --}}
-        <div class="modal fade" id="logout" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal fade" id="logout" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+            role="dialog" aria-labelledby="staticBackdropLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-top" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -338,9 +353,11 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
-                        <form action="{{ route('logout') }}" id="formlogout" method="POST" enctype="multipart/form-data">
+                        <form action="{{ route('logout') }}" id="formlogout" method="POST"
+                            enctype="multipart/form-data">
                             @csrf
-                            <button type="submit" class="btn btn-danger waves-effect btn-label waves-light" name="sb"><i class="mdi mdi-logout label-icon"></i>Logout</button>
+                            <button type="submit" class="btn btn-danger waves-effect btn-label waves-light" name="sb"><i
+                                    class="mdi mdi-logout label-icon"></i>Logout</button>
                         </form>
                         <script>
                             document.getElementById('formlogout').addEventListener('submit', function(event) {
@@ -384,14 +401,16 @@
                     <label class="form-check-label" for="layout-vertical">Vertical</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="layout" id="layout-horizontal" value="horizontal">
+                    <input class="form-check-input" type="radio" name="layout" id="layout-horizontal"
+                        value="horizontal">
                     <label class="form-check-label" for="layout-horizontal">Horizontal</label>
                 </div>
 
                 <h6 class="mt-4 mb-3 pt-2">Layout Mode</h6>
 
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="layout-mode" id="layout-mode-light" value="light">
+                    <input class="form-check-input" type="radio" name="layout-mode" id="layout-mode-light"
+                        value="light">
                     <label class="form-check-label" for="layout-mode-light">Light</label>
                 </div>
                 <div class="form-check form-check-inline">
@@ -402,74 +421,88 @@
                 <h6 class="mt-4 mb-3 pt-2">Layout Width</h6>
 
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="layout-width" id="layout-width-fuild" value="fuild" onchange="document.body.setAttribute('data-layout-size', 'fluid')">
+                    <input class="form-check-input" type="radio" name="layout-width" id="layout-width-fuild"
+                        value="fuild" onchange="document.body.setAttribute('data-layout-size', 'fluid')">
                     <label class="form-check-label" for="layout-width-fuild">Fluid</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="layout-width" id="layout-width-boxed" value="boxed" onchange="document.body.setAttribute('data-layout-size', 'boxed')">
+                    <input class="form-check-input" type="radio" name="layout-width" id="layout-width-boxed"
+                        value="boxed" onchange="document.body.setAttribute('data-layout-size', 'boxed')">
                     <label class="form-check-label" for="layout-width-boxed">Boxed</label>
                 </div>
 
                 <h6 class="mt-4 mb-3 pt-2">Layout Position</h6>
 
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="layout-position" id="layout-position-fixed" value="fixed" onchange="document.body.setAttribute('data-layout-scrollable', 'false')">
+                    <input class="form-check-input" type="radio" name="layout-position" id="layout-position-fixed"
+                        value="fixed" onchange="document.body.setAttribute('data-layout-scrollable', 'false')">
                     <label class="form-check-label" for="layout-position-fixed">Fixed</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="layout-position" id="layout-position-scrollable" value="scrollable" onchange="document.body.setAttribute('data-layout-scrollable', 'true')">
+                    <input class="form-check-input" type="radio" name="layout-position" id="layout-position-scrollable"
+                        value="scrollable" onchange="document.body.setAttribute('data-layout-scrollable', 'true')">
                     <label class="form-check-label" for="layout-position-scrollable">Scrollable</label>
                 </div>
 
                 <h6 class="mt-4 mb-3 pt-2">Topbar Color</h6>
 
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="topbar-color" id="topbar-color-light" value="light" onchange="document.body.setAttribute('data-topbar', 'light')">
+                    <input class="form-check-input" type="radio" name="topbar-color" id="topbar-color-light"
+                        value="light" onchange="document.body.setAttribute('data-topbar', 'light')">
                     <label class="form-check-label" for="topbar-color-light">Light</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="topbar-color" id="topbar-color-dark" value="dark" onchange="document.body.setAttribute('data-topbar', 'dark')">
+                    <input class="form-check-input" type="radio" name="topbar-color" id="topbar-color-dark" value="dark"
+                        onchange="document.body.setAttribute('data-topbar', 'dark')">
                     <label class="form-check-label" for="topbar-color-dark">Dark</label>
                 </div>
 
                 <h6 class="mt-4 mb-3 pt-2 sidebar-setting">Sidebar Size</h6>
 
                 <div class="form-check sidebar-setting">
-                    <input class="form-check-input" type="radio" name="sidebar-size" id="sidebar-size-default" value="default" onchange="document.body.setAttribute('data-sidebar-size', 'lg')">
+                    <input class="form-check-input" type="radio" name="sidebar-size" id="sidebar-size-default"
+                        value="default" onchange="document.body.setAttribute('data-sidebar-size', 'lg')">
                     <label class="form-check-label" for="sidebar-size-default">Default</label>
                 </div>
                 <div class="form-check sidebar-setting">
-                    <input class="form-check-input" type="radio" name="sidebar-size" id="sidebar-size-compact" value="compact" onchange="document.body.setAttribute('data-sidebar-size', 'md')">
+                    <input class="form-check-input" type="radio" name="sidebar-size" id="sidebar-size-compact"
+                        value="compact" onchange="document.body.setAttribute('data-sidebar-size', 'md')">
                     <label class="form-check-label" for="sidebar-size-compact">Compact</label>
                 </div>
                 <div class="form-check sidebar-setting">
-                    <input class="form-check-input" type="radio" name="sidebar-size" id="sidebar-size-small" value="small" onchange="document.body.setAttribute('data-sidebar-size', 'sm')">
+                    <input class="form-check-input" type="radio" name="sidebar-size" id="sidebar-size-small"
+                        value="small" onchange="document.body.setAttribute('data-sidebar-size', 'sm')">
                     <label class="form-check-label" for="sidebar-size-small">Small (Icon View)</label>
                 </div>
 
                 <h6 class="mt-4 mb-3 pt-2 sidebar-setting">Sidebar Color</h6>
 
                 <div class="form-check sidebar-setting">
-                    <input class="form-check-input" type="radio" name="sidebar-color" id="sidebar-color-light" value="light" onchange="document.body.setAttribute('data-sidebar', 'light')">
+                    <input class="form-check-input" type="radio" name="sidebar-color" id="sidebar-color-light"
+                        value="light" onchange="document.body.setAttribute('data-sidebar', 'light')">
                     <label class="form-check-label" for="sidebar-color-light">Light</label>
                 </div>
                 <div class="form-check sidebar-setting">
-                    <input class="form-check-input" type="radio" name="sidebar-color" id="sidebar-color-dark" value="dark" onchange="document.body.setAttribute('data-sidebar', 'dark')">
+                    <input class="form-check-input" type="radio" name="sidebar-color" id="sidebar-color-dark"
+                        value="dark" onchange="document.body.setAttribute('data-sidebar', 'dark')">
                     <label class="form-check-label" for="sidebar-color-dark">Dark</label>
                 </div>
                 <div class="form-check sidebar-setting">
-                    <input class="form-check-input" type="radio" name="sidebar-color" id="sidebar-color-brand" value="brand" onchange="document.body.setAttribute('data-sidebar', 'brand')">
+                    <input class="form-check-input" type="radio" name="sidebar-color" id="sidebar-color-brand"
+                        value="brand" onchange="document.body.setAttribute('data-sidebar', 'brand')">
                     <label class="form-check-label" for="sidebar-color-brand">Brand</label>
                 </div>
 
                 <h6 class="mt-4 mb-3 pt-2">Direction</h6>
 
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="layout-direction" id="layout-direction-ltr" value="ltr">
+                    <input class="form-check-input" type="radio" name="layout-direction" id="layout-direction-ltr"
+                        value="ltr">
                     <label class="form-check-label" for="layout-direction-ltr">LTR</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="layout-direction" id="layout-direction-rtl" value="rtl">
+                    <input class="form-check-input" type="radio" name="layout-direction" id="layout-direction-rtl"
+                        value="rtl">
                     <label class="form-check-label" for="layout-direction-rtl">RTL</label>
                 </div>
 
@@ -490,7 +523,7 @@
     <script src="{{ asset('assets/libs/node-waves/waves.min.js') }}"></script>
     <script src="{{ asset('assets/libs/feather-icons/feather.min.js') }}"></script>
     <!-- pace js -->
-    <script src="{{ asset('assets/libs/pace-js/pace.min.js') }}"></script>
+    {{-- <script src="{{ asset('assets/libs/pace-js/pace.min.js') }}"></script> --}}
 
     <!-- Required datatable js -->
     <script src="{{ asset('assets/libs/datatables.net/js/jquery.dataTables.min.js') }}"></script>
