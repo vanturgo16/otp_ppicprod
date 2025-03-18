@@ -67,7 +67,7 @@ class GoodLotNumberController extends Controller
             })
             ->leftJoin('master_units', 'good_receipt_note_details.master_units_id', '=', 'master_units.id')
             ->leftjoin('good_receipt_notes', 'good_receipt_note_details.id_good_receipt_notes', 'good_receipt_notes.id')
-            ->whereIn('good_receipt_note_details.status', ['Open', 'Closed'])
+            ->whereIn('good_receipt_note_details.status', ['Open', 'Close'])
             ->where(function ($query) {
                 $query->where(function ($q) {
                     $q->where('good_receipt_notes.qc_status', 'Y')

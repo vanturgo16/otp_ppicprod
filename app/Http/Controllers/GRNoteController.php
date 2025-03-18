@@ -11,6 +11,9 @@ use RealRashid\SweetAlert\Facades\Alert;
 use Browser;
 use Illuminate\Support\Facades\Crypt;
 use Picqer\Barcode\BarcodeGeneratorHTML;
+use App\Exports\GRNExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Carbon\Carbon;
 
 use App\Models\GoodReceiptNote;
 use App\Models\GoodReceiptNoteDetail;
@@ -41,7 +44,9 @@ class GRNoteController extends Controller
         $datas = GoodReceiptNote::select('good_receipt_notes.id', 'good_receipt_notes.receipt_number', 'good_receipt_notes.date', 'good_receipt_notes.type', 'good_receipt_notes.status',
                 'good_receipt_notes.id_purchase_orders', 'good_receipt_notes.external_doc_number', 'good_receipt_notes.qc_status',
                 'purchase_requisitions.request_number', 'purchase_orders.po_number', 'master_suppliers.name as supplier_name',
-                DB::raw('(SELECT COUNT(*) FROM good_receipt_note_details WHERE good_receipt_note_details.id_good_receipt_notes = good_receipt_notes.id) as count'))
+                DB::raw('(SELECT COUNT(*) FROM good_receipt_note_details 
+                    WHERE good_receipt_note_details.id_good_receipt_notes = good_receipt_notes.id 
+                    AND good_receipt_note_details.status IS NOT NULL) as count'))
             ->leftJoin('purchase_requisitions', 'good_receipt_notes.reference_number', 'purchase_requisitions.id')
             ->leftJoin('purchase_orders', 'good_receipt_notes.id_purchase_orders', 'purchase_orders.id')
             ->leftJoin('master_suppliers', 'good_receipt_notes.id_master_suppliers', 'master_suppliers.id');
@@ -347,7 +352,7 @@ class GRNoteController extends Controller
         if($data->qc_status == 'Y'){
             // Check All Product GRN With Status Open / Close Has QC Passes
             if(GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)
-                ->whereIn('status', ['Open', 'Closed'])
+                ->whereIn('status', ['Open', 'Close'])
                 ->where(function ($query) {
                     $query->where('qc_passed', '!=', 'Y')
                         ->orWhereNull('qc_passed');
@@ -356,11 +361,11 @@ class GRNoteController extends Controller
             }
         }
         // Check All Product GRN With Status Open / Close Has Generate Lot Number
-        if(GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)->whereIn('status', ['Open', 'Closed'])->whereNull('lot_number')->exists()){
+        if(GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)->whereIn('status', ['Open', 'Close'])->whereNull('lot_number')->exists()){
             return redirect()->back()->with(['fail' => 'Masih ada produk yang diterima belum generate Lot Number!']);
         }
         // Check All Product GRN With Status Open / Close Has Generate All Receipt Qty
-        if (GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)->whereIn('status', ['Open', 'Closed'])
+        if (GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)->whereIn('status', ['Open', 'Close'])
             ->whereColumn('receipt_qty', '!=', 'qty_generate_barcode')->exists()) {
             return redirect()->back()->with(['fail' => 'Masih ada sisa Qty produk yang diterima belum generate Lot!']);
         }
@@ -381,7 +386,7 @@ class GRNoteController extends Controller
                 }
             }
             // UPDATE OUTSTANDING ITEM PRODUCT
-            $itemGRNs = GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)->whereIn('status', ['Open', 'Closed'])->get();
+            $itemGRNs = GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)->whereIn('status', ['Open', 'Close'])->get();
             foreach($itemGRNs as $item){
                 $detailPR = PurchaseRequisitionsDetail::where('id', $item->id_purchase_requisition_details)->first();
                 $outstanding = (float) $detailPR->outstanding_qty - (float) $item->receipt_qty;
@@ -434,7 +439,7 @@ class GRNoteController extends Controller
                 PurchaseRequisitions::where('id', $data->reference_number)->where('status', '!=', 'Created GRN')->update(['status' => 'Created GRN']);
             }
             // ROLLBACK OUTSTANDING ITEM PRODUCT
-            $itemGRNs = GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)->whereIn('status', ['Open', 'Closed'])->get();
+            $itemGRNs = GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)->whereIn('status', ['Open', 'Close'])->get();
             foreach($itemGRNs as $item){
                 $detailPR = PurchaseRequisitionsDetail::where('id', $item->id_purchase_requisition_details)->first();
                 $outstanding = (float) $detailPR->outstanding_qty + (float) $detailPR->cancel_qty + (float) $item->receipt_qty;
@@ -520,12 +525,70 @@ class GRNoteController extends Controller
             })
             ->leftJoin('master_units', 'good_receipt_note_details.master_units_id', '=', 'master_units.id')
             ->where('good_receipt_note_details.id_good_receipt_notes', $id)
-            ->whereIn('good_receipt_note_details.status', ['Open', 'Closed'])
+            ->whereNotNull('good_receipt_note_details.status')
             ->orderBy('good_receipt_note_details.created_at')
             ->get();
 
         $view = ($lang === 'en') ? 'gr_note.print' : 'gr_note.printIDN';
         return view($view, compact('data', 'itemDatas'));
+    }
+    public function export(Request $request)
+    {
+        // dd($request->all());
+
+        $datas = GoodReceiptNoteDetail::select(
+            'good_receipt_notes.id', 'good_receipt_notes.receipt_number', 'good_receipt_notes.date', 'purchase_orders.po_number', 'purchase_requisitions.request_number', 'master_suppliers.name as supplier_name',
+            'good_receipt_notes.qc_status', 'good_receipt_notes.external_doc_number', 'good_receipt_notes.non_invoiceable', 'good_receipt_notes.type', 'good_receipt_notes.status as statusGRN',
+            'good_receipt_notes.created_at as createdGRN', 'good_receipt_notes.updated_at as updatedGRN', 
+            DB::raw('
+                CASE 
+                    WHEN good_receipt_note_details.type_product = "RM" THEN master_raw_materials.description 
+                    WHEN good_receipt_note_details.type_product = "WIP" THEN master_wips.description 
+                    WHEN good_receipt_note_details.type_product = "FG" THEN master_product_fgs.description 
+                    WHEN good_receipt_note_details.type_product IN ("TA", "Other") THEN master_tool_auxiliaries.description 
+                END as product_desc'),
+            'good_receipt_note_details.qty', 'good_receipt_note_details.receipt_qty', 'good_receipt_note_details.outstanding_qty',
+            'master_units.unit', 'master_units.unit_code',
+            'good_receipt_note_details.qc_passed', 'good_receipt_note_details.lot_number', 'good_receipt_note_details.external_no_lot',
+            'good_receipt_note_details.qty_generate_barcode', 'good_receipt_note_details.status as statusItem',
+            'good_receipt_note_details.created_at as createdItem', 'good_receipt_note_details.updated_at as updatedItem', 
+            )
+            ->leftJoin('master_raw_materials', function ($join) {
+                $join->on('good_receipt_note_details.id_master_products', '=', 'master_raw_materials.id')
+                    ->on('good_receipt_note_details.type_product', '=', DB::raw('"RM"'));
+            })
+            ->leftJoin('master_wips', function ($join) {
+                $join->on('good_receipt_note_details.id_master_products', '=', 'master_wips.id')
+                    ->on('good_receipt_note_details.type_product', '=', DB::raw('"WIP"'));
+            })
+            ->leftJoin('master_product_fgs', function ($join) {
+                $join->on('good_receipt_note_details.id_master_products', '=', 'master_product_fgs.id')
+                    ->on('good_receipt_note_details.type_product', '=', DB::raw('"FG"'));
+            })
+            ->leftJoin('master_tool_auxiliaries', function ($join) {
+                $join->on('good_receipt_note_details.id_master_products', '=', 'master_tool_auxiliaries.id')
+                        ->whereIn('good_receipt_note_details.type_product', ['TA', 'Other']);
+            })
+            ->leftJoin('good_receipt_notes', 'good_receipt_note_details.id_good_receipt_notes', 'good_receipt_notes.id')
+            ->leftJoin('master_units', 'good_receipt_note_details.master_units_id', 'master_units.id')
+            ->leftJoin('master_suppliers', 'good_receipt_notes.id_master_suppliers', 'master_suppliers.id')
+            ->leftJoin('purchase_orders', 'good_receipt_notes.id_purchase_orders', 'purchase_orders.id')
+            ->leftJoin('purchase_requisitions', 'good_receipt_notes.reference_number', 'purchase_requisitions.id')
+            ->whereNotNull('good_receipt_note_details.status')
+            ->orderBy('good_receipt_notes.created_at');
+
+            if ($request->has('typeItem') && $request->typeItem != '' && $request->typeItem != 'Semua Type') {
+                $datas->where('good_receipt_notes.type', $request->typeItem);
+            }
+            if ($request->has('status') && $request->status != '' && $request->status != 'Semua Status') {
+                $datas->where('good_receipt_notes.status', $request->status);
+            }
+            if($request->has('dateFrom') && $request->dateFrom != '' && $request->has('dateTo') && $request->dateTo != ''){
+                $datas->whereBetween('good_receipt_notes.date', [$request->dateFrom, $request->dateTo]);
+            }
+
+        $filename = 'Export_GRN_' . Carbon::now()->format('d_m_Y_H_i') . '.xlsx';
+        return Excel::download(new GRNExport($datas->get(), $request), $filename);
     }
 
     //ITEM GRN
@@ -554,7 +617,7 @@ class GRNoteController extends Controller
             DB::beginTransaction();
             try{
                 if($outstanding_qty == 0){
-                    $status = 'Closed';
+                    $status = 'Close';
                 } else {
                     $status = 'Open';
                 }
