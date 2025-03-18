@@ -86,6 +86,7 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
                 Route::post('/posted/{id}', 'posted')->name('grn.posted');
                 Route::post('/unposted/{id}', 'unposted')->name('grn.unposted');
                 Route::get('/print/{lang}/{id}', 'print')->name('grn.print');
+                Route::post('/export', 'export')->name('grn.export');
                 Route::get('/get-po-details', 'getPODetails')->name('grn.getPODetails');
                 Route::get('/get-pr-details', 'getPRDetails')->name('grn.getPRDetails');
                 //ITEM PR

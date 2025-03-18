@@ -165,7 +165,7 @@
                     className: 'align-top text-center',
                     render: function(data, type, row) {
                         let badgeColor = data === 'Open' ? 'info' : 
-                                        data === 'Closed' ? 'success' : 'primary';
+                                        data === 'Close' ? 'success' : 'primary';
                         return `<span class="badge bg-${badgeColor}" style="font-size: smaller; width: 100%">${data}</span>`;
                     },
                 },
