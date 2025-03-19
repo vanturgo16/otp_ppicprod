@@ -111,7 +111,7 @@ class DeliveryNoteController extends Controller
 
         $dnNumber = $prefix . $currentDate . str_pad($nextSequence, 6, '0', STR_PAD_LEFT);
         // Insert data ke dalam tabel delivery_notes
-       
+
 
         $packingLists = DB::table('packing_lists')->select('id', 'packing_number')->get();
         $vehicles = DB::table('master_vehicles')->select('id', 'vehicle_number')->get();
@@ -131,6 +131,7 @@ class DeliveryNoteController extends Controller
             // Validasi input
             $validatedData = $request->validate([
                 'dn_number' => 'required|unique:delivery_notes,dn_number',
+                'so_number' => 'required',
                 'jenis_dn' => 'required',
                 'date' => 'required|date',
                 'id_master_customer' => 'required',
@@ -140,12 +141,13 @@ class DeliveryNoteController extends Controller
                 'note' => 'nullable|string',
             ]);
             // dd($validatedData);
-           
+
 
 
             // Insert data ke tabel delivery_notes
             $deliveryNoteId = DB::table('delivery_notes')->insertGetId([
                 'dn_number' => $validatedData['dn_number'],
+                'so_number' => $validatedData['so_number'],
                 'jenis_dn' => $validatedData['jenis_dn'],
                 'date' => $validatedData['date'],
                 'id_master_customers' => $validatedData['id_master_customer'],
@@ -323,7 +325,7 @@ class DeliveryNoteController extends Controller
             ->first();
 
         // Jika SO tidak ditemukan, return response kosong
-        
+
 
         if (stripos($sameAs->type_address, 'same as') !== false) {
             // Jika type_address mengandung "same as", gunakan alamat yang sama untuk shipping & invoice
@@ -378,46 +380,59 @@ class DeliveryNoteController extends Controller
 
     public function edit($id)
     {
+        // Ambil data delivery note berdasarkan ID yang diberikan
         $deliveryNote = DB::table('delivery_notes')
             ->join('master_customers', 'delivery_notes.id_master_customers', '=', 'master_customers.id')
             ->join('master_vehicles', 'delivery_notes.id_master_vehicles', '=', 'master_vehicles.id')
             ->select(
                 'delivery_notes.*',
+                'master_customers.id as customer_id', // Tambahkan ID customer buat filter
                 'master_customers.name as customer_name',
-                'master_vehicles.vehicle_number as vehicle_number'
+                'master_vehicles.id as vehicle_id',
+                'master_vehicles.vehicle_number as vehicle_number',
+                'delivery_notes.so_number'
             )
             ->where('delivery_notes.id', $id)
             ->first();
-            
+        // dd($deliveryNote);
 
-        $salesOrders = DB::table('sales_orders')
-            ->where('id_master_customers', $deliveryNote->id_master_customers)
-            ->where('status', 'Posted') // Hanya ambil SO yang statusnya "Posted"
-            ->select('id', 'so_number') // Ambil ID dan nomor SO
-            ->get();
+        // Ambil semua customer untuk dropdown
+        $customers = DB::table('master_customers')->select('id', 'name')->get();
 
+        // Ambil daftar SO berdasarkan customer yang sudah ada sebelumnya
+        $salesOrders = collect(); // Default kosong biar gak error kalau $deliveryNote kosong
+        if ($deliveryNote) {
+            $salesOrders = DB::table('sales_orders')
+                ->where('id_master_customers', $deliveryNote->customer_id) // Gunakan ID customer dari delivery note
+                ->where('status', 'Posted') // Hanya SO yang statusnya "Posted"
+                ->select('id', 'so_number')
+                ->get();
+        }
+        // dd($salesOrders);
 
-
-
+        // Ambil daftar packing list berdasarkan customer di delivery note
         $packingLists = DB::table('packing_lists')
-            ->where('id_master_customers', $deliveryNote->id_master_customers)
+            ->where('id_master_customers', $deliveryNote->customer_id)
             ->select('id', 'packing_number')
             ->get();
 
+        // Ambil semua kendaraan untuk dropdown
         $vehicles = DB::table('master_vehicles')->select('id', 'vehicle_number')->get();
 
+
+        // Ambil alamat customer berdasarkan customer yang dipilih
         $customerAddresses = DB::table('master_customer_addresses')
-            ->where('id_master_customers', $deliveryNote->id_master_customers)
+            ->where('id_master_customers', $deliveryNote->customer_id)
             ->select('id', 'address')
             ->get();
 
-
+        // Ambil detail delivery note
         $deliveryNoteDetails = DB::table('delivery_note_details')
             ->join('packing_lists', 'delivery_note_details.id_packing_lists', '=', 'packing_lists.id')
             ->join('sales_orders', 'delivery_note_details.id_sales_orders', '=', 'sales_orders.id')
             ->join('master_salesmen', 'delivery_note_details.id_master_salesman', '=', 'master_salesmen.id')
             ->select(
-                'delivery_note_details.id_packing_lists', // Pastikan id disertakan di sini
+                'delivery_note_details.id_packing_lists',
                 'packing_lists.packing_number',
                 'sales_orders.reference_number as po_number',
                 'delivery_note_details.dn_type',
@@ -428,19 +443,22 @@ class DeliveryNoteController extends Controller
             ->where('delivery_note_details.id_delivery_notes', $id)
             ->get();
 
-        return view('delivery_notes.edit', compact('deliveryNote', 'packingLists', 'vehicles', 'customerAddresses', 'deliveryNoteDetails', 'salesOrders'));
+        return view('delivery_notes.edit', compact('deliveryNote', 'packingLists', 'vehicles', 'customerAddresses', 'deliveryNoteDetails',  'customers'));
     }
+
     public function update(Request $request, $id)
     {
         $validatedData = $request->validate([
             'dn_number' => 'required|unique:delivery_notes,dn_number,' . $id,
+            'so_number' => 'required',
             'date' => 'required|date',
-            // 'id_master_customer' => 'required',
+            'id_master_customer' => 'required',
             // 'id_master_salesman' => 'required',
             'id_master_vehicle' => 'required',
             'id_master_customer_address_shipping' => 'required',
             'id_master_customer_address_invoice' => 'required',
             'note' => 'nullable|string',
+
             // 'status' => 'required',
         ]);
 
@@ -452,13 +470,15 @@ class DeliveryNoteController extends Controller
                 ->where('id', $id)
                 ->update([
                     'dn_number' => $validatedData['dn_number'],
+                    'so_number' => $validatedData['so_number'],
                     'date' => $validatedData['date'],
-                    // 'id_master_customers' => $validatedData['id_master_customer'],
+                    'id_master_customers' => $validatedData['id_master_customer'],
                     // 'id_master_salesman' => $validatedData['id_master_salesman'],
                     'id_master_vehicles' => $validatedData['id_master_vehicle'],
                     'id_master_customer_address_shipping' => $validatedData['id_master_customer_address_shipping'],
                     'id_master_customer_address_invoice' => $validatedData['id_master_customer_address_invoice'],
                     'note' => $validatedData['note'] ?? null,
+
                     // 'status' => $validatedData['status'],
                     'updated_at' => now(),
                 ]);
@@ -497,7 +517,7 @@ class DeliveryNoteController extends Controller
                 'master_salesmen.name as salesman_name'
             )
             ->first();
-            
+
 
         // Mengambil data quantity dan weight dari delivery_note_details dengan left join berdasarkan type_product
         $packingListDetails = DB::table('delivery_note_details')
@@ -541,7 +561,7 @@ class DeliveryNoteController extends Controller
             )
             ->where('delivery_note_details.id_delivery_notes', $id)
             ->get();
-            // dd($id,$type,$prefix,$deliveryNote,$packingListDetails);
+        // dd($id,$type,$prefix,$deliveryNote,$packingListDetails);
 
 
         // Menghitung total weight
@@ -551,16 +571,16 @@ class DeliveryNoteController extends Controller
 
         // Mengambil alamat shipping dan invoice dari master_customer_addresses
         $idMs = DB::table('delivery_notes')
-        ->where('delivery_notes.id', $id)
-        ->select('id_master_customers')
-        ->first();
+            ->where('delivery_notes.id', $id)
+            ->select('id_master_customers')
+            ->first();
         // dd($idMs);
 
 
         $Address = DB::table('master_customer_addresses')
-        ->where('id_master_customers', $idMs->id_master_customers)
-        ->select('type_address', 'address', 'postal_code')
-        ->first();
+            ->where('id_master_customers', $idMs->id_master_customers)
+            ->select('type_address', 'address', 'postal_code')
+            ->first();
 
         $sameAs = stripos($Address->type_address, 'Same As') !== false;
 
@@ -569,11 +589,11 @@ class DeliveryNoteController extends Controller
             $shippingAddress = $Address;
         } else {
             $invoiceAddress = DB::table('master_customer_addresses')
-            ->where('id', $deliveryNote->id_master_customer_address_invoice)
+                ->where('id', $deliveryNote->id_master_customer_address_invoice)
                 ->select('address', 'postal_code')
                 ->first();
             $shippingAddress = DB::table('master_customer_addresses')
-            ->where('id', $deliveryNote->id_master_customer_address_shipping)
+                ->where('id', $deliveryNote->id_master_customer_address_shipping)
                 ->select('address', 'postal_code')
                 ->first();
         }
@@ -613,13 +633,13 @@ class DeliveryNoteController extends Controller
     public function getSoNumberByCustomer($customerId)
     {
         //cek apakah status dn posted
-        
+
         $soNo = DB::table('sales_orders')
             ->where('sales_orders.id_master_customers', $customerId)
             ->where('status', 'Posted')
             ->select('id', 'so_number') // ambil id juga buat value option-nya
             ->get();
-    
+
 
         return response()->json($soNo);
     }
