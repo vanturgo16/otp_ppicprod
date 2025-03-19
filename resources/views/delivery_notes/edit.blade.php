@@ -5,7 +5,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/trumbowyg@2.26.0/dist/ui/trumbowyg.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/trumbowyg@2.26.0/dist/trumbowyg.min.js"></script>
-    
+
     <div class="page-content">
         <div class="container-fluid">
             <!-- Page Title -->
@@ -41,7 +41,7 @@
                                 action="{{ route('delivery_notes.update', $deliveryNote->id) }}" method="POST">
                                 @csrf
                                 @method('PUT')
-                                
+
                                 <div class="mb-3">
                                     <label for="dn_number" class="form-label">Nomor DN</label>
                                     <input type="text" class="form-control" id="dn_number" name="dn_number"
@@ -53,54 +53,52 @@
                                         value="{{ old('date', $deliveryNote->date) }}" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="customer_name" class="form-label">Nama Customer</label>
-                                    <input type="text" class="form-control" id="customer_name" name="customer_name"
-                                        value="{{ old('customer_name', $deliveryNote->customer_name) }}" readonly>
-                                </div>
-                                 <div class="mb-3">
-                                    <label for="sales_order" class="form-label">No. So</label>
-                                    <select class="form-control select2" id="soNo" name="id_sales_order" required>
-                                         @foreach ($salesOrders as $so)
-                                            <option value="">
-                                                {{ $so->so_number }}</option>
+                                    <label for="customers" class="form-label">Customer</label>
+                                    <select class="form-control select2" id="customers" name="id_master_customer" required>
+                                        <option value="" disabled>Pilih Customer</option>
+                                        @foreach ($customers as $customer)
+                                            <option value="{{ $customer->id }}"
+                                                {{ old('id_master_customers', $deliveryNote->customer_id) == $customer->id ? 'selected' : '' }}>
+                                                {{ $customer->name }}
+                                            </option>
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="mb-3">
+
+                                 <div class="mb-3">
+                                    <label for="sales_order" class="form-label">No. So</label>
+                                    <select class="form-control select2" id="soNo" name="so_number" required>
+                                        <option value="" disabled selected>-</option>
+                                    </select>
+                                </div>
+
+                               <div class="mb-3">
                                     <label for="customer_address" class="form-label">Alamat Shipping</label>
-                                    <select class="form-control select2" id="customer_address"
+                                    <select class="form-control" id="addressShipping"
                                         name="id_master_customer_address_shipping" required>
-                                        <option value="" selected disabled>** Pilih Alamat Shipping</option>
-                                        @foreach ($customerAddresses as $address)
-                                            <option value="{{ $address->id }}"
-                                                {{ old('id_master_customer_address_shipping', $deliveryNote->id_master_customer_address_shipping) == $address->id ? 'selected' : '' }}>
-                                                {{ $address->address }}</option>
-                                        @endforeach
+                                        <option value="" selected disabled>-</option>
                                     </select>
                                 </div>
                                 <div class="mb-3">
                                     <label for="invoice_address" class="form-label">Alamat Invoice</label>
-                                    <select class="form-control select2" id="invoice_address"
+                                    <select class="form-control" id="addressInvoice"
                                         name="id_master_customer_address_invoice" required>
-                                        <option value="" selected disabled>** Pilih Alamat Invoice</option>
-                                        @foreach ($customerAddresses as $address)
-                                            <option value="{{ $address->id }}"
-                                                {{ old('id_master_customer_address_invoice', $deliveryNote->id_master_customer_address_invoice) == $address->id ? 'selected' : '' }}>
-                                                {{ $address->address }}</option>
-                                        @endforeach
+                                        <option value="" selected disabled>{{$deliveryNote->so_number}}</option>
                                     </select>
                                 </div>
                                 <div class="mb-3">
                                     <label for="vehicle" class="form-label">Kendaraan</label>
-                                    <select class="form-control select2" id="vehicle" name="id_master_vehicle" required>
+                                    <select class="form-control select2" id="vehicle" name="id_master_vehicles" required>
                                         <option value="" selected disabled>** Pilih Kendaraan</option>
                                         @foreach ($vehicles as $vehicle)
                                             <option value="{{ $vehicle->id }}"
-                                                {{ old('id_master_vehicle', $deliveryNote->id_master_vehicles) == $vehicle->id ? 'selected' : '' }}>
-                                                {{ $vehicle->vehicle_number }}</option>
+                                                {{ old('id_master_vehicles', $deliveryNote->vehicle_id ?? '') == $vehicle->id ? 'selected' : '' }}>
+                                                {{ $vehicle->vehicle_number }}
+                                            </option>
                                         @endforeach
                                     </select>
                                 </div>
+
                                 <div class="mb-3">
                                     <label for="note" class="form-label">Catatan</label>
                                     <textarea class="form-control" id="note" name="note" rows="3">{{ old('note', $deliveryNote->note) }}</textarea>
@@ -121,7 +119,8 @@
                                     value="{{ $deliveryNote->id }}">
                                 <div class="mb-3">
                                     <label for="packing_list" class="form-label">Packing List</label>
-                                    <select class="form-control select2" id="packing_list" name="packing_list_id" required>
+                                    <select class="form-control select2" id="packing_list" name="packing_list_id"
+                                        required>
                                         <option value="" selected disabled>** Pilih Packing List</option>
                                         @foreach ($packingLists as $packing_list)
                                             <option value="{{ $packing_list->id }}">{{ $packing_list->packing_number }}
@@ -178,8 +177,10 @@
                                                 <td>{{ $detail->transaction_type }}</td>
                                                 <td>{{ $detail->salesman_name }}</td>
                                                 <td>
-                                                    <input id="remark" type="text" class="form-control packing-list-remark"
-                                                        data-id="{{ $detail->id_packing_lists }} " value="{{$detail->remark}}">
+                                                    <input id="remark" type="text"
+                                                        class="form-control packing-list-remark"
+                                                        data-id="{{ $detail->id_packing_lists }} "
+                                                        value="{{ $detail->remark }}">
                                                 </td>
                                                 <td><button type="button"
                                                         class="btn btn-danger btn-sm remove-packing-list">Hapus</button>
@@ -302,14 +303,14 @@
                     });
                 });
 
-                $('#customer').change(function() {
+                $('#customers').change(function() {
                     var customerId = $(this).val();
                     if (customerId) {
                         loadPackingLists(customerId);
-                        loadCustomerAddresses(customerId, 'Shipping');
-                        loadCustomerAddresses(customerId, 'Invoice');
+                        loadSoNumbers(customerId);
                     }
                 });
+                
 
                 function loadPackingLists(customerId) {
                     $.ajax({
@@ -333,28 +334,81 @@
                         }
                     });
                 }
+                $('#soNo').change(function() {
+                    var soNo = $(this).val();
+                    // console.log(soNo);
+                    if (soNo) {
+                        loadCustomerAddresses(soNo);
+                    }
+                });
 
-                function loadCustomerAddresses(customerId, type) {
+                function loadSoNumbers(customerId) {
                     $.ajax({
-                        url: '{{ url('getCustomerAddresses') }}/' + customerId + '/' + type,
+                        url: '{{ url('get-so-number-by-customer') }}/' + customerId,
                         method: 'GET',
+                        beforeSend: function() {
+                            $('#soNo')
+                                .empty()
+                                .append('<option value="">Loading...</option>');
+                        },
                         success: function(response) {
-                            if (type === 'Shipping') {
-                                $('#customer_address').empty().append(
-                                    '<option value="" selected disabled>** Pilih Alamat Shipping</option>'
-                                );
-                                $.each(response, function(key, value) {
-                                    $('#customer_address').append('<option value="' + value.id +
-                                        '">' + value.address + '</option>');
-                                });
-                            } else if (type === 'Invoice') {
-                                $('#invoice_address').empty().append(
-                                    '<option value="" selected disabled>** Pilih Alamat Invoice</option>'
-                                );
-                                $.each(response, function(key, value) {
-                                    $('#invoice_address').append('<option value="' + value.id +
-                                        '">' + value.address + '</option>');
-                                });
+                            $('#soNo').empty().append(
+                                '<option value="" disabled selected>** Pilih No. SO</option>');
+                            $.each(response, function(index, so) {
+                                $('#soNo').append('<option value="' + so.so_number + '">' + so
+                                    .so_number +
+                                    '</option>');
+                            });
+                        },
+                        error: function() {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Gagal mengambil data SO',
+                            });
+                        }
+                    });
+                }
+
+                function loadCustomerAddresses(soNo) {
+                    $.ajax({
+                        url: `{{ url('get-customer-addresses-by-so') }}/${soNo}`,
+                        method: 'GET',
+                        beforeSend: function() {
+                            $('#addressShipping, #addressInvoice')
+                                .empty()
+                                .append('<option value="">Loading...</option>');
+                        },
+                        success: function(response) {
+                            // console.log("Response Data:", response);
+                            $('#addressShipping, #addressInvoice').empty();
+
+                            // Jika response kosong atau data tidak ditemukan
+                            if (!response || (!response.shipping && !response.invoice)) {
+                                $('#addressShipping').append(
+                                    '<option value="">No Shipping Address</option>');
+                                $('#addressInvoice').append('<option value="">No Invoice Address</option>');
+                                return;
+                            }
+                            if (response.shipping) {
+                                $('#addressShipping')
+                                    .append(
+                                        `<option value="${response.shipping}">${response.shipping}</option>`
+                                        )
+                                    .val(response.shipping)
+                                    .trigger('change');
+                            } else {
+                                $('#addressShipping').append(
+                                    '<option value="">No Shipping Address</option>');
+                            }
+                            if (response.invoice) {
+                                $('#addressInvoice')
+                                    .append(
+                                        `<option value="${response.invoice}">${response.invoice}</option>`)
+                                    .val(response.invoice)
+                                    .trigger('change');
+                            } else {
+                                $('#addressInvoice').append('<option value="">No Invoice Address</option>');
                             }
                         },
                         error: function(xhr) {

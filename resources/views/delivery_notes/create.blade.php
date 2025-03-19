@@ -57,7 +57,7 @@
                                 </div>
                                 <div class="mb-3">
                                     <label for="sales_order" class="form-label">No. So</label>
-                                    <select class="form-control select2" id="soNo" name="id_sales_order" required>
+                                    <select class="form-control select2" id="soNo" name="so_number" required>
                                         <option value="" disabled selected>-</option>
                                     </select>
                                 </div>
