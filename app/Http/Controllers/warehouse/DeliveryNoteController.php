@@ -394,21 +394,13 @@ class DeliveryNoteController extends Controller
             )
             ->where('delivery_notes.id', $id)
             ->first();
+
         // dd($deliveryNote);
 
         // Ambil semua customer untuk dropdown
         $customers = DB::table('master_customers')->select('id', 'name')->get();
 
-        // Ambil daftar SO berdasarkan customer yang sudah ada sebelumnya
-        $salesOrders = collect(); // Default kosong biar gak error kalau $deliveryNote kosong
-        if ($deliveryNote) {
-            $salesOrders = DB::table('sales_orders')
-                ->where('id_master_customers', $deliveryNote->customer_id) // Gunakan ID customer dari delivery note
-                ->where('status', 'Posted') // Hanya SO yang statusnya "Posted"
-                ->select('id', 'so_number')
-                ->get();
-        }
-        // dd($salesOrders);
+        
 
         // Ambil daftar packing list berdasarkan customer di delivery note
         $packingLists = DB::table('packing_lists')
@@ -639,6 +631,8 @@ class DeliveryNoteController extends Controller
             ->where('status', 'Posted')
             ->select('id', 'so_number') // ambil id juga buat value option-nya
             ->get();
+            // dd($customerId);
+            // dd($soNo);
 
 
         return response()->json($soNo);

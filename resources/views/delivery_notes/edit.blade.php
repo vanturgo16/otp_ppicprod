@@ -65,14 +65,18 @@
                                     </select>
                                 </div>
 
-                                 <div class="mb-3">
+                                <div class="mb-3">
                                     <label for="sales_order" class="form-label">No. So</label>
                                     <select class="form-control select2" id="soNo" name="so_number" required>
-                                        <option value="" disabled selected>-</option>
+                                        <option value="" disabled>-</option>
+                                        @if (isset($deliveryNote->so_number))
+                                            <option value="{{ $deliveryNote->so_number }}" selected>
+                                                {{ $deliveryNote->so_number }}</option>
+                                        @endif
                                     </select>
                                 </div>
 
-                               <div class="mb-3">
+                                <div class="mb-3">
                                     <label for="customer_address" class="form-label">Alamat Shipping</label>
                                     <select class="form-control" id="addressShipping"
                                         name="id_master_customer_address_shipping" required>
@@ -83,7 +87,7 @@
                                     <label for="invoice_address" class="form-label">Alamat Invoice</label>
                                     <select class="form-control" id="addressInvoice"
                                         name="id_master_customer_address_invoice" required>
-                                        <option value="" selected disabled>{{$deliveryNote->so_number}}</option>
+                                        <option value="" selected disabled>-</option>
                                     </select>
                                 </div>
                                 <div class="mb-3">
@@ -201,6 +205,11 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
             $(document).ready(function() {
+                var customerId = $('#customers').val(); // Ambil customer ID dari form
+                if (customerId) {
+                    // console.log(customerId)
+                    loadSoNumbers(customerId); // Load SO saat halaman dimuat
+                }
                 $('#edit-delivery-note-form').on('submit', function(e) {
                     e.preventDefault();
                     var formData = $(this).serialize();
@@ -310,7 +319,7 @@
                         loadSoNumbers(customerId);
                     }
                 });
-                
+
 
                 function loadPackingLists(customerId) {
                     $.ajax({
@@ -352,6 +361,7 @@
                                 .append('<option value="">Loading...</option>');
                         },
                         success: function(response) {
+                            console.log(response)
                             $('#soNo').empty().append(
                                 '<option value="" disabled selected>** Pilih No. SO</option>');
                             $.each(response, function(index, so) {
@@ -359,6 +369,12 @@
                                     .so_number +
                                     '</option>');
                             });
+                            // Jika sedang edit, pilih SO yang sebelumnya disimpan
+                            var selectedSo = '{{ old('so_number', $deliveryNote->so_number) }}';
+                            // console.log(selectedSo)
+                            if (selectedSo) {
+                                $('#soNo').val(selectedSo);
+                            }
                         },
                         error: function() {
                             Swal.fire({
@@ -394,7 +410,7 @@
                                 $('#addressShipping')
                                     .append(
                                         `<option value="${response.shipping}">${response.shipping}</option>`
-                                        )
+                                    )
                                     .val(response.shipping)
                                     .trigger('change');
                             } else {
