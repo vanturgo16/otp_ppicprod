@@ -1,104 +1,104 @@
 @extends('layouts.master')
 
 @section('konten')
-    <div class="page-content">
-        <div class="container-fluid">
-            @if (session('pesan'))
-                <div class="alert alert-success alert-dismissible alert-label-icon label-arrow fade show" role="alert">
-                    <i class="mdi mdi-check-all label-icon"></i><strong>Success</strong> - {{ session('pesan') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
-            <div class="row">
-                <div class="col-12">
-                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                        <h4 class="mb-sm-0 font-size-18">Delivery Notes</h4>
-                        <div class="page-title-right">
-                            <ol class="breadcrumb m-0">
-                                <li class="breadcrumb-item"><a href="javascript: void(0);">Warehouse</a></li>
-                                <li class="breadcrumb-item active">Delivery Notes</li>
-                            </ol>
-                        </div>
+<div class="page-content">
+    <div class="container-fluid">
+        @if (session('pesan'))
+        <div class="alert alert-success alert-dismissible alert-label-icon label-arrow fade show" role="alert">
+            <i class="mdi mdi-check-all label-icon"></i><strong>Success</strong> - {{ session('pesan') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        @endif
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0 font-size-18">Delivery Notes</h4>
+                    <div class="page-title-right">
+                        <ol class="breadcrumb m-0">
+                            <li class="breadcrumb-item"><a href="javascript: void(0);">Warehouse</a></li>
+                            <li class="breadcrumb-item active">Delivery Notes</li>
+                        </ol>
                     </div>
                 </div>
             </div>
-            <div class="row mb-3">
-                <div class="col-12">
-                    <a href="{{ route('delivery_notes.create') }}" class="btn btn-primary">Tambah Data</a>
+        </div>
+        <div class="row mb-3">
+            <div class="col-12">
+                <a href="{{ route('delivery_notes.create') }}" class="btn btn-primary">Tambah Data</a>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="d-flex">
+                    <input type="date" id="start_date" class="form-control me-2" placeholder="Start Date">
+                    <input type="date" id="end_date" class="form-control me-2" placeholder="End Date">
+                    <button id="filter" class="btn btn-primary me-2">Filter</button>
+                    <button id="reset" class="btn btn-secondary">Reset</button>
                 </div>
             </div>
-            <div class="row mb-3">
-                <div class="col-12">
-                    <div class="d-flex">
-                        <input type="date" id="start_date" class="form-control me-2" placeholder="Start Date">
-                        <input type="date" id="end_date" class="form-control me-2" placeholder="End Date">
-                        <button id="filter" class="btn btn-primary me-2">Filter</button>
-                        <button id="reset" class="btn btn-secondary">Reset</button>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">Delivery Notes</h5>
-                            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Delivery Notes</h5>
                         </div>
+                    </div>
 
-                        <div class="d-flex gap-2 p-3">
-                            <button class="btn btn-primary btn-filter active" data-type="" id="reset-filter">
-                                <i class="fas fa-file-alt"></i> All Data
-                            </button>
-                            <button class="btn btn-light border btn-filter" data-type="Reguler">
-                                <i class="fas fa-file"></i> DN (Reguler)
-                            </button>
-                            <button class="btn btn-info text-white btn-filter" data-type="Sample">
-                                <i class="fas fa-file"></i> DN (Sample)
-                            </button>
-                            <button class="btn btn-secondary btn-filter" data-type="Export">
-                                <i class="fas fa-file"></i> DN (Export)
-                            </button>
-                            <button class="btn btn-danger btn-filter" data-type="Retur">
-                                <i class="fas fa-file"></i> DN (Retur)
-                            </button>
-                            <button class="btn btn-success border" id="export-data">
-                                <i class="fas fa-download"></i> Export Data
-                            </button>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table id="delivery_notes_table" class="table table-bordered dt-responsive nowrap w-100">
-                                    <thead>
-                                        <tr>
-                                            <th>No</th>
-                                            <th>DN Number</th>
-                                            <th>Packing Numbers</th>
-                                            <th>PO Number</th>
-                                            <th>Date</th>
-                                            <th>DN Type</th>
-                                            <th>Transaction Type</th>
-                                            <th>Vehicles</th>
-                                            <th>Status</th>
-                                            <th>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- Data akan diisi oleh DataTables -->
-                                    </tbody>
-                                </table>
-                            </div>
+                    <div class="d-flex gap-2 p-3">
+                        <button class="btn btn-primary btn-filter active" data-type="" id="reset-filter">
+                            <i class="fas fa-file-alt"></i> All Data
+                        </button>
+                        <button class="btn btn-light border btn-filter" data-type="Reguler">
+                            <i class="fas fa-file"></i> DN (Reguler)
+                        </button>
+                        <button class="btn btn-info text-white btn-filter" data-type="Sample">
+                            <i class="fas fa-file"></i> DN (Sample)
+                        </button>
+                        <button class="btn btn-secondary btn-filter" data-type="Export">
+                            <i class="fas fa-file"></i> DN (Export)
+                        </button>
+                        <button class="btn btn-danger btn-filter" data-type="Retur">
+                            <i class="fas fa-file"></i> DN (Retur)
+                        </button>
+                        <button class="btn btn-success border" id="export-data">
+                            <i class="fas fa-download"></i> Export Data
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="delivery_notes_table" class="table table-bordered dt-responsive nowrap w-100">
+                                <thead>
+                                    <tr>
+                                        <th>No</th>
+                                        <th>DN Number</th>
+                                        <th>Packing Numbers</th>
+                                        <th>PO Number</th>
+                                        <th>Date</th>
+                                        <th>DN Type</th>
+                                        <th>Transaction Type</th>
+                                        <th>Vehicles</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data akan diisi oleh DataTables -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    @push('scripts')
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <script>
-            $(document).ready(function() {
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    $(document).ready(function() {
                 let transactionType = '';
                 let dataTable = $('#delivery_notes_table').DataTable({
                     dom: 'Bfrtip',
@@ -224,11 +224,11 @@
                         <i class="bx bx-undo" title="Un Posted"> Un Posted</i>
                     </button>
                 </form>`;
-                        buttons += `<a href="/delivery_notes/${data.id}/print?type=DN" target="_blank" 
+                        
+                    }
+                    buttons += `<a href="/delivery_notes/${data.id}/print?type=DN" target="_blank" 
    rel="noopener noreferrer" class="btn btn-sm btn-secondary ">
                 <i class="bx bx-printer"></i> Print Delivery Note</a>`;
-                    }
-
                     buttons += `<a href="/print_packing_list/${data.id}" target="_blank" 
    rel="noopener noreferrer" class="btn btn-sm btn-secondary m-1">
                 <i class="bx bx-printer"></i> Print Packing List
@@ -322,6 +322,6 @@
                     dataTable.draw();
                 });
             });
-        </script>
-    @endpush
+</script>
+@endpush
 @endsection
