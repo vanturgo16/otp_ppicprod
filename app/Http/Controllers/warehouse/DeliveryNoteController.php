@@ -622,21 +622,22 @@ class DeliveryNoteController extends Controller
     }
 
 
-    public function getSoNumberByCustomer($customerId)
+    public function getSoNumberByCustomer($customerId, Request $request)
     {
-        //cek apakah status dn posted
+        $search = $request->input('search'); // Ambil input search dari AJAX
 
         $soNo = DB::table('sales_orders')
             ->where('sales_orders.id_master_customers', $customerId)
             ->where('status', 'Posted')
-            ->select('id', 'so_number') // ambil id juga buat value option-nya
+            ->when($search, function ($query, $search) {
+                $query->where('so_number', 'like', '%' . $search . '%');
+            })
+            ->select('id', 'so_number')
             ->get();
-            // dd($customerId);
-            // dd($soNo);
-
 
         return response()->json($soNo);
     }
+
 
     public function getPackingListsByCustomer($customerId)
     {
@@ -644,8 +645,10 @@ class DeliveryNoteController extends Controller
             ->join('sales_orders', 'packing_lists.id_master_customers', '=', 'sales_orders.id_master_customers')
             ->where('sales_orders.id_master_customers', $customerId)
             ->where('packing_lists.status', 'Posted')
+            ->where('sales_orders.status', 'Posted')
             ->select('packing_lists.id', 'packing_lists.packing_number')
             ->get();
+
 
         return response()->json($packingLists);
     }

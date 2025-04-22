@@ -42,6 +42,13 @@
                                         value="{{ $packingList->customer_id }}">
                                 </div>
                                 <div class="mb-3">
+                                    <label for="soNo" class="form-label">SO Number</label>
+                                    <input type="text" class="form-control" id="soNo" name="so_number"
+                                        value="{{ $packingList->so_number }}" readonly>
+                                    <input type="hidden" id="so_id" name="so_id"
+                                        value="{{ $packingList->id_sales_orders }}">
+                                </div>
+                                <div class="mb-3">
                                     <label for="all_barcodes" class="form-label">All Barcodes</label>
                                     <input type="text" class="form-control" id="all_barcodes" name="all_barcodes"
                                         value="{{ $packingList->all_barcodes }}" readonly>
@@ -177,6 +184,7 @@
                         data: {
                             barcode: $(this).val(),
                             customer_id: $('#customer_id').val(),
+                            so_id: $('#so_id').val(),
                             change_so: $('#change_so').val(),
                             packing_list_id: $('#packing_list_id').val(),
                             _token: '{{ csrf_token() }}'
