@@ -103,6 +103,7 @@ class WarehouseController extends Controller
             // Validasi data
             $request->validate([
                 'packing_number' => 'required|unique:packing_lists,packing_number',
+                'so_id' => 'required|exists:sales_orders,id',
                 'date' => 'required|date',
                 'customer' => 'required|exists:master_customers,id',
                 'all_barcodes' => 'required|in:Y,N',
@@ -111,6 +112,7 @@ class WarehouseController extends Controller
             // Simpan data ke database
             $packingList = new PackingList();
             $packingList->packing_number = $request->packing_number;
+            $packingList->id_sales_orders = $request->so_id;
             $packingList->date = $request->date;
             $packingList->id_master_customers = $request->customer;
             $packingList->status = 'Request';
@@ -134,6 +136,22 @@ class WarehouseController extends Controller
         return $yearMonth . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
     }
 
+   
+    public function getSoNumberByCustomer($customerId)
+    {
+        //cek apakah status dn posted
+
+        $soNo = DB::table('sales_orders')
+            ->where('sales_orders.id_master_customers', $customerId)
+            ->where('status', 'Posted')
+            ->select('id', 'so_number') // ambil id juga buat value option-nya
+            ->get();
+        // dd($customerId);
+        // dd($soNo);
+
+
+        return response()->json($soNo);
+    }
     // Method untuk memeriksa barcode
     public function checkBarcode(Request $request)
     {
@@ -141,7 +159,9 @@ class WarehouseController extends Controller
         $customerId = $request->input('customer_id');
         $changeSo = $request->input('change_so');
         $packingListId = $request->input('packing_list_id');
+        $soId =  $request->input('so_id');
         // $pcs = $request->input('pcs', 0);
+        //date
 
         // Cek apakah barcode sudah ada di tabel packing_list_details
         $duplicate = DB::table('packing_list_details')
@@ -158,16 +178,18 @@ class WarehouseController extends Controller
         $isBag = false;
 
         // Query untuk mengambil data barcode berdasarkan kondisi tertentu
+        
         $barcodeRecord = DB::table('barcodes')
             ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
             ->when($changeSo, function ($query) use ($barcode, $changeSo) {
                 return $query->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
                     ->where('barcode_detail.barcode_number', $barcode)
                     ->where('sales_orders.so_number', $changeSo);
-            }, function ($query) use ($barcode, $customerId) {
+            }, function ($query) use ($barcode, $soId) {
                 return $query->where('barcode_detail.barcode_number', $barcode)
-                    ->where('barcodes.id_master_customers', $customerId);
+                    ->where('barcodes.id_sales_orders', $soId);
             })
+            
             ->select(
                 'barcode_detail.barcode_number',
                 'barcode_detail.status',
@@ -210,7 +232,7 @@ class WarehouseController extends Controller
             )
 
             ->first();
-            // dd($barcodeRecord, $customerId);
+        // dd($request->all());
 
         if ($barcodeRecord && strpos($barcodeRecord->status, 'In Stock') !== false) {
             $exists = true;
@@ -239,6 +261,7 @@ class WarehouseController extends Controller
             ]);
 
             if ($barcodeRecord->type_product === 'FG') {
+
                 DB::table('master_product_fgs')
                     ->where('id', $barcodeRecord->product_id)
                     ->decrement('stock', $isBag ? $pcs : 1);
@@ -266,7 +289,9 @@ class WarehouseController extends Controller
                 DB::table('sales_orders')
                     ->where('id', $barcodeRecord->sales_order_id)
                     ->decrement('outstanding_delivery_qty', $barcodeRecord->qty);
+
             }
+            //di sini nambah history_stock
 
 
             DB::table('barcode_detail')
@@ -286,6 +311,7 @@ class WarehouseController extends Controller
             'sales_order_id' => $barcodeRecord->sales_order_id,
             'pcs' => $pcs,
             'changeSo' => $changeSo,
+            'soId' => $soId,
             'wrap' =>  $barcodeRecord->total_wrap,
             'weight' => $isBag ? $barcodeRecord->total_weight_starting : ''
         ]);
@@ -454,9 +480,11 @@ class WarehouseController extends Controller
         // Ambil data packing list dan customer dalam satu query
         $packingList = DB::table('packing_lists')
             ->join('master_customers', 'packing_lists.id_master_customers', '=', 'master_customers.id')
+            ->join('sales_orders','packing_lists.id_sales_orders','=','sales_orders.id')
             ->where('packing_lists.id', $id)
             ->select(
                 'packing_lists.*',
+                'sales_orders.so_number',
                 'master_customers.name as customer_name',
                 'master_customers.id as customer_id'
             )
@@ -690,7 +718,8 @@ class WarehouseController extends Controller
         // Ambil data packing list dengan informasi customer
         $packingList = DB::table('packing_lists as pl')
             ->join('master_customers as mc', 'pl.id_master_customers', '=', 'mc.id')
-            ->select('pl.*', 'mc.name as customer_name')
+            ->join('sales_orders as so', 'pl.id_sales_orders', '=', 'so.id')
+            ->select('pl.*', 'mc.name as customer_name','so.so_number')
             ->where('pl.id', $id)
             ->first();
 
@@ -724,6 +753,7 @@ class WarehouseController extends Controller
             ->select(
                 'pld.*',
                 'b.type_product',
+                'so.so_number',
                 'pld.id_sales_orders as change_so',
                 DB::raw('COALESCE(fg.description, wip.description, aux.description, raw.description) as description')
             )

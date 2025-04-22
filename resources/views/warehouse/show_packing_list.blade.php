@@ -29,6 +29,10 @@
                             <p>{{ $packingList->customer_name }}</p>
                         </div>
                         <div class="mb-3">
+                            <label for="soNo" class="form-label">SO Number</label>
+                            <p>{{ $packingList->so_number }}</p>
+                        </div>
+                        <div class="mb-3">
                             <label for="all_barcodes" class="form-label">All Barcodes</label>
                             <p>{{ $packingList->all_barcodes }}</p>
                         </div>

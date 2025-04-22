@@ -37,6 +37,13 @@
                                     <input type="hidden" id="customer_id" name="customer_id">
                                 </div>
                                 <div class="mb-3">
+                                    <label for="sales_order" class="form-label">No. So</label>
+                                    <select class="form-control select2" id="soNo" name="so_number" required>
+                                        <option value="" disabled selected>-</option>
+                                    </select>
+                                    <input type="hidden" id="so_id" name="so_id">
+                                </div>
+                                <div class="mb-3">
                                     <label for="all_barcodes" class="form-label">All Barcodes</label>
                                     <select class="form-control" id="all_barcodes" name="all_barcodes" required>
                                         <option value="" disabled selected>Please select All Barcodes</option>
@@ -120,6 +127,42 @@
                 $('#customer_id').val(data.id);
             });
 
+
+            $('#customer').change(function() {
+                $('#soNo').select2({
+                    placeholder: 'Pilih SO',
+                    ajax: {
+                        url: '{{ url('get-so-number-by-customer') }}/' + $('#customer')
+                    .val(), // Ambil customer_id yang dipilih
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return {
+                                search: params.term ||
+                                    '' // Kirim query pencarian, default ke kosong jika tidak ada input
+                            };
+                        },
+                        processResults: function(data) {
+                            return {
+                                results: data.map(function(so) {
+                                    return {
+                                        id: so.id, // ID yang dipilih
+                                        text: so.so_number // Gabungan id dan no_so yang akan tampil di dropdown
+                                    };
+                                })
+                            };
+                        },
+                        cache: true
+                    }
+                }).on('select2:select', function(e) {
+                    var data = e.params.data;
+                    console.log(data)
+                    $('#so_id').val(data.id); // Tampilkan ID yang dipilih di input
+                });
+            });
+
+
+
             $('#packing-list-form').on('submit', function(e) {
                 e.preventDefault();
 
@@ -135,7 +178,7 @@
                         if (response.success) {
                             $('#packing-list-detail-card').show();
                             $('#packing-list-form').find('input, select').attr('disabled',
-                            true);
+                                true);
                             $('#packing_list_id').val(response.packing_list_id);
                             $('#save-button').hide(); // Menyembunyikan tombol simpan
                             $('#barcode').focus(); // Memfokuskan pada input barcode
@@ -168,6 +211,7 @@
                         data: {
                             barcode: $(this).val(),
                             customer_id: $('#customer_id').val(),
+                            so_id: $('#so_id').val(),
                             change_so: $('#change_so').val(),
                             packing_list_id: $('#packing_list_id').val(),
                             pcs: $('#pcs').val(), // Kirim nilai pcs jika ada
@@ -184,10 +228,15 @@
                                     '<td>' + $('#barcode').val() + '</td>' +
                                     '<td>' + (response.product_name || '') + '</td>' +
                                     (response.is_bag ?
-                                        '<td><input type="number" class="form-control number_of_box" data-id="' + response.id + '" name="number_of_box" value="' + response.wrap +
+                                        '<td><input type="number" class="form-control number_of_box" data-id="' +
+                                        response.id + '" name="number_of_box" value="' +
+                                        response.wrap +
                                         '" readonly></td>' +
-                                        '<td><input type="number" class="form-control weight" data-id="' + response.id + '" name="weight" value="' + response.weight + '" readonly></td>' +
-                                        '<td><input type="number" class="form-control pcs" data-id="' + response.id + '" name="pcs" value="' + response.pcs +
+                                        '<td><input type="number" class="form-control weight" data-id="' +
+                                        response.id + '" name="weight" value="' + response
+                                        .weight + '" readonly></td>' +
+                                        '<td><input type="number" class="form-control pcs" data-id="' +
+                                        response.id + '" name="pcs" value="' + response.pcs +
                                         '" readonly></td>' :
                                         '<td></td>' + // Kolom kosong jika bukan "bag"
                                         '<td></td>' + // Kolom kosong untuk weight
@@ -291,6 +340,34 @@
                     }
                 });
             });
+            //  SO Number
+            function loadSoNumbers(customerId) {
+                $.ajax({
+                    url: '{{ url('get-so-number-by-customer') }}/' + customerId,
+                    method: 'GET',
+                    beforeSend: function() {
+                        $('#soNo')
+                            .empty()
+                            .append('<option value="">Loading...</option>');
+                    },
+                    success: function(response) {
+                        $('#soNo').empty().append(
+                            '<option value="" disabled selected>** Pilih No. SO</option>');
+                        $.each(response, function(index, so) {
+                            $('#soNo').append('<option value="' + so.so_number + '">' + so
+                                .so_number +
+                                '</option>');
+                        });
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Gagal mengambil data SO',
+                        });
+                    }
+                });
+            }
 
             function updateRowNumbers() {
                 $('#barcode-table tbody tr').each(function(index, row) {
