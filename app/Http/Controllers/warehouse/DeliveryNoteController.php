@@ -667,7 +667,7 @@ class DeliveryNoteController extends Controller
             ->when($search, function ($query, $search) {
                 $query->where('so_number', 'like', '%' . $search . '%');
             })
-            ->select('id', 'so_number','id_master_salesman')
+            ->select('id', 'so_number')
             ->get();
 
         return response()->json($soNo);
