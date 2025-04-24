@@ -58,21 +58,22 @@
                                 <div class="mb-3">
                                     <label for="sales_order" class="form-label">No. So</label>
                                     <select class="form-control select2" id="soNo" name="so_number" required>
-                                        <option value="" disabled selected>-</option>
+                                        <option value="" disabled selected>*</option>
                                     </select>
+                                    <input type="hidden" name="id_master_salesman" value="">
                                 </div>
                                 <div class="mb-3">
                                     <label for="customer_address" class="form-label">Alamat Shipping</label>
                                     <select class="form-control" id="addressShipping"
                                         name="id_master_customer_address_shipping" required>
-                                        <option value="" selected disabled>-</option>
+                                        <option value="" selected disabled>*</option>
                                     </select>
                                 </div>
                                 <div class="mb-3">
                                     <label for="invoice_address" class="form-label">Alamat Invoice</label>
                                     <select class="form-control" id="addressInvoice"
                                         name="id_master_customer_address_invoice" required>
-                                        <option value="" selected disabled>-</option>
+                                        <option value="" selected disabled>*</option>
                                     </select>
                                 </div>
 
@@ -168,7 +169,7 @@
                 var today = new Date().toISOString().split('T')[0];
                 $('#date').val(today);
                 $('.select2').select2();
-               
+
 
                 $('#delivery-note-form').on('submit', function(e) {
                     e.preventDefault();
@@ -372,12 +373,13 @@
                 });
 
                 $('#customers').change(function() {
-                     $('#addressShipping, #addressInvoice')
-                                .empty()
-                                .append('<option value="">-</option>');
+                    $('#addressShipping, #addressInvoice')
+                        .empty()
+                        .append('<option value="">-</option>');
                     var customerId = $(this).val();
+                    // console.log(customerId);
                     if (customerId) {
-                        loadPackingLists(customerId);
+
                         loadSoNumbers(customerId);
                     }
                 });
@@ -385,6 +387,7 @@
                     var soNo = $(this).val();
                     // console.log(soNo);
                     if (soNo) {
+                        loadPackingLists(soNo);
                         loadCustomerAddresses(soNo);
                     }
                 });
@@ -405,8 +408,7 @@
                             $('#soNo').empty().append(
                                 '<option value="" disabled selected>** Pilih No. SO</option>');
                             $.each(response, function(index, so) {
-                                $('#soNo').append('<option value="' + so.so_number + '">' + so
-                                    .so_number +
+                                $('#soNo').append('<option value="' + so.id + '">' + so.so_number +
                                     '</option>');
                             });
                         },
@@ -420,9 +422,9 @@
                     });
                 }
 
-                function loadPackingLists(customerId) {
+                function loadPackingLists(soId) {
                     $.ajax({
-                        url: '{{ url('getPackingListsByCustomer') }}/' + customerId,
+                        url: '{{ url('getPackingListsBySo') }}/' + soId,
                         method: 'GET',
                         success: function(response) {
                             $('#packing_list').empty().append(
@@ -442,6 +444,7 @@
                         }
                     });
                 }
+               
 
 
                 function loadCustomerAddresses(soNo) {
@@ -457,29 +460,34 @@
                             // console.log("Response Data:", response);
                             $('#addressShipping, #addressInvoice').empty();
 
-                            // Jika response kosong atau data tidak ditemukan
+                            // Cek jika response kosong
                             if (!response || (!response.shipping && !response.invoice)) {
                                 $('#addressShipping').append(
                                     '<option value="">No Shipping Address</option>');
                                 $('#addressInvoice').append('<option value="">No Invoice Address</option>');
                                 return;
                             }
+
+                            // Shipping address
                             if (response.shipping) {
                                 $('#addressShipping')
                                     .append(
-                                        `<option value="${response.shipping}">${response.shipping}</option>`
+                                        `<option value="${response.shipping.id}">${response.shipping.address}</option>`
                                         )
-                                    .val(response.shipping)
+                                    .val(response.shipping.id)
                                     .trigger('change');
                             } else {
                                 $('#addressShipping').append(
                                     '<option value="">No Shipping Address</option>');
                             }
+
+                            // Invoice address
                             if (response.invoice) {
                                 $('#addressInvoice')
                                     .append(
-                                        `<option value="${response.invoice}">${response.invoice}</option>`)
-                                    .val(response.invoice)
+                                        `<option value="${response.invoice.id}">${response.invoice.address}</option>`
+                                        )
+                                    .val(response.invoice.id)
                                     .trigger('change');
                             } else {
                                 $('#addressInvoice').append('<option value="">No Invoice Address</option>');
@@ -495,6 +503,7 @@
                         }
                     });
                 }
+
 
 
             });

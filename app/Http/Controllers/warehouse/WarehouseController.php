@@ -181,6 +181,7 @@ class WarehouseController extends Controller
         
         $barcodeRecord = DB::table('barcodes')
             ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
+            ->join('sales_orders','barcodes.id_sales_orders','=','sales_orders.id')
             ->when($changeSo, function ($query) use ($barcode, $changeSo) {
                 return $query->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
                     ->where('barcode_detail.barcode_number', $barcode)
@@ -204,7 +205,7 @@ class WarehouseController extends Controller
                 DB::raw('COALESCE(rbp.total_weight_starting, 0) as total_weight_starting')
             )
             ->leftJoin('master_product_fgs', function ($join) {
-                $join->on('barcodes.id_master_products', '=', 'master_product_fgs.id')
+                $join->on('sales_orders.id_master_products', '=', 'master_product_fgs.id')
                     ->where('barcodes.type_product', 'FG');
             })
             ->leftJoin('master_wips', function ($join) {
@@ -212,11 +213,11 @@ class WarehouseController extends Controller
                     ->where('barcodes.type_product', 'WIP');
             })
             ->leftJoin('master_tool_auxiliaries', function ($join) {
-                $join->on('barcodes.id_master_products', '=', 'master_tool_auxiliaries.id')
+                $join->on('sales_orders.id_master_products', '=', 'master_tool_auxiliaries.id')
                     ->where('barcodes.type_product', 'AUX');
             })
             ->leftJoin('master_raw_materials', function ($join) {
-                $join->on('barcodes.id_master_products', '=', 'master_raw_materials.id')
+                $join->on('sales_orders.id_master_products', '=', 'master_raw_materials.id')
                     ->where('barcodes.type_product', 'RAW');
             })
             ->leftJoin(
@@ -232,7 +233,8 @@ class WarehouseController extends Controller
             )
 
             ->first();
-        // dd($request->all());
+        //  dd($request->all());
+        //  dd($barcodeRecord);
 
         if ($barcodeRecord && strpos($barcodeRecord->status, 'In Stock') !== false) {
             $exists = true;
@@ -249,6 +251,7 @@ class WarehouseController extends Controller
 
             $insertedId = DB::table('packing_list_details')->insertGetId([
                 'barcode' => $barcode,
+                'id_sales_orders' => $soId,
                 'total_wrap' => $barcodeRecord->total_wrap,
                 'id_packing_lists' => $packingListId,
                 'weight' => $isBag ? $barcodeRecord->total_weight_starting : '',
@@ -261,7 +264,6 @@ class WarehouseController extends Controller
             ]);
 
             if ($barcodeRecord->type_product === 'FG') {
-
                 DB::table('master_product_fgs')
                     ->where('id', $barcodeRecord->product_id)
                     ->decrement('stock', $isBag ? $pcs : 1);
@@ -453,20 +455,21 @@ class WarehouseController extends Controller
         $details = DB::table('packing_list_details')
             ->join('barcode_detail', 'packing_list_details.barcode', '=', 'barcode_detail.barcode_number')
             ->join('barcodes', 'barcodes.id', '=', 'barcode_detail.id_barcode')
+            ->join('sales_orders', 'packing_list_details.id_sales_orders', '=', 'sales_orders.id') 
             ->leftJoin('master_wips', function ($join) {
                 $join->on('barcodes.id_master_products', '=', 'master_wips.id')
                     ->where('barcodes.type_product', '=', 'WIP');
             })
             ->leftJoin('master_product_fgs', function ($join) {
-                $join->on('barcodes.id_master_products', '=', 'master_product_fgs.id')
+                $join->on('sales_orders.id_master_products', '=', 'master_product_fgs.id')
                     ->where('barcodes.type_product', '=', 'FG');
             })
             ->leftJoin('master_tool_auxiliaries', function ($join) {
-                $join->on('barcodes.id_master_products', '=', 'master_tool_auxiliaries.id')
+                $join->on('sales_orders.id_master_products', '=', 'master_tool_auxiliaries.id')
                     ->where('barcodes.type_product', '=', 'AUX');
             })
             ->leftJoin('master_raw_materials', function ($join) {
-                $join->on('barcodes.id_master_products', '=', 'master_raw_materials.id')
+                $join->on('sales_orders.id_master_products', '=', 'master_raw_materials.id')
                     ->where('barcodes.type_product', '=', 'RAW');
             })
             ->where('packing_list_details.id_packing_lists', $id)
@@ -476,6 +479,8 @@ class WarehouseController extends Controller
                 DB::raw('COALESCE(master_wips.description, master_product_fgs.description, master_tool_auxiliaries.description, master_raw_materials.description) as product_description')
             )
             ->get();
+            // dd($details);
+         
 
         // Ambil data packing list dan customer dalam satu query
         $packingList = DB::table('packing_lists')
@@ -685,19 +690,19 @@ class WarehouseController extends Controller
                 DB::raw('COALESCE(blow_results.blow_weight, sf_results.sf_weight, master_raw_materials.weight ) as production_weight')
             )
             ->leftJoin('master_product_fgs', function ($join) {
-                $join->on('barcodes.id_master_products', '=', 'master_product_fgs.id')
+                $join->on('sales_orders.id_master_products', '=', 'master_product_fgs.id')
                     ->where('barcodes.type_product', '=', 'FG');
             })
             ->leftJoin('master_wips', function ($join) {
-                $join->on('barcodes.id_master_products', '=', 'master_wips.id')
+                $join->on('sales_orders.id_master_products', '=', 'master_wips.id')
                     ->where('barcodes.type_product', '=', 'WIP');
             })
             ->leftJoin('master_tool_auxiliaries', function ($join) {
-                $join->on('barcodes.id_master_products', '=', 'master_tool_auxiliaries.id')
+                $join->on('sales_orders.id_master_products', '=', 'master_tool_auxiliaries.id')
                     ->where('barcodes.type_product', '=', 'AUX');
             })
             ->leftJoin('master_raw_materials', function ($join) {
-                $join->on('barcodes.id_master_products', '=', 'master_raw_materials.id')
+                $join->on('sales_orders.id_master_products', '=', 'master_raw_materials.id')
                     ->where('barcodes.type_product', '=', 'RAW');
             })
             ->join('master_units', function ($join) {

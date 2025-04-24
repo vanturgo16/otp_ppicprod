@@ -178,7 +178,7 @@
                             data: 'action',
                             name: 'action',
                             orderable: false,
-                            searchable: false,
+                            searchable: true,
                             render: function(data, type, row, meta) {
                                 return generateActionButtons(row);
                             }

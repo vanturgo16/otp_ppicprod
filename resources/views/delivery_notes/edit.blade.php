@@ -68,11 +68,12 @@
                                 <div class="mb-3">
                                     <label for="sales_order" class="form-label">No. So</label>
                                     <select class="form-control select2" id="soNo" name="so_number" required>
-                                        <option value="" disabled>-</option>
-                                        @if (isset($deliveryNote->so_number))
-                                            <option value="{{ $deliveryNote->so_number }}" selected>
-                                                {{ $deliveryNote->so_number }}</option>
-                                        @endif
+                                        <option value="" ></option>
+                                        @foreach ($soNo as $noSo)
+                                            <option
+                                                value="{{ $noSo->id }}"{{ old('id_sales_orders', $deliveryNote->so_id) == $noSo->id ? 'selected' : '' }}>
+                                                {{ $noSo->so_number }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
 
@@ -80,14 +81,24 @@
                                     <label for="customer_address" class="form-label">Alamat Shipping</label>
                                     <select class="form-control" id="addressShipping"
                                         name="id_master_customer_address_shipping" required>
-                                        <option value="" selected disabled>-</option>
+                                        @foreach ($shipAddress as $address)
+                                            <option value="{{ $address->id }}"
+                                                {{ old('id_master_customer_address_invoice', $deliveryNote->id_master_customer_addresses_shipping ?? '') == $address->id ? 'selected' : '' }}>
+                                                {{ $address->address }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 <div class="mb-3">
                                     <label for="invoice_address" class="form-label">Alamat Invoice</label>
                                     <select class="form-control" id="addressInvoice"
                                         name="id_master_customer_address_invoice" required>
-                                        <option value="" selected disabled>-</option>
+                                        @foreach ($invAddress as $address)
+                                            <option value="{{ $address->id }}"
+                                                {{ old('id_master_customer_address_invoice', $deliveryNote->id_master_customer_addresses_invoice ?? '') == $address->id ? 'selected' : '' }}>
+                                                {{ $address->address }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 <div class="mb-3">
@@ -123,8 +134,7 @@
                                     value="{{ $deliveryNote->id }}">
                                 <div class="mb-3">
                                     <label for="packing_list" class="form-label">Packing List</label>
-                                    <select class="form-control select2" id="packing_list" name="packing_list_id"
-                                        required>
+                                    <select class="form-control select2" id="packing_list" name="packing_list_id" required>
                                         <option value="" selected disabled>** Pilih Packing List</option>
                                         @foreach ($packingLists as $packing_list)
                                             <option value="{{ $packing_list->id }}">{{ $packing_list->packing_number }}
@@ -205,11 +215,6 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
             $(document).ready(function() {
-                var customerId = $('#customers').val(); // Ambil customer ID dari form
-                if (customerId) {
-                    // console.log(customerId)
-                    loadSoNumbers(customerId); // Load SO saat halaman dimuat
-                }
                 $('#edit-delivery-note-form').on('submit', function(e) {
                     e.preventDefault();
                     var formData = $(this).serialize();
@@ -311,19 +316,19 @@
                         }
                     });
                 });
-
+                
                 $('#customers').change(function() {
+                    $('#addressShipping, #addressInvoice').empty()
                     var customerId = $(this).val();
                     if (customerId) {
-                        loadPackingLists(customerId);
                         loadSoNumbers(customerId);
                     }
                 });
 
 
-                function loadPackingLists(customerId) {
+                function loadPackingLists(packingListId) {
                     $.ajax({
-                        url: '{{ url('getPackingListsByCustomer') }}/' + customerId,
+                        url: '{{ url('getPackingListDetails') }}/' + packingListId,
                         method: 'GET',
                         success: function(response) {
                             $('#packing_list').empty().append(
@@ -348,9 +353,35 @@
                     // console.log(soNo);
                     if (soNo) {
                         loadCustomerAddresses(soNo);
+                        loadPackingLists(soNo);
                     }
                 });
 
+                function loadPackingLists(soId) {
+                    $.ajax({
+                        url: '{{ url('getPackingListsBySo') }}/' + soId,
+                        method: 'GET',
+                        success: function(response) {
+                            $('#packing_list').empty().append(
+                                '<option value="" selected disabled>** Pilih Packing List</option>');
+                            $.each(response, function(key, value) {
+                                $('#packing_list').append('<option value="' + value.id + '">' +
+                                    value.packing_number + '</option>');
+                            });
+                        },
+                        error: function(xhr) {
+                            console.error(xhr.responseText);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'Gagal memuat daftar Packing List',
+                            });
+                        }
+                    });
+                }
+
+
+                 //  SO Number
                 function loadSoNumbers(customerId) {
                     $.ajax({
                         url: '{{ url('get-so-number-by-customer') }}/' + customerId,
@@ -361,20 +392,12 @@
                                 .append('<option value="">Loading...</option>');
                         },
                         success: function(response) {
-                            console.log(response)
                             $('#soNo').empty().append(
                                 '<option value="" disabled selected>** Pilih No. SO</option>');
                             $.each(response, function(index, so) {
-                                $('#soNo').append('<option value="' + so.so_number + '">' + so
-                                    .so_number +
+                                $('#soNo').append('<option value="' + so.id + '">' + so.so_number +
                                     '</option>');
                             });
-                            // Jika sedang edit, pilih SO yang sebelumnya disimpan
-                            var selectedSo = '{{ old('so_number', $deliveryNote->so_number) }}';
-                            // console.log(selectedSo)
-                            if (selectedSo) {
-                                $('#soNo').val(selectedSo);
-                            }
                         },
                         error: function() {
                             Swal.fire({
@@ -399,29 +422,34 @@
                             // console.log("Response Data:", response);
                             $('#addressShipping, #addressInvoice').empty();
 
-                            // Jika response kosong atau data tidak ditemukan
+                            // Cek jika response kosong
                             if (!response || (!response.shipping && !response.invoice)) {
                                 $('#addressShipping').append(
                                     '<option value="">No Shipping Address</option>');
                                 $('#addressInvoice').append('<option value="">No Invoice Address</option>');
                                 return;
                             }
+
+                            // Shipping address
                             if (response.shipping) {
                                 $('#addressShipping')
                                     .append(
-                                        `<option value="${response.shipping}">${response.shipping}</option>`
-                                    )
-                                    .val(response.shipping)
+                                        `<option value="${response.shipping.id}">${response.shipping.address}</option>`
+                                        )
+                                    .val(response.shipping.id)
                                     .trigger('change');
                             } else {
                                 $('#addressShipping').append(
                                     '<option value="">No Shipping Address</option>');
                             }
+
+                            // Invoice address
                             if (response.invoice) {
                                 $('#addressInvoice')
                                     .append(
-                                        `<option value="${response.invoice}">${response.invoice}</option>`)
-                                    .val(response.invoice)
+                                        `<option value="${response.invoice.id}">${response.invoice.address}</option>`
+                                        )
+                                    .val(response.invoice.id)
                                     .trigger('change');
                             } else {
                                 $('#addressInvoice').append('<option value="">No Invoice Address</option>');
@@ -437,7 +465,6 @@
                         }
                     });
                 }
-
                 $(document).on('click', '.remove-packing-list', function() {
                     var row = $(this).closest('tr');
                     var packingListId = row.data('id');

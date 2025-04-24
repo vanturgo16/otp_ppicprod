@@ -95,7 +95,7 @@
                                             @foreach ($details as $index => $detail)
                                                 <tr data-id="{{ $detail->id }}">
                                                     <td class="row-number">{{ $index + 1 }}</td>
-                                                    <td>{{ $detail->id_sales_orders }}</td>
+                                                    <td></td>
                                                     <td>{{ $detail->barcode }}</td>
                                                     <td>{{ $detail->product_description }}</td>
                                                     @if (stripos($detail->sts_start, 'bag'))
@@ -150,14 +150,14 @@
                 e.preventDefault();
 
                 var formData = $(this).serialize();
-                console.log("Form Data:", formData);
+                // console.log("Form Data:", formData);
 
                 $.ajax({
                     url: $(this).attr('action'),
                     method: $(this).attr('method'),
                     data: formData,
                     success: function(response) {
-                        console.log("Response:", response);
+                        // console.log("Response:", response);
                         if (response.success) {
                             Swal.fire('Success', 'Data berhasil diupdate', 'success');
                         } else {
@@ -194,7 +194,8 @@
 
 
                             if (response.exists) {
-                                var newRow = '<tr data-id="' + response.id + '">' +
+                                var newRow = 
+                                '<tr data-id="' + response.id + '">' +
                                     '<td class="row-number">' + ($('#barcode-table tbody tr')
                                         .length + 1) + '</td>' +
                                     '<td>' + ($('#change_so').val() || '') + '</td>' +
@@ -292,7 +293,7 @@
                 var row = $(this).closest('tr');
                 var id = row.data('id');
                 var pcs = row.find('.pcs').val(); // Ambil nilai pcs sebelum menghapus
-                console.log(id);
+                // console.log(id);
 
                 $.ajax({
                     url: '{{ route('packing_list.remove_barcode') }}',

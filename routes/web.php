@@ -197,7 +197,7 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
         Route::get('delivery_notes/{id}/add_packing_list', 'addPackingList')->name('delivery_notes.add_packing_list');
         Route::post('delivery_notes/{id}/store_packing_list', 'storePackingList')->name('delivery_notes.store_packing_list');
         Route::get('getPackingListDetails/{id}', 'getPackingListDetails')->name('delivery_notes.getPackingListDetails');
-        Route::get('getPackingListsByCustomer/{customerId}', 'getPackingListsByCustomer')->name('getPackingListsByCustomer');
+        Route::get('getPackingListsBySo/{soId}', 'getPackingListsBySo')->name('getPackingListsBySo');
         Route::put('delivery_notes/{id}/post', 'post')->name('delivery_notes.post');
         Route::put('delivery_notes/{id}/unpost', 'unpost')->name('delivery_notes.unpost');
         Route::delete('delivery_notes/{id}', 'destroy')->name('delivery_notes.destroy');
