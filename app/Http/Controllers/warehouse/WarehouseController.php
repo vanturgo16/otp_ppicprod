@@ -144,12 +144,10 @@ class WarehouseController extends Controller
         $soNo = DB::table('sales_orders')
             ->where('sales_orders.id_master_customers', $customerId)
             ->where('status', 'Posted')
-            ->select('id', 'so_number') // ambil id juga buat value option-nya
+            ->select('id', 'so_number')
             ->get();
         // dd($customerId);
         // dd($soNo);
-
-
         return response()->json($soNo);
     }
     // Method untuk memeriksa barcode

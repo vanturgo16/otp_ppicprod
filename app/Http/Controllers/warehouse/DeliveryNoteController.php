@@ -430,21 +430,12 @@ class DeliveryNoteController extends Controller
             ->get();
         // Ambil daftar packing list berdasarkan customer di delivery note
         $packingLists = DB::table('packing_lists')
-            ->where('id_master_customers', $deliveryNote->customer_id)
+            ->where('id_sales_orders', $deliveryNote->so_id)
             ->select('id', 'packing_number')
             ->get();
 
         // Ambil semua kendaraan untuk dropdown
         $vehicles = DB::table('master_vehicles')->select('id', 'vehicle_number')->get();
-        
-
-
-        // Ambil alamat customer berdasarkan customer yang dipilih
-        $customerAddresses = DB::table('master_customer_addresses')
-            ->where('id_master_customers', $deliveryNote->customer_id)
-            ->select('id', 'address')
-            ->get();
-
         // Ambil detail delivery note
         $deliveryNoteDetails = DB::table('delivery_note_details')
             ->join('packing_lists', 'delivery_note_details.id_packing_lists', '=', 'packing_lists.id')
