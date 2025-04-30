@@ -221,6 +221,7 @@
                         url: '{{ url('getPackingListDetails') }}/' + packingListId,
                         method: 'GET',
                         success: function(response) {
+                            console.log(response);
                             $('#po_number').val(response.po_number);
                             $('#dn_type').val(response.dn_type);
                             $('#transaction_type').val(response.transaction_type);
@@ -248,6 +249,7 @@
                         method: 'POST',
                         data: formData,
                         success: function(response) {
+                            console.log('data',response)
                             if (response.success) {
                                 var packingListId = $('#packing_list').val();
                                 var packingListNumber = $('#packing_list option:selected').text();
@@ -381,13 +383,14 @@
                     if (customerId) {
 
                         loadSoNumbers(customerId);
+                        loadPackingLists(customerId);
                     }
                 });
                 $('#soNo').change(function() {
                     var soNo = $(this).val();
                     // console.log(soNo);
                     if (soNo) {
-                        loadPackingLists(soNo);
+                        
                         loadCustomerAddresses(soNo);
                     }
                 });
@@ -422,9 +425,9 @@
                     });
                 }
 
-                function loadPackingLists(soId) {
+                function loadPackingLists(customerId) {
                     $.ajax({
-                        url: '{{ url('getPackingListsBySo') }}/' + soId,
+                        url: '{{ url('getPackingListsByCustomer') }}/' + customerId,
                         method: 'GET',
                         success: function(response) {
                             $('#packing_list').empty().append(

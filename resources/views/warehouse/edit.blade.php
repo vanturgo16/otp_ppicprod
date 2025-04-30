@@ -99,8 +99,8 @@
                                                     <td>{{ $detail->barcode }}</td>
                                                     <td>{{ $detail->product_description }}</td>
                                                     @if (stripos($detail->sts_start, 'bag'))
-                                                        <td><input type="number" class="form-control number_of_box"
-                                                                data-id="{{ $detail->id }}" name="number_of_box"
+                                                        <td><input type="number" class="form-control wrap"
+                                                                data-id="{{ $detail->id }}" name="wrap"
                                                                 value="{{ $detail->total_wrap }}"></td>
                                                         <td><input type="number" class="form-control weight"
                                                                 data-id="{{ $detail->id }}" name="weight"
@@ -202,8 +202,8 @@
                                     '<td>' + $('#barcode').val() + '</td>' +
                                     '<td>' + (response.product_name || '') + '</td>' +
                                     (response.is_bag ?
-                                        '<td><input type="number" class="form-control number_of_box" data-id="' +
-                                        response.id + '" name="number_of_box" value="' +
+                                        '<td><input type="number" class="form-contro wrap" data-id="' +
+                                        response.id + '" name="wrap" value="' +
                                         response.wrap +
                                         '" readonly></td>' +
                                         '<td><input type="number" class="form-control weight" data-id="' +
@@ -253,7 +253,7 @@
                 }
             });
 
-            $(document).on('change', '.number_of_box, .weight, .pcs', function() {
+            $(document).on('change', '.wrap, .weight, .pcs', function() {
                 var id = $(this).data('id');
                 var field = $(this).attr('name');
                 var value = $(this).val();

@@ -238,8 +238,8 @@
                                     '<td>' + $('#barcode').val() + '</td>' +
                                     '<td>' + (response.product_name || '') + '</td>' +
                                     (response.is_bag ?
-                                        '<td><input type="number" class="form-control number_of_box" data-id="' +
-                                        response.id + '" name="number_of_box" value="' +
+                                        '<td><input type="number" class="form-control " data-id="' +
+                                        response.id + '" name="wrap" value="' +
                                         response.wrap +
                                         '" readonly></td>' +
                                         '<td><input type="number" class="form-control weight" data-id="' +

@@ -223,13 +223,13 @@
                 @foreach ($packingListDetails as $detail)
                     <tr>
                         <td>{{ $no++ }}</td>
-                        <td>{{ $detail->product_description }}</td>
-                        <td>{{ $detail->product_name }}</td>
-                        <!-- <td>{{ $detail->perforasi }}</td> -->
-                        <td>{{ $detail->qty }}</td>
-                        <td>{{ $detail->unit_name }}</td>
-                        <td>{{ $detail->weight }} KG</td>
-                        <td>{{ $detail->remark }}</td>
+                        <td>{{$detail->description}}</td>
+                        <td>{{$detail->code}}</td>
+                        <!-- <td>perforasi</td> -->
+                        <td>{{$detail->qty}}</td>
+                        <td>{{$detail->unit}}</td>
+                        <td>{{$detail->weight}} kg</td>
+                        <td>{{$detail->remark}}</td>
 
                     </tr>
                 @endforeach

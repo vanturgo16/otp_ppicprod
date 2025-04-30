@@ -191,6 +191,7 @@ class WarehouseController extends Controller
             
             ->select(
                 'barcode_detail.barcode_number',
+                'sales_orders.so_number as soNo',
                 'barcode_detail.status',
                 'barcodes.type_product',
                 'barcodes.id_sales_orders as sales_order_id',
@@ -198,10 +199,24 @@ class WarehouseController extends Controller
                 DB::raw('COALESCE(master_product_fgs.description, master_wips.description, master_tool_auxiliaries.description, master_raw_materials.description) as description'),
                 DB::raw('COALESCE(master_product_fgs.id, master_wips.id, master_tool_auxiliaries.id, master_raw_materials.id ) as product_id'),
                 DB::raw('COALESCE(master_product_fgs.stock, master_wips.stock, master_tool_auxiliaries.stock, master_raw_materials.stock) as stock'),
+                DB::raw('COALESCE(master_product_fgs.weight, report_blow_production_results.weight, master_wips.weight) as weight'),
                 DB::raw('COALESCE(rbp.total_amount_result, 1) as total_amount_result'),
                 DB::raw('COALESCE(rbp.total_wrap, 0) as total_wrap'),
                 DB::raw('COALESCE(rbp.total_weight_starting, 0) as total_weight_starting')
             )
+            ->leftJoin('report_blow_production_results', function ($join) {
+                $join->on('barcode_detail.barcode_number', '=', 'report_blow_production_results.barcode')
+                    ->where('barcode_detail.status','like', '%BLW');
+            })
+            ->leftJoin('report_bag_production_results', function ($join) {
+                $join->on('barcode_detail.barcode_number', '=', 'report_bag_production_results.barcode')
+                    ->where('barcode_detail.status','like', '%BAG');
+            })
+            ->leftJoin('report_sf_production_results', function ($join) {
+                $join->on('barcode_detail.barcode_number', '=', 'report_sf_production_results.barcode')
+                    ->where('barcode_detail.status','like', '%FLD')
+                    ->orwhere('barcode_detail.status','like', '%SLT');
+            })
             ->leftJoin('master_product_fgs', function ($join) {
                 $join->on('sales_orders.id_master_products', '=', 'master_product_fgs.id')
                     ->where('barcodes.type_product', 'FG');
@@ -249,10 +264,10 @@ class WarehouseController extends Controller
 
             $insertedId = DB::table('packing_list_details')->insertGetId([
                 'barcode' => $barcode,
-                'id_sales_orders' => $soId,
+                'change_so' => $changeSo === null ? null : $barcodeRecord->soNo,
                 'total_wrap' => $barcodeRecord->total_wrap,
                 'id_packing_lists' => $packingListId,
-                'weight' => $isBag ? $barcodeRecord->total_weight_starting : '',
+                'weight' => $isBag ? $barcodeRecord->total_weight_starting : $barcodeRecord->weight,
                 'pcs' => ($barcodeRecord->type_product === 'AUX' || $barcodeRecord->type_product === 'RAW')
                     ? $barcodeRecord->qty  // Gunakan qty dari barcode untuk AUX dan RAW
                     : ($isBag ? $pcs : 1),
@@ -298,7 +313,7 @@ class WarehouseController extends Controller
                 ->where('barcode_number', $barcode)
                 ->update(['status' => 'Packing List']);
         } else {
-            $message = $changeSo ? 'Barcode tidak sesuai dengan SO yang diberikan' : 'Barcode tidak sesuai dengan customer yang diberikan';
+            $message = $changeSo ? 'Barcode tidak sesuai dengan SO yang diberikan' : 'Barcode tidak sesuai dengan customer/SO yang diberikan';
             return response()->json(['exists' => false, 'status' => false, 'message' => $message]);
         }
 
@@ -453,21 +468,20 @@ class WarehouseController extends Controller
         $details = DB::table('packing_list_details')
             ->join('barcode_detail', 'packing_list_details.barcode', '=', 'barcode_detail.barcode_number')
             ->join('barcodes', 'barcodes.id', '=', 'barcode_detail.id_barcode')
-            ->join('sales_orders', 'packing_list_details.id_sales_orders', '=', 'sales_orders.id') 
             ->leftJoin('master_wips', function ($join) {
                 $join->on('barcodes.id_master_products', '=', 'master_wips.id')
                     ->where('barcodes.type_product', '=', 'WIP');
             })
             ->leftJoin('master_product_fgs', function ($join) {
-                $join->on('sales_orders.id_master_products', '=', 'master_product_fgs.id')
+                $join->on('barcodes.id_master_products', '=', 'master_product_fgs.id')
                     ->where('barcodes.type_product', '=', 'FG');
             })
             ->leftJoin('master_tool_auxiliaries', function ($join) {
-                $join->on('sales_orders.id_master_products', '=', 'master_tool_auxiliaries.id')
+                $join->on('barcodes.id_master_products', '=', 'master_tool_auxiliaries.id')
                     ->where('barcodes.type_product', '=', 'AUX');
             })
             ->leftJoin('master_raw_materials', function ($join) {
-                $join->on('sales_orders.id_master_products', '=', 'master_raw_materials.id')
+                $join->on('barcodes.id_master_products', '=', 'master_raw_materials.id')
                     ->where('barcodes.type_product', '=', 'RAW');
             })
             ->where('packing_list_details.id_packing_lists', $id)
@@ -737,6 +751,7 @@ class WarehouseController extends Controller
         // Ambil detail packing list dengan deskripsi berdasarkan tipe produk
         $detailsQuery = DB::table('packing_list_details as pld')
             ->join('barcode_detail as bd', 'pld.barcode', '=', 'bd.barcode_number')
+            ->join('packing_lists as pl', 'pld.id_packing_lists', '=', 'pl.id')
             ->join('barcodes as b', 'bd.id_barcode', '=', 'b.id')
             ->join('sales_orders as so', 'b.id_sales_orders', '=', 'so.id');
 
@@ -757,7 +772,7 @@ class WarehouseController extends Controller
                 'pld.*',
                 'b.type_product',
                 'so.so_number',
-                'pld.id_sales_orders as change_so',
+                'pld.change_so as change_so',
                 DB::raw('COALESCE(fg.description, wip.description, aux.description, raw.description) as description')
             )
             ->where('pld.id_packing_lists', $id)
