@@ -249,7 +249,7 @@
                         method: 'POST',
                         data: formData,
                         success: function(response) {
-                            console.log('data',response)
+                            console.log('data', response)
                             if (response.success) {
                                 var packingListId = $('#packing_list').val();
                                 var packingListNumber = $('#packing_list option:selected').text();
@@ -390,7 +390,7 @@
                     var soNo = $(this).val();
                     // console.log(soNo);
                     if (soNo) {
-                        
+
                         loadCustomerAddresses(soNo);
                     }
                 });
@@ -433,8 +433,12 @@
                             $('#packing_list').empty().append(
                                 '<option value="" selected disabled>** Pilih Packing List</option>');
                             $.each(response, function(key, value) {
+                                let ko = value.id_order_confirmations
+                                if (ko == null) {
+                                    ko = value.reference_number
+                                }
                                 $('#packing_list').append('<option value="' + value.id + '">' +
-                                    value.packing_number + '</option>');
+                                    value.packing_number + ' (' + ko + ')' + '</option>');
                             });
                         },
                         error: function(xhr) {
@@ -447,7 +451,7 @@
                         }
                     });
                 }
-               
+
 
 
                 function loadCustomerAddresses(soNo) {
@@ -476,7 +480,7 @@
                                 $('#addressShipping')
                                     .append(
                                         `<option value="${response.shipping.id}">${response.shipping.address}</option>`
-                                        )
+                                    )
                                     .val(response.shipping.id)
                                     .trigger('change');
                             } else {
@@ -489,7 +493,7 @@
                                 $('#addressInvoice')
                                     .append(
                                         `<option value="${response.invoice.id}">${response.invoice.address}</option>`
-                                        )
+                                    )
                                     .val(response.invoice.id)
                                     .trigger('change');
                             } else {
