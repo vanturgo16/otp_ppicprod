@@ -95,12 +95,12 @@
                                             @foreach ($details as $index => $detail)
                                                 <tr data-id="{{ $detail->id }}">
                                                     <td class="row-number">{{ $index + 1 }}</td>
-                                                    <td>{{ $detail->id_sales_orders }}</td>
+                                                    <td></td>
                                                     <td>{{ $detail->barcode }}</td>
                                                     <td>{{ $detail->product_description }}</td>
                                                     @if (stripos($detail->sts_start, 'bag'))
-                                                        <td><input type="number" class="form-control number_of_box"
-                                                                data-id="{{ $detail->id }}" name="number_of_box"
+                                                        <td><input type="number" class="form-control wrap"
+                                                                data-id="{{ $detail->id }}" name="wrap"
                                                                 value="{{ $detail->total_wrap }}"></td>
                                                         <td><input type="number" class="form-control weight"
                                                                 data-id="{{ $detail->id }}" name="weight"
@@ -150,14 +150,14 @@
                 e.preventDefault();
 
                 var formData = $(this).serialize();
-                console.log("Form Data:", formData);
+                // console.log("Form Data:", formData);
 
                 $.ajax({
                     url: $(this).attr('action'),
                     method: $(this).attr('method'),
                     data: formData,
                     success: function(response) {
-                        console.log("Response:", response);
+                        // console.log("Response:", response);
                         if (response.success) {
                             Swal.fire('Success', 'Data berhasil diupdate', 'success');
                         } else {
@@ -194,15 +194,16 @@
 
 
                             if (response.exists) {
-                                var newRow = '<tr data-id="' + response.id + '">' +
+                                var newRow = 
+                                '<tr data-id="' + response.id + '">' +
                                     '<td class="row-number">' + ($('#barcode-table tbody tr')
                                         .length + 1) + '</td>' +
                                     '<td>' + ($('#change_so').val() || '') + '</td>' +
                                     '<td>' + $('#barcode').val() + '</td>' +
                                     '<td>' + (response.product_name || '') + '</td>' +
                                     (response.is_bag ?
-                                        '<td><input type="number" class="form-control number_of_box" data-id="' +
-                                        response.id + '" name="number_of_box" value="' +
+                                        '<td><input type="number" class="form-contro wrap" data-id="' +
+                                        response.id + '" name="wrap" value="' +
                                         response.wrap +
                                         '" readonly></td>' +
                                         '<td><input type="number" class="form-control weight" data-id="' +
@@ -252,7 +253,7 @@
                 }
             });
 
-            $(document).on('change', '.number_of_box, .weight, .pcs', function() {
+            $(document).on('change', '.wrap, .weight, .pcs', function() {
                 var id = $(this).data('id');
                 var field = $(this).attr('name');
                 var value = $(this).val();
@@ -292,7 +293,7 @@
                 var row = $(this).closest('tr');
                 var id = row.data('id');
                 var pcs = row.find('.pcs').val(); // Ambil nilai pcs sebelum menghapus
-                console.log(id);
+                // console.log(id);
 
                 $.ajax({
                     url: '{{ route('packing_list.remove_barcode') }}',

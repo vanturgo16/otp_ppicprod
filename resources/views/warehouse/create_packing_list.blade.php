@@ -1,6 +1,13 @@
 @extends('layouts.master')
 
 @section('konten')
+    <style>
+        .selectable {
+            user-select: text;
+            -webkit-user-select: text;
+            /* untuk Safari */
+        }
+    </style>
     <div class="page-content">
         <div class="container-fluid">
             <div class="row">
@@ -33,13 +40,13 @@
                                 </div>
                                 <div class="mb-3">
                                     <label for="customer" class="form-label">Customer</label>
-                                    <select class="form-control" id="customer" name="customer" required></select>
+                                    <select class="form-control" id="customer" name="customer" required>
+                                    </select>
                                     <input type="hidden" id="customer_id" name="customer_id">
                                 </div>
                                 <div class="mb-3">
-                                    <label for="sales_order" class="form-label">No. So</label>
-                                    <select class="form-control select2" id="soNo" name="so_number" required>
-                                        <option value="" disabled selected>-</option>
+                                    <label for="soNo" class="form-label">No. So</label>
+                                    <select class="form-control" id="soNo" name="so_number" required>
                                     </select>
                                     <input type="hidden" id="so_id" name="so_id">
                                 </div>
@@ -133,7 +140,7 @@
                     placeholder: 'Pilih SO',
                     ajax: {
                         url: '{{ url('get-so-number-by-customer') }}/' + $('#customer')
-                    .val(), // Ambil customer_id yang dipilih
+                            .val(), // Ambil customer_id yang dipilih
                         dataType: 'json',
                         delay: 250,
                         data: function(params) {
@@ -152,11 +159,14 @@
                                 })
                             };
                         },
+
                         cache: true
                     }
+               
+
                 }).on('select2:select', function(e) {
                     var data = e.params.data;
-                    console.log(data)
+                    // console.log(data)
                     $('#so_id').val(data.id); // Tampilkan ID yang dipilih di input
                 });
             });
@@ -167,14 +177,14 @@
                 e.preventDefault();
 
                 var formData = $(this).serialize();
-                console.log("Form Data:", formData);
+                // console.log("Form Data:", formData);
 
                 $.ajax({
                     url: $(this).attr('action'),
                     method: $(this).attr('method'),
                     data: formData,
                     success: function(response) {
-                        console.log("Response:", response);
+                        // console.log("Response:", response);
                         if (response.success) {
                             $('#packing-list-detail-card').show();
                             $('#packing-list-form').find('input, select').attr('disabled',
@@ -218,7 +228,7 @@
                             _token: '{{ csrf_token() }}'
                         },
                         success: function(response) {
-                            console.log("Response:", response.exists);
+                            // console.log("Response:", response.exists);
 
                             if (response.exists) {
                                 newRow = '<tr data-id="' + response.id + '">' +
@@ -228,8 +238,8 @@
                                     '<td>' + $('#barcode').val() + '</td>' +
                                     '<td>' + (response.product_name || '') + '</td>' +
                                     (response.is_bag ?
-                                        '<td><input type="number" class="form-control number_of_box" data-id="' +
-                                        response.id + '" name="number_of_box" value="' +
+                                        '<td><input type="number" class="form-control " data-id="' +
+                                        response.id + '" name="wrap" value="' +
                                         response.wrap +
                                         '" readonly></td>' +
                                         '<td><input type="number" class="form-control weight" data-id="' +
