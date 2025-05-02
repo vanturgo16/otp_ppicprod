@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\MstCustomers;
 use App\Models\Warehouse\PackingList;
+use App\Models\Marketing\salesOrder;
 use App\Models\Warehouse\DeliveryNote;
 use DataTables;
 
@@ -750,13 +751,26 @@ class DeliveryNoteController extends Controller
         $packingList->status = 'Posted';
         $packingList->save();
 
+        // Update sales_orders jadi Closed
+        if ($packingList->id_sales_orders) {
+            salesOrder::where('id', $packingList->id_sales_orders)
+                ->update(['status' => 'Closed']);
+        }
+
         return redirect()->route('delivery_notes.list')->with('pesan', 'Status berhasil diubah menjadi Posted.');
     }
+
     public function unpost($id)
     {
         $packingList = DeliveryNote::find($id);
         $packingList->status = 'Request';
         $packingList->save();
+
+        // Kembalikan sales_orders ke status Posted
+        if ($packingList->id_sales_orders) {
+            salesOrder::where('id', $packingList->id_sales_orders)
+                ->update(['status' => 'Posted']);
+        }
 
         return redirect()->route('delivery_notes.list')->with('pesan', 'Status berhasil diubah menjadi Request.');
     }
