@@ -673,8 +673,9 @@ class DeliveryNoteController extends Controller
             ->where('master_customers.id', $customerId)
             ->where('packing_lists.status', 'Posted')
             ->where('sales_orders.status', 'Posted')
-            ->select('packing_lists.id', 'packing_lists.packing_number')
+            ->select('packing_lists.id', 'packing_lists.packing_number','sales_orders.id_order_confirmations', 'sales_orders.reference_number')
             ->get();
+            // dd($packingLists);
 
 
         return response()->json($packingLists);
