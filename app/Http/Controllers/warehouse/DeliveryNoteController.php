@@ -658,7 +658,7 @@ class DeliveryNoteController extends Controller
             ->when($search, function ($query, $search) {
                 $query->where('so_number', 'like', '%' . $search . '%');
             })
-            ->select('id', 'so_number')
+            ->select('id', 'so_number', 'id_order_confirmations', 'reference_number')
             ->get();
 
         return response()->json($soNo);
@@ -673,9 +673,9 @@ class DeliveryNoteController extends Controller
             ->where('master_customers.id', $customerId)
             ->where('packing_lists.status', 'Posted')
             ->where('sales_orders.status', 'Posted')
-            ->select('packing_lists.id', 'packing_lists.packing_number','sales_orders.id_order_confirmations', 'sales_orders.reference_number')
+            ->select('packing_lists.id', 'packing_lists.packing_number', 'sales_orders.id_order_confirmations', 'sales_orders.reference_number')
             ->get();
-            // dd($packingLists);
+        // dd($packingLists);
 
 
         return response()->json($packingLists);
