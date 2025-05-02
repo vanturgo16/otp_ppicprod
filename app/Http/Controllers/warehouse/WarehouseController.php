@@ -136,7 +136,7 @@ class WarehouseController extends Controller
         return $yearMonth . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
     }
 
-   
+
     public function getSoNumberByCustomer($customerId)
     {
         //cek apakah status dn posted
@@ -176,19 +176,20 @@ class WarehouseController extends Controller
         $isBag = false;
 
         // Query untuk mengambil data barcode berdasarkan kondisi tertentu
-        
+
         $barcodeRecord = DB::table('barcodes')
             ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
-            ->join('sales_orders','barcodes.id_sales_orders','=','sales_orders.id')
+            ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
             ->when($changeSo, function ($query) use ($barcode, $changeSo) {
-                return $query->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
+                return $query
                     ->where('barcode_detail.barcode_number', $barcode)
                     ->where('sales_orders.so_number', $changeSo);
             }, function ($query) use ($barcode, $soId) {
-                return $query->where('barcode_detail.barcode_number', $barcode)
+                return $query
+                    ->where('barcode_detail.barcode_number', $barcode)
                     ->where('barcodes.id_sales_orders', $soId);
             })
-            
+
             ->select(
                 'barcode_detail.barcode_number',
                 'sales_orders.so_number as soNo',
@@ -206,16 +207,16 @@ class WarehouseController extends Controller
             )
             ->leftJoin('report_blow_production_results', function ($join) {
                 $join->on('barcode_detail.barcode_number', '=', 'report_blow_production_results.barcode')
-                    ->where('barcode_detail.status','like', '%BLW');
+                    ->where('barcode_detail.status', 'like', '%BLW');
             })
             ->leftJoin('report_bag_production_results', function ($join) {
                 $join->on('barcode_detail.barcode_number', '=', 'report_bag_production_results.barcode')
-                    ->where('barcode_detail.status','like', '%BAG');
+                    ->where('barcode_detail.status', 'like', '%BAG');
             })
             ->leftJoin('report_sf_production_results', function ($join) {
                 $join->on('barcode_detail.barcode_number', '=', 'report_sf_production_results.barcode')
-                    ->where('barcode_detail.status','like', '%FLD')
-                    ->orwhere('barcode_detail.status','like', '%SLT');
+                    ->where('barcode_detail.status', 'like', '%FLD')
+                    ->orwhere('barcode_detail.status', 'like', '%SLT');
             })
             ->leftJoin('master_product_fgs', function ($join) {
                 $join->on('sales_orders.id_master_products', '=', 'master_product_fgs.id')
@@ -260,7 +261,7 @@ class WarehouseController extends Controller
                 return response()->json(['exists' => false, 'status' => false, 'message' => 'Stok tidak mencukupi']);
             }
 
-            
+
 
             $insertedId = DB::table('packing_list_details')->insertGetId([
                 'barcode' => $barcode,
@@ -304,7 +305,6 @@ class WarehouseController extends Controller
                 DB::table('sales_orders')
                     ->where('id', $barcodeRecord->sales_order_id)
                     ->decrement('outstanding_delivery_qty', $barcodeRecord->qty);
-
             }
             //di sini nambah history_stock
 
@@ -491,13 +491,13 @@ class WarehouseController extends Controller
                 DB::raw('COALESCE(master_wips.description, master_product_fgs.description, master_tool_auxiliaries.description, master_raw_materials.description) as product_description')
             )
             ->get();
-            // dd($details);
-         
+        // dd($details);
+
 
         // Ambil data packing list dan customer dalam satu query
         $packingList = DB::table('packing_lists')
             ->join('master_customers', 'packing_lists.id_master_customers', '=', 'master_customers.id')
-            ->join('sales_orders','packing_lists.id_sales_orders','=','sales_orders.id')
+            ->join('sales_orders', 'packing_lists.id_sales_orders', '=', 'sales_orders.id')
             ->where('packing_lists.id', $id)
             ->select(
                 'packing_lists.*',
@@ -736,7 +736,7 @@ class WarehouseController extends Controller
         $packingList = DB::table('packing_lists as pl')
             ->join('master_customers as mc', 'pl.id_master_customers', '=', 'mc.id')
             ->join('sales_orders as so', 'pl.id_sales_orders', '=', 'so.id')
-            ->select('pl.*', 'mc.name as customer_name','so.so_number')
+            ->select('pl.*', 'mc.name as customer_name', 'so.so_number')
             ->where('pl.id', $id)
             ->first();
 
