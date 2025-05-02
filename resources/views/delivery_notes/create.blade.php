@@ -1,170 +1,168 @@
 @extends('layouts.master')
 
 @section('konten')
-    <div class="page-content">
-        <div class="container-fluid">
-            <div class="row">
-                <div class="col-12">
-                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                        <h4 class="mb-sm-0 font-size-18">Tambah Delivery Notes</h4>
-                        <div class="page-title-right">
-                            <ol class="breadcrumb m-0">
-                                <li class="breadcrumb-item"><a href="{{ route('delivery_notes.list') }}">Warehouse</a></li>
-                                <li class="breadcrumb-item active">Tambah Delivery Notes</li>
-                            </ol>
-                        </div>
+<div class="page-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <h4 class="mb-sm-0 font-size-18">Tambah Delivery Notes</h4>
+                    <div class="page-title-right">
+                        <ol class="breadcrumb m-0">
+                            <li class="breadcrumb-item"><a href="{{ route('delivery_notes.list') }}">Warehouse</a></li>
+                            <li class="breadcrumb-item active">Tambah Delivery Notes</li>
+                        </ol>
                     </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-body">
-                            <form id="delivery-note-form">
-                                @csrf
-                                <div class="mb-3">
-                                    <label for="jenis-dn" class="form-label">Pilih Jenis Delivery Note</label>
-                                    <select class="form-control" id="jenis-dn" name="jenis_dn" required
-                                        onchange="this.form.submit()">
-                                        <option value="Regular" {{ request('jenis_dn') == 'Regular' ? 'selected' : '' }}>
-                                            Regular</option>
-                                        <option value="Export" {{ request('jenis_dn') == 'Export' ? 'selected' : '' }}>
-                                            Export</option>
-                                        <option value="Sample" {{ request('jenis_dn') == 'Sample' ? 'selected' : '' }}>
-                                            Sample</option>
-                                        <option value="Return" {{ request('jenis_dn') == 'Return' ? 'selected' : '' }}>
-                                            Return</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="dn_number" class="form-label">Nomor DN</label>
-                                    <input type="text" class="form-control" id="dn_number" name="dn_number"
-                                        value="{{ $dnNumber }}" readonly>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="date" class="form-label">Tanggal</label>
-                                    <input type="date" class="form-control" id="date" name="date" required>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="customer" class="form-label">Customer</label>
-                                    <select class="form-control select2" id="customers" name="id_master_customer" required>
-                                        <option value="" selected disabled>** Pilih Customer</option>
-                                        @foreach ($customers as $customer)
-                                            <option value="{{ $customer->id }}">{{ $customer->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="sales_order" class="form-label">No. So</label>
-                                    <select class="form-control select2" id="soNo" name="so_number" required>
-                                        <option value="" disabled selected>*</option>
-                                    </select>
-                                    <input type="hidden" name="id_master_salesman" value="">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="customer_address" class="form-label">Alamat Shipping</label>
-                                    <select class="form-control" id="addressShipping"
-                                        name="id_master_customer_address_shipping" required>
-                                        <option value="" selected disabled>*</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="invoice_address" class="form-label">Alamat Invoice</label>
-                                    <select class="form-control" id="addressInvoice"
-                                        name="id_master_customer_address_invoice" required>
-                                        <option value="" selected disabled>*</option>
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="vehicle" class="form-label">Kendaraan</label>
-                                    <select class="form-control" id="vehicle" name="id_master_vehicle" required>
-                                        <option value="" selected disabled>** Pilih Kendaraan</option>
-                                        @foreach ($vehicles as $vehicle)
-                                            <option value="{{ $vehicle->id }}">{{ $vehicle->vehicle_number }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="note" class="form-label">Catatan</label>
-                                    <textarea class="form-control" id="note" name="note" rows="3"></textarea>
-                                </div>
-                                <button type="submit" class="btn btn-primary">Simpan</button>
-                                <button type="button" class="btn btn-secondary" id="kembali-btn"
-                                    style="display: none;">Kembali</button>
-                            </form>
-                        </div>
-                    </div>
-                    <div class="card" id="packing-list-card" style="display: none;">
-                        <div class="card-body">
-                            <h5 class="card-title">Tambah Packing List</h5>
-                            <form id="packing-list-form">
-                                @csrf
-                                <input type="hidden" id="delivery_note_id" name="delivery_note_id">
-                                <div class="mb-3">
-                                    <label for="packing_list" class="form-label">Packing List</label>
-                                    <select class="form-control select2" id="packing_list" name="packing_list_id"
-                                        required>
-                                        <option value="" selected disabled>** Pilih Packing List</option>
-                                        <!-- Options will be loaded dynamically -->
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="po_number" class="form-label">Nomor PO</label>
-                                    <input type="text" class="form-control" id="po_number" name="po_number" required
-                                        readonly>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="dn_type" class="form-label">Tipe DN</label>
-                                    <input type="text" class="form-control" id="dn_type" name="dn_type" required
-                                        readonly>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="type_product" class="form-label">Tipe Produk</label>
-                                    <input type="text" class="form-control" id="type_product" name="type_product"
-                                        required readonly>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="transaction_type" class="form-label">Tipe Transaksi</label>
-                                    <input type="text" class="form-control" id="transaction_type"
-                                        name="transaction_type" required readonly>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="salesman_name" class="form-label">Nama Salesman</label>
-                                    <input type="text" class="form-control" id="salesman_name" name="salesman_name"
-                                        required readonly>
-                                </div>
-                                <button type="submit" class="btn btn-primary">Tambah Packing List</button>
-                            </form>
-                            <div class="table-responsive mt-3">
-                                <table class="table table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>Nomor Packing List</th>
-                                            <th>Nomor PO</th>
-                                            <th>Tipe DN</th>
-                                            <th>Tipe Transaksi</th>
-                                            <th>Salesman</th>
-                                            <th>Remark</th>
-                                            <th>Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="packing-list-details"></tbody>
-                                </table>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <form id="delivery-note-form">
+                            @csrf
+                            <div class="mb-3">
+                                <label for="jenis-dn" class="form-label">Pilih Jenis Delivery Note</label>
+                                <select class="form-control" id="jenis-dn" name="jenis_dn" required
+                                    onchange="this.form.submit()">
+                                    <option value="Regular" {{ request('jenis_dn')=='Regular' ? 'selected' : '' }}>
+                                        Regular</option>
+                                    <option value="Export" {{ request('jenis_dn')=='Export' ? 'selected' : '' }}>
+                                        Export</option>
+                                    <option value="Sample" {{ request('jenis_dn')=='Sample' ? 'selected' : '' }}>
+                                        Sample</option>
+                                    <option value="Return" {{ request('jenis_dn')=='Return' ? 'selected' : '' }}>
+                                        Return</option>
+                                </select>
                             </div>
+                            <div class="mb-3">
+                                <label for="dn_number" class="form-label">Nomor DN</label>
+                                <input type="text" class="form-control" id="dn_number" name="dn_number"
+                                    value="{{ $dnNumber }}" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="date" class="form-label">Tanggal</label>
+                                <input type="date" class="form-control" id="date" name="date" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="customer" class="form-label">Customer</label>
+                                <select class="form-control select2" id="customers" name="id_master_customer" required>
+                                    <option value="" selected disabled>** Pilih Customer</option>
+                                    @foreach ($customers as $customer)
+                                    <option value="{{ $customer->id }}">{{ $customer->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="sales_order" class="form-label">No. So</label>
+                                <select class="form-control select2" id="soNo" name="so_number" required>
+                                    <option value="" disabled selected>*</option>
+                                </select>
+                                <input type="hidden" name="id_master_salesman" value="">
+                            </div>
+                            <div class="mb-3">
+                                <label for="customer_address" class="form-label">Alamat Shipping</label>
+                                <select class="form-control" id="addressShipping"
+                                    name="id_master_customer_address_shipping" required>
+                                    <option value="" selected disabled>*</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="invoice_address" class="form-label">Alamat Invoice</label>
+                                <select class="form-control" id="addressInvoice"
+                                    name="id_master_customer_address_invoice" required>
+                                    <option value="" selected disabled>*</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="vehicle" class="form-label">Kendaraan</label>
+                                <select class="form-control" id="vehicle" name="id_master_vehicle" required>
+                                    <option value="" selected disabled>** Pilih Kendaraan</option>
+                                    @foreach ($vehicles as $vehicle)
+                                    <option value="{{ $vehicle->id }}">{{ $vehicle->vehicle_number }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="note" class="form-label">Catatan</label>
+                                <textarea class="form-control" id="note" name="note" rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Simpan</button>
+                            <button type="button" class="btn btn-secondary" id="kembali-btn"
+                                style="display: none;">Kembali</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="card" id="packing-list-card" style="display: none;">
+                    <div class="card-body">
+                        <h5 class="card-title">Tambah Packing List</h5>
+                        <form id="packing-list-form">
+                            @csrf
+                            <input type="hidden" id="delivery_note_id" name="delivery_note_id">
+                            <div class="mb-3">
+                                <label for="packing_list" class="form-label">Packing List</label>
+                                <select class="form-control select2" id="packing_list" name="packing_list_id" required>
+                                    <option value="" selected disabled>** Pilih Packing List</option>
+                                    <!-- Options will be loaded dynamically -->
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="po_number" class="form-label">Nomor PO</label>
+                                <input type="text" class="form-control" id="po_number" name="po_number" required
+                                    readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="dn_type" class="form-label">Tipe DN</label>
+                                <input type="text" class="form-control" id="dn_type" name="dn_type" required readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="type_product" class="form-label">Tipe Produk</label>
+                                <input type="text" class="form-control" id="type_product" name="type_product" required
+                                    readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="transaction_type" class="form-label">Tipe Transaksi</label>
+                                <input type="text" class="form-control" id="transaction_type" name="transaction_type"
+                                    required readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label for="salesman_name" class="form-label">Nama Salesman</label>
+                                <input type="text" class="form-control" id="salesman_name" name="salesman_name" required
+                                    readonly>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Tambah Packing List</button>
+                        </form>
+                        <div class="table-responsive mt-3">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Nomor Packing List</th>
+                                        <th>Nomor PO</th>
+                                        <th>Tipe DN</th>
+                                        <th>Tipe Transaksi</th>
+                                        <th>Salesman</th>
+                                        <th>Remark</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="packing-list-details"></tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    @push('scripts')
-        <!-- SweetAlert2 JS -->
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <script>
-            $(document).ready(function() {
+@push('scripts')
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    $(document).ready(function() {
                 $('#customers').val('').trigger('change');
                 var today = new Date().toISOString().split('T')[0];
                 $('#date').val(today);
@@ -410,10 +408,15 @@
                         success: function(response) {
                             $('#soNo').empty().append(
                                 '<option value="" disabled selected>** Pilih No. SO</option>');
-                            $.each(response, function(index, so) {
-                                $('#soNo').append('<option value="' + so.id + '">' + so.so_number +
-                                    '</option>');
-                            });
+                                $.each(response, function (index, so) {
+                                    let labelSuffix = so.id_order_confirmations 
+                                        ? so.id_order_confirmations 
+                                        : so.reference_number;
+
+                                    let label = so.so_number + ' (' + labelSuffix + ')';
+
+                                    $('#soNo').append('<option value="' + so.id + '">' + label + '</option>');
+                                });
                         },
                         error: function() {
                             Swal.fire({
@@ -514,6 +517,6 @@
 
 
             });
-        </script>
-    @endpush
+</script>
+@endpush
 @endsection

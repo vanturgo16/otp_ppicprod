@@ -193,6 +193,7 @@ class WarehouseController extends Controller
             ->select(
                 'barcode_detail.barcode_number',
                 'sales_orders.so_number as soNo',
+                'sales_orders.id_master_products as id_master_products',
                 'barcode_detail.status',
                 'barcodes.type_product',
                 'barcodes.id_sales_orders as sales_order_id',
@@ -260,9 +261,6 @@ class WarehouseController extends Controller
             if ($newStock < 0) {
                 return response()->json(['exists' => false, 'status' => false, 'message' => 'Stok tidak mencukupi']);
             }
-
-
-
             $insertedId = DB::table('packing_list_details')->insertGetId([
                 'barcode' => $barcode,
                 'change_so' => $changeSo === null ? null : $barcodeRecord->soNo,
@@ -276,7 +274,58 @@ class WarehouseController extends Controller
                 'created_at' => now(),
                 'updated_at' => now()
             ]);
+            //scrip histori
+            $packing = DB::table('packing_lists')
+                ->select('packing_number')
+                ->where('id', $packingListId)
+                ->first();
 
+            $packingNumber = $packing ? $packing->packing_number : null;
+            // dd($packingListId);
+            if ($packingNumber) {
+                // Cek apakah sudah ada data history_stocks untuk packing_number tersebut
+                $existingHistory = DB::table('history_stocks')
+                    ->where('id_good_receipt_notes_details', $packingNumber)
+                    ->where('type_product', $barcodeRecord->type_product)
+                    ->where('id_master_products', $barcodeRecord->product_id)
+                    ->first();
+
+                $qtyToInsert = ($barcodeRecord->type_product === 'AUX' || $barcodeRecord->type_product === 'RAW')
+                    ? $barcodeRecord->qty
+                    : ($isBag ? $pcs : 1);
+
+                if ($existingHistory) {
+                    // Jika sudah ada, update qty dan tambahkan barcode ke daftar
+                    $newQty = $existingHistory->qty + $qtyToInsert;
+
+                    // Gabungkan barcode lama dengan yang baru
+                    $existingBarcodes = $existingHistory->barcode ?? '';
+                    $newBarcodes = $existingBarcodes ? $existingBarcodes . ', ' . $barcode : $barcode;
+
+                    DB::table('history_stocks')
+                        ->where('id', $existingHistory->id)
+                        ->update([
+                            'qty' => $newQty,
+                            'barcode' => $newBarcodes,
+                            'updated_at' => now()
+                        ]);
+                } else {
+                    // Insert baru
+                    DB::table('history_stocks')->insert([
+                        'id_good_receipt_notes_details' => $packingNumber,
+                        'type_product' => $barcodeRecord->type_product,
+                        'id_master_products' => $barcodeRecord->product_id,
+                        'qty' => $qtyToInsert,
+                        'type_stock' => 'OUT',
+                        'barcode' => $barcode,
+                        'date' => now(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                        'remarks' => null
+                    ]);
+                }
+            }
+            //end scrip history
             if ($barcodeRecord->type_product === 'FG') {
                 DB::table('master_product_fgs')
                     ->where('id', $barcodeRecord->product_id)
@@ -307,8 +356,6 @@ class WarehouseController extends Controller
                     ->decrement('outstanding_delivery_qty', $barcodeRecord->qty);
             }
             //di sini nambah history_stock
-
-
             DB::table('barcode_detail')
                 ->where('barcode_number', $barcode)
                 ->update(['status' => 'Packing List']);
@@ -444,8 +491,45 @@ class WarehouseController extends Controller
                         ->where('id', $barcodeRecord->sales_order_id)
                         ->increment('outstanding_delivery_qty', $barcodeRecord->qty);
                 }
+                // Tambahan: Proses remove dari history_stocks
+                $packing = DB::table('packing_lists')
+                    ->select('packing_number')
+                    ->where('id', $barcodeDetail->id_packing_lists)
+                    ->first();
 
+                $packingNumber = $packing ? $packing->packing_number : null;
 
+                if ($packingNumber) {
+                    $history = DB::table('history_stocks')
+                        ->where('id_good_receipt_notes_details', $packingNumber)
+                        ->where('type_product', $barcodeRecord->type_product)
+                        ->where('id_master_products', $barcodeRecord->id_master_products)
+                        ->first();
+
+                    if ($history) {
+                        $qtyToRemove = $barcodeDetail->pcs;
+
+                        // Hapus barcode dari string
+                        $barcodeList = explode(', ', $history->barcode);
+                        $barcodeList = array_filter($barcodeList, fn($b) => $b !== $barcode);
+                        $newBarcodeString = implode(', ', $barcodeList);
+                        $newQty = $history->qty - $qtyToRemove;
+
+                        if ($newQty > 0) {
+                            DB::table('history_stocks')
+                                ->where('id', $history->id)
+                                ->update([
+                                    'qty' => $newQty,
+                                    'barcode' => $newBarcodeString,
+                                    'updated_at' => now()
+                                ]);
+                        } else {
+                            DB::table('history_stocks')
+                                ->where('id', $history->id)
+                                ->delete();
+                        }
+                    }
+                }
                 // Update status barcode di tabel barcode_detail
                 DB::table('barcode_detail')
                     ->where('barcode_number', $barcode)
@@ -807,6 +891,13 @@ class WarehouseController extends Controller
         DB::transaction(function () use ($id) {
             // Ambil semua detail packing list
             $details = DB::table('packing_list_details')->where('id_packing_lists', $id)->get();
+            // Ambil packing number
+            $packing = DB::table('packing_lists')
+                ->select('packing_number')
+                ->where('id', $id)
+                ->first();
+
+            $packingNumber = $packing ? $packing->packing_number : null;
 
             foreach ($details as $detail) {
                 // Ambil informasi barcode
@@ -872,7 +963,12 @@ class WarehouseController extends Controller
 
             // Hapus detail packing list
             DB::table('packing_list_details')->where('id_packing_lists', $id)->delete();
-
+            // Hapus entri history_stocks berdasarkan packing_number
+            if ($packingNumber) {
+                DB::table('history_stocks')
+                    ->where('id_good_receipt_notes_details', $packingNumber)
+                    ->delete();
+            }
             // Hapus packing list
             DB::table('packing_lists')->where('id', $id)->delete();
         });
