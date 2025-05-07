@@ -412,6 +412,32 @@ class GRNoteController extends Controller
                     'remarks' => $item->note,
                     'date' => DB::raw('CURRENT_DATE()')
                 ]);
+                // UPDATE STOCK
+                if($item->type_product == 'FG'){
+                    $dataFG = MstProductFG::find($item->id_master_products);
+                    if ($dataFG) {
+                        $dataFG->stock += $item->receipt_qty;
+                        $dataFG->save();
+                    }
+                } elseif($item->type_product == 'RM'){
+                    $dataRM = MstRawMaterial::find($item->id_master_products);
+                    if ($dataRM) {
+                        $dataRM->stock += $item->receipt_qty;
+                        $dataRM->save();
+                    }
+                } elseif($item->type_product == 'WIP'){
+                    $dataWIP = MstWip::find($item->id_master_products);
+                    if ($dataWIP) {
+                        $dataWIP->stock += $item->receipt_qty;
+                        $dataWIP->save();
+                    }
+                } elseif($item->type_product == 'TA' || $item->type_product == 'Other'){
+                    $dataTA = MstToolAux::find($item->id_master_products);
+                    if ($dataTA) {
+                        $dataTA->stock += $item->receipt_qty;
+                        $dataTA->save();
+                    }
+                }
             }
             
             // UPDATE GRN
@@ -459,6 +485,32 @@ class GRNoteController extends Controller
 
                 // DELETE HISTORY STOCK
                 HistoryStocks::where('id_good_receipt_notes_details', $item->id)->delete();
+                // UPDATE STOCK
+                if($item->type_product == 'FG'){
+                    $dataFG = MstProductFG::find($item->id_master_products);
+                    if ($dataFG) {
+                        $dataFG->stock -= $item->receipt_qty;
+                        $dataFG->save();
+                    }
+                } elseif($item->type_product == 'RM'){
+                    $dataRM = MstRawMaterial::find($item->id_master_products);
+                    if ($dataRM) {
+                        $dataRM->stock -= $item->receipt_qty;
+                        $dataRM->save();
+                    }
+                } elseif($item->type_product == 'WIP'){
+                    $dataWIP = MstWip::find($item->id_master_products);
+                    if ($dataWIP) {
+                        $dataWIP->stock -= $item->receipt_qty;
+                        $dataWIP->save();
+                    }
+                } elseif($item->type_product == 'TA' || $item->type_product == 'Other'){
+                    $dataTA = MstToolAux::find($item->id_master_products);
+                    if ($dataTA) {
+                        $dataTA->stock -= $item->receipt_qty;
+                        $dataTA->save();
+                    }
+                }
             }
 
             // UPDATE STATUS GRN

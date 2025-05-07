@@ -84,7 +84,10 @@
 
                 <!-- Columns without merging -->
                 <td>{{ $data->product_desc ?? '-' }}</td>
-                <td>
+                <td>{{ $data->qty ??  '0' }}</td>
+                <td>{{ $data->receipt_qty ??  '0' }}</td>
+                <td>{{ $data->outstanding_qty ??  '0' }}</td>
+                {{-- <td>
                     {{ $data->qty 
                         ? (strpos(strval($data->qty), '.') !== false 
                             ? rtrim(rtrim(number_format($data->qty, 6, ',', '.'), '0'), ',') 
@@ -104,7 +107,7 @@
                             ? rtrim(rtrim(number_format($data->outstanding_qty, 6, ',', '.'), '0'), ',') 
                             : number_format($data->outstanding_qty, 0, ',', '.')) 
                         : '0' }}
-                </td>
+                </td> --}}
                 <td>{{ $data->unit ?? '-' }}</td>
                 <td>{{ $data->qc_passed ?? '-' }}</td>
                 <td>{{ $data->lot_number ?? '-' }}</td>
