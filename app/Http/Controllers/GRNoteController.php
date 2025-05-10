@@ -361,11 +361,11 @@ class GRNoteController extends Controller
             }
         }
         // Check All Product GRN With Status Open / Close Has Generate Lot Number
-        if(GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)->whereIn('status', ['Open', 'Close'])->whereNull('lot_number')->exists()){
+        if(GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)->whereNotNull('status')->whereIn('status', ['Open', 'Close'])->whereNull('lot_number')->exists()){
             return redirect()->back()->with(['fail' => 'Masih ada produk yang diterima belum generate Lot Number!']);
         }
         // Check All Product GRN With Status Open / Close Has Generate All Receipt Qty
-        if (GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)->whereIn('status', ['Open', 'Close'])
+        if (GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)->whereNotNull('status')->whereIn('status', ['Open', 'Close'])
             ->whereColumn('receipt_qty', '!=', 'qty_generate_barcode')->exists()) {
             return redirect()->back()->with(['fail' => 'Masih ada sisa Qty produk yang diterima belum generate Lot!']);
         }
