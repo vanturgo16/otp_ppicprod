@@ -201,7 +201,8 @@
                                     <td>{{ $detail->barcode_number }}</td>
                                     <td>{{ $detail->so_number }}</td>
                                     <td>{{ $detail->pcs . ' ' . $detail->unit }}</td>
-                                    <td>{{ stripos($detail->sts_start, 'bag') ? $detail->weight : $detail->production_weight }} KG</td>
+                                    <td>{{$detail->weight }} KG</td>
+                                    {{-- <td>{{ stripos($detail->sts_start, 'bag') ? $detail->weight : $detail->production_weight }} KG</td> --}}
                                     @if (stripos($detail->sts_start, 'bag') !== false)
                                         <td>{{ $detail->total_wrap }}</td>
                                     @endif
@@ -214,9 +215,10 @@
                                         $subtotals[$detail->unit] += $detail->pcs;
 
                                         // Total berat dan wrap
-                                        $totalWeight += stripos($detail->sts_start, 'bag')
-                                            ? $detail->weight
-                                            : $detail->production_weight;
+                                        // $totalWeight += stripos($detail->sts_start, 'bag')
+                                        //     ? $detail->weight
+                                        //     : $detail->production_weight;
+                                        $totalWeight +=$detail->weight;
 
                                         if (stripos($detail->sts_start, 'bag') !== false) {
                                             $totalWrap += $detail->total_wrap;

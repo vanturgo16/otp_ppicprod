@@ -749,27 +749,27 @@ class WarehouseController extends Controller
             ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
 
             // Subquery untuk mendapatkan berat berdasarkan kondisi
-            ->leftJoinSub(
-                DB::table('report_blow_production_results')
-                    ->select('barcode', 'weight as blow_weight'),
-                'blow_results',
-                function ($join) {
-                    $join->on('barcode_detail.barcode_number', '=', 'blow_results.barcode')
-                        ->where('packing_list_details.sts_start', 'like', '%BLW');
-                }
-            )
-            ->leftJoinSub(
-                DB::table('report_sf_production_results')
-                    ->select('barcode', 'weight as sf_weight'),
-                'sf_results',
-                function ($join) {
-                    $join->on('barcode_detail.barcode_number', '=', 'sf_results.barcode')
-                        ->where(function ($query) {
-                            $query->where('packing_list_details.sts_start', 'like', '%FLD')
-                                ->orWhere('packing_list_details.sts_start', 'like', '%SLT');
-                        });
-                }
-            )
+            // ->leftJoinSub(
+            //     DB::table('report_blow_production_results')
+            //         ->select('barcode', 'weight as blow_weight'),
+            //     'blow_results',
+            //     function ($join) {
+            //         $join->on('barcode_detail.barcode_number', '=', 'blow_results.barcode')
+            //             ->where('packing_list_details.sts_start', 'like', '%BLW');
+            //     }
+            // )
+            // ->leftJoinSub(
+            //     DB::table('report_sf_production_results')
+            //         ->select('barcode', 'weight as sf_weight'),
+            //     'sf_results',
+            //     function ($join) {
+            //         $join->on('barcode_detail.barcode_number', '=', 'sf_results.barcode')
+            //             ->where(function ($query) {
+            //                 $query->where('packing_list_details.sts_start', 'like', '%FLD')
+            //                     ->orWhere('packing_list_details.sts_start', 'like', '%SLT');
+            //             });
+            //     }
+            // )
 
             // Select kolom yang diambil
             ->select(
@@ -782,8 +782,8 @@ class WarehouseController extends Controller
                 'master_units.unit',
                 'packing_list_details.pcs',
                 'packing_list_details.weight',
-                'packing_list_details.total_wrap',
-                DB::raw('COALESCE(blow_results.blow_weight, sf_results.sf_weight, master_raw_materials.weight ) as production_weight')
+                'packing_list_details.total_wrap'
+                // DB::raw('COALESCE(blow_results.blow_weight, sf_results.sf_weight, master_raw_materials.weight ) as production_weight')
             )
             ->leftJoin('master_product_fgs', function ($join) {
                 $join->on('sales_orders.id_master_products', '=', 'master_product_fgs.id')
@@ -809,6 +809,7 @@ class WarehouseController extends Controller
             })
             ->where('packing_list_details.id_packing_lists', $id)
             ->get();
+            // dd($packingList, $details);
 
         return view('warehouse.print_packing_list', compact('packingList', 'details'));
     }
