@@ -409,6 +409,7 @@ class GRNoteController extends Controller
                     'id_master_products' => $item->id_master_products,
                     'qty' => $item->receipt_qty,
                     'type_stock' => 'IN',
+                    'is_closed' => 1,
                     'remarks' => $item->note,
                     'date' => DB::raw('CURRENT_DATE()')
                 ]);
