@@ -375,11 +375,13 @@ class BarcodeController extends Controller
             'mp.thickness',
             'mp.perforasi',
             'mp.width',
+            'mp.id as id_master_products',
             DB::raw('IF(mp.type_product = "FG", mp.height, NULL) AS height')
         )
         ->where('bd.id_barcode', $id)
           
             ->get();
+            // dd($barcodeDetails);
         return view('barcode.print', compact('barcodeDetails'));
     }
 
@@ -426,9 +428,11 @@ class BarcodeController extends Controller
             'mp.thickness',
             'mp.perforasi',
             'mp.width',
+            'mp.id as id_master_products',
             DB::raw('IF(mp.type_product = "FG", mp.height, NULL) AS height')
         )
         ->where('bd.id_barcode', $id)
+          
             ->get();
         return view('barcode.print_broker', compact('barcodeDetails'));
     }
@@ -476,10 +480,11 @@ class BarcodeController extends Controller
             'mp.thickness',
             'mp.perforasi',
             'mp.width',
+            'mp.id as id_master_products',
             DB::raw('IF(mp.type_product = "FG", mp.height, NULL) AS height')
         )
         ->where('bd.id_barcode', $id)
-        
+          
             ->get();
         return view('barcode.print_cbc', compact('barcodeDetails'));
     }
