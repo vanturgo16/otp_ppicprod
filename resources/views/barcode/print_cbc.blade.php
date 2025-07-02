@@ -17,6 +17,7 @@
                     CBC AMERICA LLC
                 </div>
                 <table class="barcode-table">
+                    
                     <tr>
                         <td class="label"><strong>SO No.</strong></td>
                         <td class="colon">:</td>
@@ -28,22 +29,23 @@
                     <tr>
                         <td class="label"><strong>PO No.</strong></td>
                         <td class="colon">:</td>
-                        <td class="value">{{ $barcode->po_number ?? 'N/A' }}</td>
+                        <td class="value">{{ $barcode->po_number ?? '-' }}</td>
                     </tr>
                     <tr>
                         <td class="label"><strong>Desc</strong></td>
                         <td class="colon">:</td>
-                        <td class="value">{{ $barcode->description ?? 'N/A' }}</td>
+                        <td class="value">{{ $barcode->description ?? '-' }}</td>
                     </tr>
                     <tr>
                         <td class="label"><strong>Size</strong></td>
                         <td class="colon">:</td>
-                        <td class="value">{{ $barcode->width ?? 'N/A' }} &nbsp;&nbsp;&nbsp;&nbsp; <strong>P:</strong>{{ $barcode->perforasi ?? 'N/A' }}</td>
+                        <td class="value">{{ $barcode->width ?? '-' }} MM  &nbsp;  &nbsp;{{ $barcode->height ?? ($barcode->length ?? '') }}
+                            &nbsp;&nbsp;&nbsp;&nbsp; <strong>P:</strong>{{ $barcode->perforasi ?? '-' }}</td>
                     </tr>
                     <tr>
                         <td class="label"><strong>Thickness</strong></td>
                         <td class="colon">:</td>
-                        <td class="value">{{ $barcode->thickness ?? 'N/A' }}</td>
+                        <td class="value">{{ $barcode->thickness ?? '-' }}</td>
                     </tr>
                     <tr>
                         <td class="label"><strong>Group</strong></td>
@@ -126,6 +128,8 @@
 .value {
     text-align: left;
     white-space: nowrap;
+    word-wrap: break-word; /* Buat memecah kata panjang */
+    font-weight: bold; /* Menjadikan teks tebal */
 }
 
 .company-name {
