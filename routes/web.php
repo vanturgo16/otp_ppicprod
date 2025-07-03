@@ -116,9 +116,10 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
                 Route::get('/barcode/{lot_number}', 'generateBarcode')->name('grn_gln.generateBarcode');
             });
         });
-    }); 
+    });
 
     include __DIR__ . '/ppic/workOrder.php';
+    include __DIR__ . '/ppic/sampleRekap.php';
 
 
     Route::controller(BarcodeController::class)->middleware('permission:PPIC_Barcode')->group(function () {
@@ -189,7 +190,7 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
         // Route::post('/adjust-stock', 'adjustStock')->name('adjust-stock');
     });
 
-   
+
     Route::controller(DeliveryNoteController::class)->group(function () {
         Route::get('delivery_notes', 'list')->name('delivery_notes.list');
         Route::get('delivery_notes/create', 'create')->name('delivery_notes.create');
@@ -211,4 +212,4 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
         Route::get('get-so-number-by-customer/{customerId}', 'getSoNumberByCustomer')->name('get-so-number-by-customer');
         Route::get('get-customer-addresses-by-so/{soNo}', 'getCustomerAddressesBySo')->name('get-customer-addresses-by-so');
     });
-}); 
+});
