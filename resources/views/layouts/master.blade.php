@@ -284,6 +284,15 @@
                         </li>
                         @endcan
 
+                        @can('PPIC')
+                        <li>
+                            <a href="{{ route('rekapitulasi-order') }}">
+                                <i data-feather="file-text"></i>
+                                <span data-key="t-horizontal">Rekapitulasi Order</span>
+                            </a>
+                        </li>
+                        @endcan
+
                         @can('PPIC_user_management')
                         <li class="{{ request()->is('user/*') ? 'mm-active' : '' }}">
                             <a href="javascript: void(0);" class="has-arrow">
@@ -627,7 +636,7 @@
             // Function to initialize Select2 globally
             function initSelect2(context) {
                 $(context).find('.input-select2').each(function () {
-                    if (!$(this).hasClass("select2-hidden-accessible")) { 
+                    if (!$(this).hasClass("select2-hidden-accessible")) {
                         $(this).select2({
                             width: 'resolve',
                             dropdownParent: $(this).closest('.modal').length ? $(this).closest('.modal') : $('body')
