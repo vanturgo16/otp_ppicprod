@@ -566,10 +566,13 @@ class DeliveryNoteController extends Controller
                 DB::raw('SUM(packing_list_details.weight) as weight'),
                 DB::raw('SUM(packing_list_details.pcs) as qty'),
                 DB::raw('COALESCE(master_product_fgs.description, master_wips.description, master_tool_auxiliaries.description, master_raw_materials.description) as description'),
-                DB::raw('COALESCE(master_product_fgs.product_code, master_wips.wip_code, master_tool_auxiliaries.description, master_raw_materials.description) as code'),
+                DB::raw('COALESCE(master_product_fgs.product_code, master_wips.wip_code, master_tool_auxiliaries.description, master_raw_materials.description) as p_code'),
+                DB::raw("IFNULL(sales_orders.cust_product_code,'-') as code"),
                 'master_units.unit as unit',
+                'sales_orders.id as soId',
                 'delivery_note_details.remark as remark'
             )
+
             ->where('delivery_note_details.id_delivery_notes', $id)
             ->groupBy('description', 'code', 'unit')
 
