@@ -39,7 +39,7 @@
             justify-content: center;
             align-items: center;
             width: 40%;
-            
+
         }
 
         .header-right {
@@ -63,15 +63,24 @@
             line-height: 1.5;
             font-size: 12px;
         }
-        .header .cont-title{
+
+        .header .cont-title {
             text-align: center;
         }
 
         .header .title {
-            font-size: 14px;
+            
+            font-size: 24px;
             font-weight: bold;
             border-bottom: 2px solid;
+            
+            line-height: 1;
         }
+        
+
+        
+           
+        
 
         .info-table {
             min-width: 60%;
@@ -129,7 +138,7 @@
             width: 20%;
             text-align: left;
             font-size: 12px;
-            border: solid 2px;
+            border: solid 3px;
             padding: 0;
         }
 
@@ -140,8 +149,90 @@
 
         }
 
+        .kepada-yth p b {
+            font-size: 16px;
+
+        }
+
         .total {
             font-size: 14px;
+        }
+
+        @media print {
+
+            @page {
+                margin: 10mm;
+                /* ruang putih tepi kertas */
+            }
+
+            body {
+                margin: 0 !important;
+                padding: 0 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                background: none !important;
+            }
+
+            .container {
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 0 !important;
+                position: relative;
+                page-break-inside: avoid;
+               
+            }
+
+          
+            .header {
+                white-space: nowrap;
+                font-size: clamp(14px, 1.8vw, 18px);
+                /* ukuran adaptif: min 12 px, max 18 px */
+                line-height: 1.2;
+            }
+
+            .header-left,
+            .header-center,
+            .header-right {
+                flex: 0 0 auto;
+            }
+
+            .header-center {
+                padding-top: 130px;
+
+            }
+
+            .header-right {
+                margin-top: 0px;
+                display: flex;
+                justify-content: left;
+                padding-left: 40px;
+            }
+
+            .kepada-yth {
+                border: solid 3px black;
+                padding: 2px;
+                padding-right: 70px;
+            }
+
+            .main-table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                page-break-inside: avoid;
+            }
+
+            .main-table th,
+            .main-table td {
+                border: 1px solid #000 !important;
+                font-size: 10pt !important;
+                padding: 4pt !important;
+            }
+
+            .signatures {
+                width: 100%;
+                page-break-inside: avoid;
+                margin-top: 25mm !important;
+            }
+            
         }
     </style>
 </head>
@@ -163,7 +254,7 @@
             <div class="header-center">
                 <div class="cont-title">
                     <p class="title">SURAT PENGANTAR</p>
-                    <p><strong>{{ $prefix }}{{ str_replace('DN', '', $deliveryNote->dn_number) }}</strong></p>
+                    <p>{{ $prefix }}{{ str_replace('DN', '', $deliveryNote->dn_number) }}</p>
                 </div>
             </div>
             <div class="header-right">
@@ -197,7 +288,7 @@
 
         <div class="kepada-yth">
             <p>Kepada Yth,</p>
-            <p>{{ $deliveryNote->customer_name }}</p>
+            <p><b>{{ $deliveryNote->customer_name }}</b></p>
             {{-- invoice addres: --}}
             <p>{{ $invoiceAddress->address }}</p>
             <p>{{ $invoiceAddress->postal_code }}</p>
@@ -223,13 +314,13 @@
                 @foreach ($packingListDetails as $detail)
                     <tr>
                         <td>{{ $no++ }}</td>
-                        <td>{{$detail->description}}</td>
-                        <td>{{$detail->code}}</td>
+                        <td>{{ $detail->description }}</td>
+                        <td>{{ $detail->code }}</td>
                         <!-- <td>perforasi</td> -->
-                        <td>{{$detail->qty}}</td>
-                        <td>{{$detail->unit}}</td>
-                        <td>{{$detail->weight}} kg</td>
-                        <td>{{$detail->remark}}</td>
+                        <td>{{ $detail->qty }}</td>
+                        <td>{{ $detail->unit }}</td>
+                        <td>{{ $detail->weight }} kg</td>
+                        <td>{{ $detail->remark }}</td>
 
                     </tr>
                 @endforeach
