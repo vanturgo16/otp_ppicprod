@@ -6,7 +6,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
+            margin: 5px;
             padding: 0;
         }
 
@@ -46,7 +46,7 @@
             display: flex;
             justify-content: end;
             width: 30%;
-            font-size: 10px;
+            font-size: 12px;
             margin-bottom: 0;
             margin-top: 60px;
             padding-right: 110px;
@@ -61,7 +61,7 @@
         .header p {
             margin: 0;
             line-height: 1.5;
-            font-size: 12px;
+            font-size: 14px;
         }
 
         .header .cont-title {
@@ -73,10 +73,11 @@
             font-size: 24px;
             font-weight: bold;
             border-bottom: 2px solid;
-            
             line-height: 1;
         }
-        
+        .header .no-dn{
+            font-size: 16px;
+        }
 
         
            
@@ -90,7 +91,7 @@
 
         .info-table td {
             padding: 5px 0;
-            font-size: 12px;
+            font-size: 14px;
         }
 
         .right-align {
@@ -105,7 +106,7 @@
 
         .main-table th,
         .main-table td {
-            border: 1px solid black;
+            border: 0.8px solid black;
             padding: 8px;
             text-align: left;
             font-size: 12px;
@@ -137,7 +138,7 @@
             right: 0;
             width: 20%;
             text-align: left;
-            font-size: 12px;
+            font-size: 14px;
             border: solid 3px;
             padding: 0;
         }
@@ -157,16 +158,16 @@
         .total {
             font-size: 14px;
         }
+       
 
         @media print {
 
             @page {
-                margin: 10mm;
                 /* ruang putih tepi kertas */
             }
 
             body {
-                margin: 0 !important;
+                margin: 5.1px !important;
                 padding: 0 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
@@ -187,7 +188,7 @@
                 white-space: nowrap;
                 font-size: clamp(14px, 1.8vw, 18px);
                 /* ukuran adaptif: min 12 px, max 18 px */
-                line-height: 1.2;
+                line-height: 1.8;
             }
 
             .header-left,
@@ -205,7 +206,7 @@
                 margin-top: 0px;
                 display: flex;
                 justify-content: left;
-                padding-left: 40px;
+                padding-left: 30px;
             }
 
             .kepada-yth {
@@ -254,7 +255,7 @@
             <div class="header-center">
                 <div class="cont-title">
                     <p class="title">SURAT PENGANTAR</p>
-                    <p>{{ $prefix }}{{ str_replace('DN', '', $deliveryNote->dn_number) }}</p>
+                    <p class="no-dn">{{ $prefix }}{{ str_replace('DN', '', $deliveryNote->dn_number) }}</p>
                 </div>
             </div>
             <div class="header-right">
