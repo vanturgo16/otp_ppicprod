@@ -73,10 +73,11 @@
             font-size: 24px;
             font-weight: bold;
             border-bottom: 2px solid;
-            
             line-height: 1;
         }
-        
+        .header .no-dn{
+            font-size: 16px;
+        }
 
         
            
@@ -157,6 +158,7 @@
         .total {
             font-size: 14px;
         }
+       
 
         @media print {
 
@@ -253,7 +255,7 @@
             <div class="header-center">
                 <div class="cont-title">
                     <p class="title">SURAT PENGANTAR</p>
-                    <p>{{ $prefix }}{{ str_replace('DN', '', $deliveryNote->dn_number) }}</p>
+                    <p class="no-dn">{{ $prefix }}{{ str_replace('DN', '', $deliveryNote->dn_number) }}</p>
                 </div>
             </div>
             <div class="header-right">
