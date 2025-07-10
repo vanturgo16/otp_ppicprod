@@ -198,6 +198,7 @@ class DeliveryNoteController extends Controller
                 ->join('barcode_detail', 'packing_list_details.barcode', '=', 'barcode_detail.barcode_number')
                 ->join('barcodes', 'barcode_detail.id_barcode', '=', 'barcodes.id')
                 ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
+                ->join('packing_lists', 'packing_list_details.id_packing_lists', '=', 'packing_lists.id')
 
                 // Left join berdasarkan type_product
                 ->leftJoin('master_product_fgs', function ($join) {
@@ -235,13 +236,12 @@ class DeliveryNoteController extends Controller
                     DB::raw('COUNT(packing_list_details.barcode) as total_qty'),
                     DB::raw('SUM(packing_list_details.weight) as total_weight'),
                     'master_units.id as id_master_unit',
-                    'sales_orders.id_master_salesmen as id_master_salesman',
-                    'sales_orders.id as soId'
+                    'packing_lists.id_sales_orders as soId',
+                    'sales_orders.id_master_salesmen as id_master_salesman'
                 )
                 ->where('packing_list_details.id_packing_lists', $validatedData['packing_list_id'])
                 ->groupBy('master_units.id', 'sales_orders.id', 'sales_orders.id_master_salesmen')
                 ->first();
-
 
 
 
@@ -252,7 +252,7 @@ class DeliveryNoteController extends Controller
             // Simpan ke dalam tabel delivery_note_details
             DB::table('delivery_note_details')->insert([
                 'id_delivery_notes' => $id,
-                'id_sales_orders' => $packingListDetails->soId,
+                'id_sales_orders' =>  $packingListDetails->soId,
                 'id_packing_lists' => $validatedData['packing_list_id'],
                 'qty' => $packingListDetails->total_qty,
                 'id_master_units' => $packingListDetails->id_master_unit,
