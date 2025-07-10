@@ -97,7 +97,19 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@if(session('alert'))
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'failed to post',
+                    html: {!! json_encode(session('alert')) !!},
+                });
+            });
+        </script>
+@endif
 <script>
+
     $(document).ready(function() {
                 let transactionType = '';
                 let dataTable = $('#delivery_notes_table').DataTable({

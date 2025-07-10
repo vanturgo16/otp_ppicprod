@@ -11,6 +11,8 @@ use App\Models\Marketing\salesOrder;
 use App\Models\Warehouse\DeliveryNote;
 use DataTables;
 
+use function Laravel\Prompts\select;
+
 class DeliveryNoteController extends Controller
 {
 
@@ -750,31 +752,88 @@ class DeliveryNoteController extends Controller
     }
     public function post($id)
     {
-        $packingList = DeliveryNote::find($id);
-        $packingList->status = 'Posted';
-        $packingList->save();
+        // ----- 1. Ambil DN; 404 kalau tak ada -----
+        $dn = DeliveryNote::findOrFail($id);
+        
 
-        // Update sales_orders jadi Closed
-        if ($packingList->id_sales_orders) {
-            salesOrder::where('id', $packingList->id_sales_orders)
-                ->update(['status' => 'Closed']);
+        // ----- 2. Rekap qty per SO -----
+        $rekap = DB::table('delivery_note_details as dnd')
+            ->join('sales_orders as so', 'dnd.id_sales_orders', '=', 'so.id')
+            ->join('packing_list_details as pld', 'dnd.id_packing_lists', '=', 'pld.id_packing_lists')
+            ->join('packing_lists as pl','pld.id_packing_lists','=','pl.id')
+            ->select(
+                'dnd.id_sales_orders as so_id',
+                'so.qty as so_qty',
+                'pl.packing_number as pl_no',
+                DB::raw('SUM(pld.pcs) AS pl_qty')
+            )
+            ->where('dnd.id_delivery_notes', $dn->id)
+            ->groupBy('so_id', 'so_qty')
+            ->get();
+            // dd($rekap);
+
+        // ----- 3. Pisahkan match & mismatch (abaikan tipe) -----
+        [$match, $mismatch] = $rekap->partition(
+            fn($r) => (int) $r->pl_qty === (int) $r->so_qty
+        );
+
+        // ----- 4. Jika ADA mismatch → alert & tidak ubah status apa pun -----
+        if ($mismatch->isNotEmpty()) {
+            $plNo = $mismatch->pluck('pl_no')->implode(', ');
+
+            return back()->with([
+                'alert' => "packing list dengan no : {$plNo} memiliki selisih qty sales_orders",
+            ]);
+            
         }
+        
 
-        return redirect()->route('delivery_notes.list')->with('pesan', 'Status berhasil diubah menjadi Posted.');
+        // ----- 5. Semua match → jalankan perubahan di satu transaction -----
+        DB::transaction(function () use ($dn, $match) {
+
+            // 5a. Update status SO menjadi Closed
+            SalesOrder::whereIn('id', $match->pluck('so_id'))
+                ->update(['status' => 'Closed']);
+
+            // 5b. Update status DN menjadi Posted
+            $dn->status = 'Posted';
+            $dn->save();
+        });
+
+        // ----- 6. Redirect dengan pesan sukses -----
+        return redirect()
+            ->route('delivery_notes.list')
+            ->with('pesan', "Delivery Note #{$dn->id} berhasil di‑POST dan semua SO ditutup.");
     }
 
     public function unpost($id)
     {
-        $packingList = DeliveryNote::find($id);
-        $packingList->status = 'Request';
-        $packingList->save();
+        /* 1. Pastikan DN memang sudah Posted */
+        $dn = DeliveryNote::where('status', 'Posted')->findOrFail($id);
 
-        // Kembalikan sales_orders ke status Posted
-        if ($packingList->id_sales_orders) {
-            salesOrder::where('id', $packingList->id_sales_orders)
-                ->update(['status' => 'Posted']);
-        }
+        /* 2. Dapatkan semua SO yang terkait DN ini */
+        $soIds = DB::table('delivery_note_details')
+            ->where('id_delivery_notes', $dn->id)
+            ->pluck('id_sales_orders')
+            ->unique();               // contoh: [12, 15]
 
-        return redirect()->route('delivery_notes.list')->with('pesan', 'Status berhasil diubah menjadi Request.');
+        /* 3. Jalankan perubahan dalam satu transaksi */
+        DB::transaction(function () use ($dn, $soIds) {
+
+            /* 3a. Turunkan status DN kembali ke “Request” */
+            $dn->status = 'Request';          // atau label lain jika ingin
+            $dn->save();
+
+            /* 3b. “Buka” kembali semua SO tersebut */
+            if ($soIds->isNotEmpty()) {
+                SalesOrder::whereIn('id', $soIds)
+                    ->update(['status' => 'Posted']);   // ← status setelah di‑un‑post
+            }
+        });
+
+        /* 4. Redirect dengan pesan sukses */
+        return redirect()
+            ->route('delivery_notes.list')
+            ->with('pesan', "Delivery Note #{$dn->id} berhasil di‑UN‑POST dan status SO dibuka kembali.");
     }
 }
