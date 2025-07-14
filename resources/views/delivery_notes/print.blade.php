@@ -69,25 +69,27 @@
         }
 
         .header .title {
-            
+
             font-size: 24px;
             font-weight: bold;
             border-bottom: 2px solid;
             line-height: 1;
         }
-        .header .no-dn{
+
+        .header .no-dn {
             font-size: 16px;
         }
 
-        
-           
-        
+
+
+
 
         .info-table {
             min-width: 60%;
             margin-bottom: 20px;
             table-layout: fixed;
         }
+
 
         .info-table td {
             padding: 5px 0;
@@ -158,7 +160,7 @@
         .total {
             font-size: 14px;
         }
-       
+
 
         @media print {
 
@@ -180,10 +182,10 @@
                 padding: 0 0 !important;
                 position: relative;
                 page-break-inside: avoid;
-               
+
             }
 
-          
+
             .header {
                 white-space: nowrap;
                 font-size: clamp(14px, 1.8vw, 18px);
@@ -233,7 +235,7 @@
                 page-break-inside: avoid;
                 margin-top: 25mm !important;
             }
-            
+
         }
     </style>
 </head>
@@ -270,11 +272,37 @@
                 <td>: {{ date('d/m/Y', strtotime($deliveryNote->date)) }}</td>
                 <td></td>
             </tr>
+            @php
+                $adaKO = $packingListDetails->contains(function ($item) {
+                    return $item->ko_number !== null && $item->ko_number !== '-';
+                });
+
+                $adaPO = $packingListDetails->contains(function ($item) {
+                    return $item->ko_number === null || $item->ko_number === '-';
+                });
+
+                $label = 'PO';
+                if ($adaKO && $adaPO) {
+                    $label = 'PO/KO';
+                } elseif ($adaKO) {
+                    $label = 'KO';
+                }
+            @endphp
+
+
             <tr>
-                <td>No. PO</td>
-                <td>: {{ $deliveryNote->sales_order_po_number }}</td>
+                <td>No. {{ $label }}</td>
+                <td>:
+                    @foreach ($packingListDetails as $detail)
+                        <span>{{ $detail->ko_po_no }}@if (!$loop->last)
+                                -
+                            @endif
+                        </span>
+                    @endforeach
+                </td>
                 <td></td>
             </tr>
+
             <tr>
                 <td>No. Pol. Kendaraan</td>
                 <td>: {{ $deliveryNote->vehicle_number }}</td>
