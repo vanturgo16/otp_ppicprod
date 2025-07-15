@@ -33,6 +33,7 @@ class DeliveryNoteController extends Controller
                     'delivery_note_details.dn_type', // Pastikan kolom ini disertakan
                     'delivery_note_details.transaction_type', // Pastikan kolom ini disertakan
                     DB::raw('GROUP_CONCAT(DISTINCT packing_lists.packing_number SEPARATOR ", ") as packing_numbers'),
+                    // DB::raw('GROUP_CONCAT(DISTINCT sales_orders.so_number SEPARATOR ", ") as so_number'),
                     'master_vehicles.vehicle_number as vehicle',
                     'sales_orders.reference_number as po_number'
                 )
@@ -46,7 +47,6 @@ class DeliveryNoteController extends Controller
             if ($start_date && $end_date) {
                 $query->whereBetween('delivery_notes.date', [$start_date, $end_date]);
             }
-
             $data = $query->get();
 
             return datatables()->of($data)
