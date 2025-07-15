@@ -74,6 +74,7 @@
                                         <th>No</th>
                                         <th>DN Number</th>
                                         <th>Packing Numbers</th>
+                                        <th>Sales Order Numbers</th>
                                         <th>PO Number</th>
                                         <th>Date</th>
                                         <th>DN Type</th>
@@ -156,6 +157,11 @@
                             name: 'packing_numbers',
                             orderable: true
                         },
+                        // {
+                        //     data: 'so_number',
+                        //     name: 'so_number',
+                        //     orderable: true
+                        // },
                         {
                             data: 'po_number',
                             name: 'po_number',

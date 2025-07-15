@@ -54,6 +54,7 @@
                                     <tr>
                                         <th>No</th>
                                         <th>Packing Number</th>
+                                        <th>Sales order Number</th>
                                         <th>Date</th>
                                         <th>Customer</th>
                                         <th>Status</th>
@@ -138,6 +139,11 @@
                 {
                     data: 'packing_number',
                     name: 'packing_number',
+                    orderable: true
+                },
+                {
+                    data: 'so_number',
+                    name: 'so_number',
                     orderable: true
                 },
                 {

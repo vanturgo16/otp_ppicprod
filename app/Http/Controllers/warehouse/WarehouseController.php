@@ -20,6 +20,7 @@ class WarehouseController extends Controller
             $columns = ['id', 'packing_number', 'date', 'customer', 'status'];
 
             $query = DB::table('packing_lists as pl')
+                ->join('sales_orders as so', 'pl.id_sales_orders', '=', 'so.id')
                 ->leftJoin('master_customers as mc', 'pl.id_master_customers', '=', 'mc.id')
                 ->select(
                     'pl.id',
@@ -27,6 +28,7 @@ class WarehouseController extends Controller
                     'pl.date',
                     'mc.name as customer',
                     'pl.status',
+                    'so.so_number',
                     DB::raw('"" as action') // Menambahkan kolom action sebagai kolom kosong
                 )
                 ->orderBy($columns[$orderColumn], $orderDirection);
@@ -224,8 +226,8 @@ class WarehouseController extends Controller
             })
             ->leftJoin(DB::raw('(SELECT barcode, SUM(amount_result) as total_amount_result, SUM(weight_starting) as total_weight_starting, SUM(wrap) as total_wrap FROM report_bag_production_results GROUP BY barcode) as rbp'), 'barcode_detail.barcode_number', '=', 'rbp.barcode')
             ->first();
-            // dd($barcodeRecord->sales_order_id, $soId);
-            
+        // dd($barcodeRecord->sales_order_id, $soId);
+
 
         if ($barcodeRecord && strpos($barcodeRecord->status, 'In Stock') !== false) {
             $exists = true;
@@ -405,7 +407,7 @@ class WarehouseController extends Controller
 
         // Ambil informasi barcode dari tabel packing_list_details
         $barcodeDetail = DB::table('packing_list_details as pls')
-        ->join('packing_lists as pl', 'pls.id_packing_lists','=','pl.id')->where('pls.id', $id)->first();
+            ->join('packing_lists as pl', 'pls.id_packing_lists', '=', 'pl.id')->where('pls.id', $id)->first();
 
         if ($barcodeDetail) {
             // Ambil informasi produk terkait dari tabel barcodes, master_product_fgs dan sales_orders
@@ -434,14 +436,14 @@ class WarehouseController extends Controller
                     'barcodes.id_master_products as id_master_products',
                     'barcodes.type_product as type_product',
                     'barcode_detail.status as status',
-                DB::raw('COALESCE(master_product_fgs.id, master_wips.id, master_tool_auxiliaries.id, master_raw_materials.id) as product_id'),
-                'barcodes.qty'
+                    DB::raw('COALESCE(master_product_fgs.id, master_wips.id, master_tool_auxiliaries.id, master_raw_materials.id) as product_id'),
+                    'barcodes.qty'
                 )
                 ->first();
-                
-                $soId= $barcodeDetail->id_sales_orders;
-                
-                
+
+            $soId = $barcodeDetail->id_sales_orders;
+
+
 
             if ($barcodeRecord) {
                 $barcode = $barcodeDetail->barcode;
@@ -467,7 +469,7 @@ class WarehouseController extends Controller
                 DB::table('sales_orders')
                     ->where('id', $soId)
                     ->increment('outstanding_delivery_qty', $stockUpdateQty);
-                
+
                 if ($barcodeRecord->sales_order_id != $soId) {
                     DB::table('sales_orders')
                         ->where('id', $barcodeRecord->sales_order_id)
