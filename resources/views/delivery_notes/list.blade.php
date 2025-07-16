@@ -74,7 +74,7 @@
                                         <th>No</th>
                                         <th>DN Number</th>
                                         <th>Packing Numbers</th>
-                                        <th>Sales Order Numbers</th>
+                                        {{-- <th>Sales Order Numbers</th> --}}
                                         <th>PO Number</th>
                                         <th>Date</th>
                                         <th>DN Type</th>
