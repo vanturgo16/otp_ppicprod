@@ -74,13 +74,14 @@
                                         <th>No</th>
                                         <th>DN Number</th>
                                         <th>Packing Numbers</th>
+                                        <th>Customers</th>
                                         {{-- <th>Sales Order Numbers</th> --}}
                                         <th>PO Number</th>
                                         <th>Date</th>
                                         <th>DN Type</th>
                                         <th>Transaction Type</th>
                                         <th>Vehicles</th>
-                                        <th>cust product</th>
+                                        <th>Cust product</th>
                                         <th>Status</th>
                                         <th>Action</th>
                                     </tr>
@@ -158,14 +159,14 @@
                             name: 'packing_numbers',
                             orderable: true
                         },
-                        // {
-                        //     data: 'so_number',
-                        //     name: 'so_number',
-                        //     orderable: true
-                        // },
                         {
-                            data: 'po_number',
-                            name: 'po_number',
+                            data: 'customer',
+                            name: 'customer',
+                            orderable: true
+                        },
+                        {
+                            data: 'ko_po_no',
+                            name: 'ko_po_no',
                             orderable: true
                         },
                         {

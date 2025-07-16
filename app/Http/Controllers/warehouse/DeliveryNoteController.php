@@ -24,19 +24,22 @@ class DeliveryNoteController extends Controller
             $transaction_type = $request->input('transaction_type');
 
             $query = DB::table('delivery_notes')
+            ->join('master_customers','delivery_notes.id_master_customers','=','master_customers.id')
                 ->leftJoin('delivery_note_details', 'delivery_notes.id', '=', 'delivery_note_details.id_delivery_notes')
                 ->leftJoin('packing_lists', 'delivery_note_details.id_packing_lists', '=', 'packing_lists.id')
                 ->join('master_vehicles', 'delivery_notes.id_master_vehicles', '=', 'master_vehicles.id')
                 ->leftJoin('sales_orders', 'delivery_note_details.id_sales_orders', '=', 'sales_orders.id')
                 ->select(
                     'delivery_notes.*',
-                    'delivery_note_details.dn_type', // Pastikan kolom ini disertakan
-                    'delivery_note_details.transaction_type', // Pastikan kolom ini disertakan
+                    'master_customers.name as customer',
+                    'delivery_note_details.dn_type',
+                    'delivery_note_details.transaction_type',
                     DB::raw('GROUP_CONCAT(DISTINCT packing_lists.packing_number SEPARATOR ", ") as packing_numbers'),
                     DB::raw('GROUP_CONCAT(DISTINCT sales_orders.cust_product_code SEPARATOR ", ") as cust'),
-                    // DB::raw('GROUP_CONCAT(DISTINCT sales_orders.so_number SEPARATOR ", ") as so_number'),
+                    DB::raw("IF(sales_orders.id_order_confirmations IS NULL OR sales_orders.id_order_confirmations = '-', sales_orders.reference_number, sales_orders.id_order_confirmations) as ko_po_no"),
                     'master_vehicles.vehicle_number as vehicle',
-                    'sales_orders.reference_number as po_number'
+                    'sales_orders.reference_number as po_number',
+                    'sales_orders.reference_number as id_order_confirmation'
                 )
                 ->groupBy('delivery_notes.id')
                 ->orderBy('delivery_notes.created_at', 'desc');
