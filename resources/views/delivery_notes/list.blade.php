@@ -81,7 +81,6 @@
                                         <th>DN Type</th>
                                         <th>Transaction Type</th>
                                         <th>Vehicles</th>
-                                        <th>Cust product</th>
                                         <th>Status</th>
                                         <th>Action</th>
                                     </tr>
@@ -187,11 +186,6 @@
                         {
                             data: 'vehicle',
                             name: 'vehicle',
-                            orderable: true
-                        },
-                        {
-                            data: 'cust',
-                            name: 'cust',
                             orderable: true
                         },
                         {

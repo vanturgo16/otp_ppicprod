@@ -35,7 +35,6 @@ class DeliveryNoteController extends Controller
                     'delivery_note_details.dn_type',
                     'delivery_note_details.transaction_type',
                     DB::raw('GROUP_CONCAT(DISTINCT packing_lists.packing_number SEPARATOR ", ") as packing_numbers'),
-                    DB::raw('GROUP_CONCAT(DISTINCT sales_orders.cust_product_code SEPARATOR ", ") as cust'),
                     DB::raw("IF(sales_orders.id_order_confirmations IS NULL OR sales_orders.id_order_confirmations = '-', sales_orders.reference_number, sales_orders.id_order_confirmations) as ko_po_no"),
                     'master_vehicles.vehicle_number as vehicle',
                     'sales_orders.reference_number as po_number',
