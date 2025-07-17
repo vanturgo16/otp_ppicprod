@@ -202,8 +202,8 @@ class DeliveryNoteController extends Controller
             $packingListDetails = DB::table('packing_list_details')
                 ->join('barcode_detail', 'packing_list_details.barcode', '=', 'barcode_detail.barcode_number')
                 ->join('barcodes', 'barcode_detail.id_barcode', '=', 'barcodes.id')
-                ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
                 ->join('packing_lists', 'packing_list_details.id_packing_lists', '=', 'packing_lists.id')
+                ->join('sales_orders', 'packing_lists.id_sales_orders', '=', 'sales_orders.id')
 
                 // Left join berdasarkan type_product
                 ->leftJoin('master_product_fgs', function ($join) {
@@ -242,11 +242,13 @@ class DeliveryNoteController extends Controller
                     DB::raw('SUM(packing_list_details.weight) as total_weight'),
                     'master_units.id as id_master_unit',
                     'packing_lists.id_sales_orders as soId',
-                    'sales_orders.id_master_salesmen as id_master_salesman'
+                    'sales_orders.id_master_salesmen as id_master_salesman',
+                    'sales_orders.reference_number as po_number'
                 )
                 ->where('packing_list_details.id_packing_lists', $validatedData['packing_list_id'])
                 ->groupBy('master_units.id', 'sales_orders.id', 'sales_orders.id_master_salesmen')
                 ->first();
+                // dd($packingListDetails);
 
 
 
@@ -275,10 +277,11 @@ class DeliveryNoteController extends Controller
 
             return response()->json([
                 'success' => true,
-                'po_number' => $request->po_number,
+                'po_number' => $packingListDetails->po_number,
                 'dn_type' => $request->dn_type,
                 'transaction_type' => $request->transaction_type,
                 'salesman_name' => $request->salesman_name,
+                'id_sales_orders' =>  $packingListDetails->soId,
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
