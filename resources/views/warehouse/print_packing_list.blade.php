@@ -120,7 +120,13 @@
             font-size: 12px;
         }
 
+        .no-border {
+            border-top: none !important;
+            border-bottom: none !important;
+        }
+
         @media print {
+
             .main-table th,
             .main-table td {
                 border: 1px solid black;
@@ -179,6 +185,7 @@
                                 <th>Description</th>
                                 <th>Barcode</th>
                                 <th>No. SO</th>
+                                <th>Perforasi</th>
                                 <th>Isi Dus</th>
                                 <th>Berat</th>
                                 @if (collect($details)->contains(fn($d) => stripos($d->sts_start, 'bag') !== false))
@@ -191,6 +198,8 @@
                                 $subtotals = [];
                                 $totalWeight = 0;
                                 $totalWrap = 0;
+                                $previousNoSo = null;
+                                $previousPerforasi = null;
                             @endphp
 
                             @foreach ($details as $index => $detail)
@@ -199,9 +208,25 @@
                                     <td>{{ $detail->product_code }}</td>
                                     <td>{{ $detail->description }}</td>
                                     <td>{{ $detail->barcode_number }}</td>
-                                    <td>{{ $detail->so_number }}</td>
+
+                                    @if ($detail->so_number !== $previousNoSo)
+                                        <td class="no-border"> {{ $detail->so_number }}</td>
+                                        @php $previousNoSo = $detail->so_number; @endphp
+                                    @else
+                                        <td class="no-border"></td>
+                                    @endif
+
+
+
+                                    @if ($detail->perforasi !== $previousPerforasi)
+                                        <td class="no-border">{{ $detail->perforasi}}</td>
+                                        @php $previousPerforasi = $detail->perforasi; @endphp
+                                    @else
+                                        <td class="no-border"></td>
+                                    @endif
+
                                     <td>{{ $detail->pcs . ' ' . $detail->unit }}</td>
-                                    <td>{{$detail->weight }} KG</td>
+                                    <td>{{ $detail->weight }} KG</td>
                                     {{-- <td>{{ stripos($detail->sts_start, 'bag') ? $detail->weight : $detail->production_weight }} KG</td> --}}
                                     @if (stripos($detail->sts_start, 'bag') !== false)
                                         <td>{{ $detail->total_wrap }}</td>
@@ -218,7 +243,7 @@
                                         // $totalWeight += stripos($detail->sts_start, 'bag')
                                         //     ? $detail->weight
                                         //     : $detail->production_weight;
-                                        $totalWeight +=$detail->weight;
+                                        $totalWeight += $detail->weight;
 
                                         if (stripos($detail->sts_start, 'bag') !== false) {
                                             $totalWrap += $detail->total_wrap;
@@ -234,7 +259,8 @@
             <div class="row mt-4">
                 <div class="col-12" style="float: right; text-align: right;">
                     @foreach ($subtotals as $unit => $subtotal)
-                        <p><strong>Subtotal ({{ $unit }}):</strong> {{ number_format($subtotal) }} {{ $unit }}</p>
+                        <p><strong>Subtotal ({{ $unit }}):</strong> {{ number_format($subtotal) }}
+                            {{ $unit }}</p>
                     @endforeach
                     <p><strong>Total Berat:</strong> {{ number_format($totalWeight, 2) }} KG</p>
                     @if ($totalWrap > 0)

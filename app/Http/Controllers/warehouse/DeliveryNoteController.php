@@ -584,6 +584,7 @@ class DeliveryNoteController extends Controller
                 DB::raw("IF(sales_orders.id_order_confirmations IS NULL OR sales_orders.id_order_confirmations = '-', sales_orders.reference_number, sales_orders.id_order_confirmations) as ko_po_no"),
                 'sales_orders.so_category as dn_type',
                 'sales_orders.id_master_products',
+                DB::raw("IF(sales_orders.perforasi IS NULL, 'P-', sales_orders.perforasi) as perforasi"),
                 'delivery_note_details.remark as remark'
             )
             ->where('delivery_note_details.id_delivery_notes', $id)

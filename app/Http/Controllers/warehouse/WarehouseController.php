@@ -763,6 +763,7 @@ class WarehouseController extends Controller
                 DB::raw('COALESCE(master_product_fgs.description, master_wips.description, master_tool_auxiliaries.description, master_raw_materials.description) as description'),
                 'barcode_detail.barcode_number',
                 'sales_orders.so_number',
+                DB::raw("IF(sales_orders.perforasi IS NULL, 'P-', sales_orders.perforasi) as perforasi"),
                 'master_units.unit',
                 'packing_list_details.pcs',
                 'packing_list_details.weight',
