@@ -329,7 +329,7 @@
                     <th>No.</th>
                     <th>Description</th>
                     <th>Cust. Product Code</th>
-                    <!-- <th>Perforasi</th> -->
+                    <th>Perforasi</th>
                     <th>Qty</th>
                     <th>Unit</th>
                     <th>Weight</th>
@@ -345,7 +345,7 @@
                         <td>{{ $no++ }}</td>
                         <td>{{ $detail->description }}</td>
                         <td>{{ $detail->code }}</td>
-                        <!-- <td>perforasi</td> -->
+                        <td>{{ $detail->perforasi }}</td>
                         <td>{{ $detail->qty }}</td>
                         <td>{{ $detail->unit }}</td>
                         <td>{{ $detail->weight }} kg</td>
@@ -354,7 +354,7 @@
                     </tr>
                 @endforeach
                 <tr>
-                    <td style="text-align: center" colspan="3"><strong>TOTAL</strong></td>
+                    <td style="text-align: center" colspan="4"><strong>TOTAL</strong></td>
                     <td>{{ $totalQty }} </td>
                     <td></td>
                     <td>{{ $totalWeight }} KG</td>

@@ -24,7 +24,7 @@ class DeliveryNoteController extends Controller
             $transaction_type = $request->input('transaction_type');
 
             $query = DB::table('delivery_notes')
-            ->join('master_customers','delivery_notes.id_master_customers','=','master_customers.id')
+                ->join('master_customers', 'delivery_notes.id_master_customers', '=', 'master_customers.id')
                 ->leftJoin('delivery_note_details', 'delivery_notes.id', '=', 'delivery_note_details.id_delivery_notes')
                 ->leftJoin('packing_lists', 'delivery_note_details.id_packing_lists', '=', 'packing_lists.id')
                 ->join('master_vehicles', 'delivery_notes.id_master_vehicles', '=', 'master_vehicles.id')
@@ -243,12 +243,12 @@ class DeliveryNoteController extends Controller
                     'master_units.id as id_master_unit',
                     'packing_lists.id_sales_orders as soId',
                     'sales_orders.id_master_salesmen as id_master_salesman',
-                    'sales_orders.reference_number as po_number'
+                    DB::raw("IF(sales_orders.id_order_confirmations IS NULL OR sales_orders.id_order_confirmations = '-', sales_orders.reference_number, sales_orders.id_order_confirmations) as po_number")
                 )
                 ->where('packing_list_details.id_packing_lists', $validatedData['packing_list_id'])
                 ->groupBy('master_units.id', 'sales_orders.id', 'sales_orders.id_master_salesmen')
                 ->first();
-                // dd($packingListDetails);
+            // dd($packingListDetails);
 
 
 
@@ -584,6 +584,7 @@ class DeliveryNoteController extends Controller
                 DB::raw("IF(sales_orders.id_order_confirmations IS NULL OR sales_orders.id_order_confirmations = '-', sales_orders.reference_number, sales_orders.id_order_confirmations) as ko_po_no"),
                 'sales_orders.so_category as dn_type',
                 'sales_orders.id_master_products',
+                DB::raw("IF(sales_orders.perforasi IS NULL, 'P-', sales_orders.perforasi) as perforasi"),
                 'delivery_note_details.remark as remark'
             )
             ->where('delivery_note_details.id_delivery_notes', $id)
