@@ -29,6 +29,19 @@
                         <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
                         <td class="value">{{ $barcode->nm_cust ?? '-' }}</td>
                     </tr>
+                     <tr>
+        <td><strong>No KO/PO</strong></td>
+        <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
+       
+            <td  class="value">
+            <b>
+            @if(is_null($barcode->id_order_confirmations))
+                {{ $barcode->reference_number ?? '-' }}
+            @else
+                {{ '-' }}
+            @endif
+            </b></td>
+    </tr>
                     <tr>
                         <td><strong>Description</strong></td>
                         <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
