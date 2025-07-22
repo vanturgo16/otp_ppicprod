@@ -36,6 +36,19 @@
             <b>{{ $barcode->description ?? '-' }}</b></td>
     </tr>
     <tr>
+        <td><strong>No KO/PO</strong></td>
+        <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
+       
+            <td  class="value">
+            <b>
+            @if(is_null($barcode->id_order_confirmations))
+                {{ $barcode->reference_number ?? '-' }}
+            @else
+                {{ '-' }}
+            @endif
+            </b></td>
+    </tr>
+    <tr>
         <td><strong>Size</strong></td>
         <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
         <td class="value">{{ $barcode->width ?? '-' }} MM  &nbsp; X &nbsp;{{ $barcode->height ?? ($barcode->length ?? '') }}
