@@ -123,6 +123,7 @@
         .no-border {
             border-top: none !important;
             border-bottom: none !important;
+
         }
 
         @media print {
@@ -165,6 +166,10 @@
                         <td>: {{ $packingList->packing_number }}</td>
                     </tr>
                     <tr>
+                        <td>SO Nomor</td>
+                        <td>: {{ $packingList->so_number }}</td>
+                    </tr>
+                    <tr>
                         <td>Tanggal</td>
                         <td>: {{ \Carbon\Carbon::parse($packingList->date)->format('d/m/Y') }}</td>
                     </tr>
@@ -198,8 +203,6 @@
                                 $subtotals = [];
                                 $totalWeight = 0;
                                 $totalWrap = 0;
-                                $previousNoSo = null;
-                                $previousPerforasi = null;
                             @endphp
 
                             @foreach ($details as $index => $detail)
@@ -208,23 +211,8 @@
                                     <td>{{ $detail->product_code }}</td>
                                     <td>{{ $detail->description }}</td>
                                     <td>{{ $detail->barcode_number }}</td>
-
-                                    @if ($detail->so_number !== $previousNoSo)
-                                        <td class="no-border"> {{ $detail->so_number }}</td>
-                                        @php $previousNoSo = $detail->so_number; @endphp
-                                    @else
-                                        <td class="no-border"></td>
-                                    @endif
-
-
-
-                                    @if ($detail->perforasi !== $previousPerforasi)
-                                        <td class="no-border">{{ $detail->perforasi}}</td>
-                                        @php $previousPerforasi = $detail->perforasi; @endphp
-                                    @else
-                                        <td class="no-border"></td>
-                                    @endif
-
+                                    <td>{{ $detail->so_number }}
+                                    <td>{{ $detail->perforasi }}
                                     <td>{{ $detail->pcs . ' ' . $detail->unit }}</td>
                                     <td>{{ $detail->weight }} KG</td>
                                     {{-- <td>{{ stripos($detail->sts_start, 'bag') ? $detail->weight : $detail->production_weight }} KG</td> --}}
