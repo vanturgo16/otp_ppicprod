@@ -678,7 +678,8 @@ class WarehouseController extends Controller
                         return response()->json(['success' => false, 'error' => 'Barcode not found or not valid for the given conditions.']);
                     }
                 } else {
-                    if ($field == 'pcs' && $oldDetail && substr($oldDetail->barcode, -1) === 'B') {
+                    // if ($field == 'pcs' && $oldDetail && substr($oldDetail->barcode, -1) === 'B')
+                        if ($field == 'pcs' && $oldDetail && stripos($$oldDetail->status, 'bag') !== false) {
                         $barcodeRecord = DB::table('barcodes')
                             ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
                             ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
@@ -723,7 +724,8 @@ class WarehouseController extends Controller
     {
         $packingList = DB::table('packing_lists')
             ->join('master_customers', 'packing_lists.id_master_customers', '=', 'master_customers.id')
-            ->select('packing_lists.packing_number', 'packing_lists.date', 'master_customers.name as customer_name')
+            ->join('sales_orders', 'packing_lists.id_sales_orders', '=', 'sales_orders.id')
+            ->select('packing_lists.packing_number', 'packing_lists.date', 'master_customers.name as customer_name','sales_orders.so_number')
             ->where('packing_lists.id', $id)
             ->first();
 
