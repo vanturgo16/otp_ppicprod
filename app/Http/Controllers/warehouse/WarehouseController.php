@@ -39,7 +39,8 @@ class WarehouseController extends Controller
                 $query->where(function ($query) use ($searchValue) {
                     $query->where('pl.packing_number', 'like', '%' . $searchValue . '%')
                         ->orWhere('mc.name', 'like', '%' . $searchValue . '%')
-                        ->orWhere('pl.status', 'like', '%' . $searchValue . '%');
+                        ->orWhere('pl.status', 'like', '%' . $searchValue . '%')
+                        ->orWhere('so.so_number', 'like', '%' . $searchValue . '%');
                 });
             }
 
