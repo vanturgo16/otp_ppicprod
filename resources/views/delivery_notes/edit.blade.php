@@ -399,10 +399,15 @@
                         success: function(response) {
                             $('#soNo').empty().append(
                                 '<option value="" disabled selected>** Pilih No. SO</option>');
-                            $.each(response, function(index, so) {
-                                $('#soNo').append('<option value="' + so.id + '">' + so.so_number +
-                                    '</option>');
-                            });
+                                $.each(response, function (index, so) {
+                                    let labelSuffix = so.id_order_confirmations 
+                                        ? so.id_order_confirmations 
+                                        : so.reference_number;
+
+                                    let label = so.so_number + ' (' + labelSuffix + ')';
+
+                                    $('#soNo').append('<option value="' + so.id + '">' + label + '</option>');
+                                });
                         },
                         error: function() {
                             Swal.fire({
