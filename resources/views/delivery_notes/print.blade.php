@@ -272,33 +272,11 @@
                 <td>: {{ date('d/m/Y', strtotime($deliveryNote->date)) }}</td>
                 <td></td>
             </tr>
-            @php
-                $adaKO = $packingListDetails->contains(function ($item) {
-                    return $item->ko_number !== null && $item->ko_number !== '-';
-                });
-
-                $adaPO = $packingListDetails->contains(function ($item) {
-                    return $item->ko_number === null || $item->ko_number === '-';
-                });
-
-                $label = 'PO';
-                if ($adaKO && $adaPO) {
-                    $label = 'PO/KO';
-                } elseif ($adaKO) {
-                    $label = 'KO';
-                }
-            @endphp
-
-
+          
             <tr>
-                <td>No. {{ $label }}</td>
-                <td>:
-                    @foreach ($packingListDetails as $detail)
-                        <span>{{ $detail->ko_po_no }}@if (!$loop->last)
-                                -
-                            @endif
-                        </span>
-                    @endforeach
+                <td>No.PO</td>
+                <td>: {{ $deliveryNote->ko_po_no }}
+                    
                 </td>
                 <td></td>
             </tr>
