@@ -328,7 +328,7 @@ class DeliveryNoteController extends Controller
                 'invoice' => null
             ]);
         }
-       
+
 
         if (stripos($sameAs->type_address, 'same as') !== false) {
             // Jika alamat "same as"
@@ -573,13 +573,13 @@ class DeliveryNoteController extends Controller
                 DB::raw('SUM(packing_list_details.weight) as weight'),
                 DB::raw('SUM(packing_list_details.pcs) as qty'),
                 DB::raw('COALESCE(master_product_fgs.description, master_wips.description, master_tool_auxiliaries.description, master_raw_materials.description) as description'),
+                DB::raw("COALESCE(master_product_fgs.perforasi, master_wips.perforasi, master_tool_auxiliaries.weight_stock, master_raw_materials.weight_stock,'p-') as perforasi"),
                 DB::raw('COALESCE(master_product_fgs.product_code, master_wips.wip_code, master_tool_auxiliaries.description, master_raw_materials.description) as p_code'),
                 DB::raw("IFNULL(sales_orders.cust_product_code,'-') as code"),
                 'master_units.unit as unit',
                 'sales_orders.id as soId',
                 'sales_orders.so_category as dn_type',
                 'sales_orders.id_master_products',
-                DB::raw("IF(sales_orders.perforasi IS NULL, 'P-', sales_orders.perforasi) as perforasi"),
                 'delivery_note_details.remark as remark'
             )
             ->where('delivery_note_details.id_delivery_notes', $id)
@@ -597,7 +597,7 @@ class DeliveryNoteController extends Controller
             ->where('delivery_notes.id', $id)
             ->select('id_master_customers')
             ->first();
-        // dd($idMs);
+        // $idMs);
         $Address = DB::table('master_customer_addresses')
             ->where('id_master_customers', $idMs->id_master_customers)
             ->select('type_address', 'address', 'postal_code')
