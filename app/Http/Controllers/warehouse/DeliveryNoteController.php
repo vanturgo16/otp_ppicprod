@@ -325,17 +325,13 @@ class DeliveryNoteController extends Controller
 
         if (!$sameAs) {
             return response()->json([
-                'shipping' => null,
                 'invoice' => null
             ]);
         }
+       
 
         if (stripos($sameAs->type_address, 'same as') !== false) {
             // Jika alamat "same as"
-            $shipping = [
-                'id' => $sameAs->id,
-                'address' => $sameAs->address
-            ];
             $invoice = [
                 'id' => $sameAs->id,
                 'address' => $sameAs->address
@@ -352,12 +348,11 @@ class DeliveryNoteController extends Controller
                 ->whereIn('type_address', ['Shipping', 'Invoice'])
                 ->get(['id', 'type_address', 'address']);
 
-            $shipping = $addresses->firstWhere('type_address', 'Shipping');
             $invoice = $addresses->firstWhere('type_address', 'Invoice');
-
-            $shipping = $shipping ? ['id' => $shipping->id, 'address' => $shipping->address] : null;
             $invoice = $invoice ? ['id' => $invoice->id, 'address' => $invoice->address] : null;
         }
+        $shipping = $sameAs->address;
+        $shipping = $shipping ? ['id' => $sameAs->id, 'address' => $sameAs->address] : null;
 
         return response()->json([
             'shipping' => $shipping,
