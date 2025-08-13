@@ -116,6 +116,7 @@
                 let transactionType = '';
                 let dataTable = $('#delivery_notes_table').DataTable({
                     dom: 'Bfrtip',
+                    stateSave: true,
                     buttons: [
                         'copy', 'csv', 'excel', 'pdf', 'print'
                     ],

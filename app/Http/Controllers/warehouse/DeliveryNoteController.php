@@ -96,6 +96,7 @@ class DeliveryNoteController extends Controller
         // Ambil jenis DN dari request
         $jenisDn = $request->input('jenis_dn', 'Regular'); // Default ke Regular jika belum dipilih
 
+
         // Tentukan prefix sesuai jenis DN
         $prefix = match ($jenisDn) {
             'Export' => 'DE',
@@ -118,7 +119,6 @@ class DeliveryNoteController extends Controller
         }
 
         $dnNumber = $prefix . $currentDate . str_pad($nextSequence, 6, '0', STR_PAD_LEFT);
-        // Insert data ke dalam tabel delivery_notes
 
 
         $packingLists = DB::table('packing_lists')->select('id', 'packing_number')->get();
@@ -140,6 +140,7 @@ class DeliveryNoteController extends Controller
             $validatedData = $request->validate([
                 'dn_number' => 'required|unique:delivery_notes,dn_number',
                 'jenis_dn' => 'required',
+                'so_number' => 'required',
                 'date' => 'required|date',
                 'id_master_customer' => 'required',
                 'id_master_vehicle' => 'required',
@@ -155,6 +156,7 @@ class DeliveryNoteController extends Controller
             $deliveryNoteId = DB::table('delivery_notes')->insertGetId([
                 'dn_number' => $validatedData['dn_number'],
                 'jenis_dn' => $validatedData['jenis_dn'],
+                'id_sales_orders' => $validatedData['so_number'],
                 'date' => $validatedData['date'],
                 'id_master_customers' => $validatedData['id_master_customer'],
                 'id_master_vehicles' => $validatedData['id_master_vehicle'],
@@ -391,10 +393,10 @@ class DeliveryNoteController extends Controller
     {
         // Ambil data delivery note berdasarkan ID yang diberikan
         $deliveryNote = DB::table('delivery_notes')
-            ->join('delivery_note_details', 'delivery_notes.id', '=', 'delivery_note_details.id_delivery_notes')
+            ->leftJoin('delivery_note_details', 'delivery_notes.id', '=', 'delivery_note_details.id_delivery_notes')
             ->join('master_customers', 'delivery_notes.id_master_customers', '=', 'master_customers.id')
             ->join('master_vehicles', 'delivery_notes.id_master_vehicles', '=', 'master_vehicles.id')
-            ->join('sales_orders as so', 'delivery_note_details.id_sales_orders', '=', 'so.id')
+            ->leftJoin('sales_orders as so', 'delivery_note_details.id_sales_orders', '=', 'so.id')
             ->select(
                 'delivery_notes.id as id',
                 'delivery_notes.dn_number',
@@ -449,10 +451,10 @@ class DeliveryNoteController extends Controller
             ->select(
                 'delivery_note_details.id_packing_lists',
                 'packing_lists.packing_number',
-                'sales_orders.reference_number as po_number',
                 'delivery_note_details.dn_type',
                 'delivery_note_details.remark',
                 'delivery_note_details.transaction_type',
+                DB::raw("IF(sales_orders.id_order_confirmations IS NULL OR sales_orders.id_order_confirmations = '-', sales_orders.reference_number, sales_orders.id_order_confirmations) as ko_po_no"),
                 'master_salesmen.name as salesman_name'
             )
             ->where('delivery_note_details.id_delivery_notes', $id)
@@ -520,7 +522,7 @@ class DeliveryNoteController extends Controller
         // Mengambil data delivery note
         $deliveryNote = DB::table('delivery_notes')
             ->join('delivery_note_details', 'delivery_notes.id', '=', 'delivery_note_details.id_delivery_notes')
-            ->join('sales_orders', 'delivery_note_details.id_sales_orders', '=', 'sales_orders.id')
+            ->join('sales_orders', 'delivery_notes.id_sales_orders', '=', 'sales_orders.id')
             ->join('master_customers', 'delivery_notes.id_master_customers', '=', 'master_customers.id')
             ->join('master_vehicles', 'delivery_notes.id_master_vehicles', '=', 'master_vehicles.id')
             ->join('master_salesmen', 'delivery_note_details.id_master_salesman', '=', 'master_salesmen.id')
@@ -528,7 +530,8 @@ class DeliveryNoteController extends Controller
             ->select(
                 'delivery_notes.*',
                 'delivery_note_details.type_product',
-                'sales_orders.so_category as dn_type',
+                DB::raw("IF(sales_orders.id_order_confirmations IS NULL OR sales_orders.id_order_confirmations = '-', sales_orders.reference_number, sales_orders.id_order_confirmations) as ko_po_no"),
+                // 'sales_orders.so_category as dn_type',
                 'master_customers.name as customer_name',
                 'master_vehicles.vehicle_number as vehicle_number',
                 'master_salesmen.name as salesman_name'
@@ -579,9 +582,6 @@ class DeliveryNoteController extends Controller
                 DB::raw("IFNULL(sales_orders.cust_product_code,'-') as code"),
                 'master_units.unit as unit',
                 'sales_orders.id as soId',
-                'sales_orders.reference_number as po_number',
-                'sales_orders.id_order_confirmations as ko_number',
-                DB::raw("IF(sales_orders.id_order_confirmations IS NULL OR sales_orders.id_order_confirmations = '-', sales_orders.reference_number, sales_orders.id_order_confirmations) as ko_po_no"),
                 'sales_orders.so_category as dn_type',
                 'sales_orders.id_master_products',
                 DB::raw("IF(sales_orders.perforasi IS NULL, 'P-', sales_orders.perforasi) as perforasi"),
