@@ -680,7 +680,7 @@ class WarehouseController extends Controller
                     }
                 } else {
                     // if ($field == 'pcs' && $oldDetail && substr($oldDetail->barcode, -1) === 'B')
-                        if ($field == 'pcs' && $oldDetail && stripos($$oldDetail->status, 'bag') !== false) {
+                    if ($field == 'pcs' && $oldDetail && stripos($$oldDetail->status, 'bag') !== false) {
                         $barcodeRecord = DB::table('barcodes')
                             ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
                             ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
@@ -726,7 +726,7 @@ class WarehouseController extends Controller
         $packingList = DB::table('packing_lists')
             ->join('master_customers', 'packing_lists.id_master_customers', '=', 'master_customers.id')
             ->join('sales_orders', 'packing_lists.id_sales_orders', '=', 'sales_orders.id')
-            ->select('packing_lists.packing_number', 'packing_lists.date', 'master_customers.name as customer_name','sales_orders.so_number')
+            ->select('packing_lists.packing_number', 'packing_lists.date', 'master_customers.name as customer_name', 'sales_orders.so_number')
             ->where('packing_lists.id', $id)
             ->first();
 
@@ -763,10 +763,10 @@ class WarehouseController extends Controller
                 'barcodes.type_product',
                 DB::raw('COALESCE(master_product_fgs.product_code, master_wips.wip_code, master_tool_auxiliaries.code, master_raw_materials.rm_code) as product_code'),
                 'packing_list_details.sts_start',
+                DB::raw("COALESCE(master_product_fgs.perforasi, master_wips.perforasi, master_tool_auxiliaries.weight_stock, master_raw_materials.weight_stock,'p-') as perforasi"),
                 DB::raw('COALESCE(master_product_fgs.description, master_wips.description, master_tool_auxiliaries.description, master_raw_materials.description) as description'),
                 'barcode_detail.barcode_number',
                 'sales_orders.so_number',
-                DB::raw("IF(sales_orders.perforasi IS NULL, 'P-', sales_orders.perforasi) as perforasi"),
                 'master_units.unit',
                 'packing_list_details.pcs',
                 'packing_list_details.weight',
