@@ -195,6 +195,7 @@
                                 <th>Berat</th>
                                 @if (collect($details)->contains(fn($d) => stripos($d->sts_start, 'bag') !== false))
                                     <th>Wrap</th>
+                                    <th>PCS/Wrap</th>
                                 @endif
                             </tr>
                         </thead>
@@ -218,6 +219,7 @@
                                     {{-- <td>{{ stripos($detail->sts_start, 'bag') ? $detail->weight : $detail->production_weight }} KG</td> --}}
                                     @if (stripos($detail->sts_start, 'bag') !== false)
                                         <td>{{ $detail->total_wrap }}</td>
+                                        <td>{{ $detail->pcs / $detail->total_wrap}}</td>
                                     @endif
 
                                     @php
