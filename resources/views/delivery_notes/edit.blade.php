@@ -72,7 +72,7 @@
                                         @foreach ($soNo as $noSo)
                                             <option
                                                 value="{{ $noSo->id }}"{{ old('id_sales_orders', $deliveryNote->so_id) == $noSo->id ? 'selected' : '' }}>
-                                                {{ $noSo->so_number }}</option>
+                                                {{ $noSo->so_number }} ({{$noSo->ko_po_no}})</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -397,12 +397,14 @@
                                 .append('<option value="">Loading...</option>');
                         },
                         success: function(response) {
+                            console.log(response)
                             $('#soNo').empty().append(
                                 '<option value="" disabled selected>** Pilih No. SO</option>');
                                 $.each(response, function (index, so) {
                                     let labelSuffix = so.id_order_confirmations 
                                         ? so.id_order_confirmations 
                                         : so.reference_number;
+                                        console.log(labelSuffix);
 
                                     let label = so.so_number + ' (' + labelSuffix + ')';
 

@@ -418,7 +418,7 @@ class DeliveryNoteController extends Controller
         $soNo = DB::table('sales_orders')
             ->where('sales_orders.id_master_customers', $deliveryNote->id_customers)
             ->where('status', 'Posted')
-            ->select('id', 'so_number')
+            ->select('id', 'so_number', DB::raw("IF(sales_orders.id_order_confirmations IS NULL OR sales_orders.id_order_confirmations = '-', sales_orders.reference_number, sales_orders.id_order_confirmations) as ko_po_no"))
             ->get();
         //address
         $shipAddress = DB::table('master_customer_addresses')
