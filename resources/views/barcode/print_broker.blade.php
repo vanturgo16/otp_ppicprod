@@ -4,7 +4,7 @@
 
 <div class="page-content">
     <div class="container-fluid">
-        <button onclick="window.print()" class="btn btn-primary no-print">Print</button>
+        {{-- <button onclick="window.print()" class="btn btn-primary no-print">Print</button> --}}
         <div class="barcode-print">
             @foreach ($barcodeDetails as $barcode)
             {{-- <div class="kotak-tebal"> --}}
