@@ -4,13 +4,15 @@
 
 <div class="page-content">
     <div class="container-fluid">
-        <button onclick="window.print()" class="btn btn-primary no-print">Print</button>
+        <p></p>
+        {{-- <button onclick="window.print()" class="btn btn-primary no-print">Print</button> --}}
         <div class="barcode-print">
           
             <div class="barcode-item">
               
 <table class="barcode-table">
-    <tr><b>
+    <p></p>
+ 
         <td><strong>SO No.</strong></td>
         <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
         <td class="value">{{ $barcode->so_number }}
