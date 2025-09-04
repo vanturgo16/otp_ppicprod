@@ -57,6 +57,7 @@
                                         <th>Sales order Number</th>
                                         <th>Date</th>
                                         <th>Customer</th>
+                                        <th>shipping</th>
                                         <th>Status</th>
                                         <th>Action</th>
                                     </tr>
@@ -155,6 +156,11 @@
                 {
                     data: 'customer',
                     name: 'customer',
+                    orderable: true
+                },
+                {
+                    data: 'address',
+                    name: 'address',
                     orderable: true
                 },
                 {

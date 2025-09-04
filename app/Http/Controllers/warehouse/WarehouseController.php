@@ -21,17 +21,20 @@ class WarehouseController extends Controller
 
             $query = DB::table('packing_lists as pl')
                 ->join('sales_orders as so', 'pl.id_sales_orders', '=', 'so.id')
+                ->join('master_customer_addresses as shipping', 'so.id_master_customer_addresses', '=', 'shipping.id')
                 ->leftJoin('master_customers as mc', 'pl.id_master_customers', '=', 'mc.id')
                 ->select(
                     'pl.id',
                     'pl.packing_number',
                     'pl.date',
-                    'mc.name as customer',
+                    'mc.name as customer', 
                     'pl.status',
                     'so.so_number',
+                    'shipping.address as address',
                     DB::raw('"" as action') // Menambahkan kolom action sebagai kolom kosong
                 )
                 ->orderBy($columns[$orderColumn], $orderDirection);
+                
 
             // Handle search
             if ($request->has('search') && $request->input('search')) {
@@ -306,22 +309,53 @@ class WarehouseController extends Controller
                 }
             }
 
-            // Update stok produk berdasarkan tipe
-            $stockUpdateQty = ($barcodeRecord->type_product === 'AUX' || $barcodeRecord->type_product === 'RAW') ? $barcodeRecord->qty : ($isBag ? $pcs : 1);
+            // ambil data weight dari tabel packing_list_details
+            $weightDetail = DB::table('packing_list_details')
+                ->where('barcode', $barcodeRecord->barcode_number) 
+                ->value('weight');
+
+            $stockUpdateQty = ($barcodeRecord->type_product === 'AUX' || $barcodeRecord->type_product === 'RAW')
+                ? $barcodeRecord->qty
+                : ($isBag ? $pcs : 1);
+
             switch ($barcodeRecord->type_product) {
                 case 'FG':
-                    DB::table('master_product_fgs')->where('id', $barcodeRecord->product_id)->decrement('stock', $stockUpdateQty);
+                    DB::table('master_product_fgs')
+                        ->where('id', $barcodeRecord->product_id)
+                        ->update([
+                            'stock' => DB::raw("stock - $stockUpdateQty"),
+                            'weight_stock' => DB::raw("weight_stock - $weightDetail")
+                        ]);
                     break;
+
                 case 'WIP':
-                    DB::table('master_wips')->where('id', $barcodeRecord->product_id)->decrement('stock', $stockUpdateQty);
+                    DB::table('master_wips')
+                        ->where('id', $barcodeRecord->product_id)
+                        ->update([
+                            'stock' => DB::raw("stock - $stockUpdateQty"),
+                            'weight_stock' => DB::raw("weight_stock - $weightDetail")
+                        ]);
                     break;
+
                 case 'AUX':
-                    DB::table('master_tool_auxiliaries')->where('id', $barcodeRecord->product_id)->decrement('stock', $stockUpdateQty);
+                    DB::table('master_tool_auxiliaries')
+                        ->where('id', $barcodeRecord->product_id)
+                        ->update([
+                            'stock' => DB::raw("stock - $stockUpdateQty"),
+                            'weight_stock' => DB::raw("weight_stock - $weightDetail")
+                        ]);
                     break;
+
                 case 'RAW':
-                    DB::table('master_raw_materials')->where('id', $barcodeRecord->product_id)->decrement('stock', $stockUpdateQty);
+                    DB::table('master_raw_materials')
+                        ->where('id', $barcodeRecord->product_id)
+                        ->update([
+                            'stock' => DB::raw("stock - $stockUpdateQty"),
+                            'weight_stock' => DB::raw("weight_stock - $weightDetail")
+                        ]);
                     break;
             }
+
             //pengurangan sales_orders.outstanding_qty
             DB::table('sales_orders')
                 ->where('id', $soId)
@@ -450,22 +484,53 @@ class WarehouseController extends Controller
                 $barcode = $barcodeDetail->barcode;
                 $isBag = stripos($barcodeDetail->sts_start, 'bag') !== false;
 
-                // Kembalikan stok ke jumlah sebelumnya
-                $stockUpdateQty = ($barcodeRecord->type_product === 'AUX' || $barcodeRecord->type_product === 'RAW') ? $barcodeRecord->qty : ($isBag ? $pcs : 1);
+                // ambil data weight dari tabel packing_list_details
+                $weightDetail = DB::table('packing_list_details')
+                    ->where('barcode', $barcode) // asumsi ada relasi id detail
+                    ->value('weight');
+
+                $stockUpdateQty = ($barcodeRecord->type_product === 'AUX' || $barcodeRecord->type_product === 'RAW')
+                    ? $barcodeRecord->qty
+                    : ($isBag ? $pcs : 1);
+
                 switch ($barcodeRecord->type_product) {
                     case 'FG':
-                        DB::table('master_product_fgs')->where('id', $barcodeRecord->product_id)->increment('stock', $stockUpdateQty);
+                        DB::table('master_product_fgs')
+                            ->where('id', $barcodeRecord->product_id)
+                            ->update([
+                                'stock' => DB::raw("stock + $stockUpdateQty"),
+                                'weight_stock' => DB::raw("weight_stock + $weightDetail")
+                            ]);
                         break;
+
                     case 'WIP':
-                        DB::table('master_wips')->where('id', $barcodeRecord->product_id)->increment('stock', $stockUpdateQty);
+                        DB::table('master_wips')
+                            ->where('id', $barcodeRecord->product_id)
+                            ->update([
+                                'stock' => DB::raw("stock + $stockUpdateQty"),
+                                'weight_stock' => DB::raw("weight_stock + $weightDetail")
+                            ]);
                         break;
+
                     case 'AUX':
-                        DB::table('master_tool_auxiliaries')->where('id', $barcodeRecord->product_id)->increment('stock', $stockUpdateQty);
+                        DB::table('master_tool_auxiliaries')
+                            ->where('id', $barcodeRecord->product_id)
+                            ->update([
+                                'stock' => DB::raw("stock + $stockUpdateQty"),
+                                'weight_stock' => DB::raw("weight_stock + $weightDetail")
+                            ]);
                         break;
+
                     case 'RAW':
-                        DB::table('master_raw_materials')->where('id', $barcodeRecord->product_id)->increment('stock', $stockUpdateQty);
+                        DB::table('master_raw_materials')
+                            ->where('id', $barcodeRecord->product_id)
+                            ->update([
+                                'stock' => DB::raw("stock + $stockUpdateQty"),
+                                'weight_stock' => DB::raw("weight_stock + $weightDetail")
+                            ]);
                         break;
                 }
+
 
                 DB::table('sales_orders')
                     ->where('id', $soId)
