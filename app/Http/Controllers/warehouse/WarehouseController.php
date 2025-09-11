@@ -356,16 +356,25 @@ class WarehouseController extends Controller
                     break;
             }
 
-            //pengurangan sales_orders.outstanding_qty
-            DB::table('sales_orders')
-                ->where('id', $soId)
-                ->decrement('outstanding_delivery_qty', $stockUpdateQty);
-            if ($barcodeRecord->sales_order_id != $soId) {
+            function decrementOutstanding($soId, $stockUpdateQty, $weightDetail)
+            {
+                $unitCode = DB::table('sales_orders as so')
+                    ->join('master_units as mu', 'so.id_master_units', '=', 'mu.id')
+                    ->where('so.id', $soId)
+                    ->value('mu.unit_code');
+
+                $decrementValue = ($unitCode === 'KG') ? $weightDetail : $stockUpdateQty;
+
                 DB::table('sales_orders')
-                    ->where('id', $barcodeRecord->sales_order_id)
-                    ->decrement('outstanding_delivery_qty', $stockUpdateQty);
+                    ->where('id', $soId)
+                    ->decrement('outstanding_delivery_qty', $decrementValue);
             }
 
+            decrementOutstanding($soId, $stockUpdateQty, $weightDetail);
+
+            if ($barcodeRecord->sales_order_id != $soId) {
+                decrementOutstanding($barcodeRecord->sales_order_id, $stockUpdateQty, $weightDetail);
+            }
 
             DB::table('barcode_detail')->where('barcode_number', $barcode)->update(['status' => 'Packing List']);
         } else {
@@ -531,16 +540,38 @@ class WarehouseController extends Controller
                         break;
                 }
 
+                // Buat helper function
+                function incrementOutstanding($soId, $stockUpdateQty, $weightDetail)
+                {
+                    $unitCode = DB::table('sales_orders as so')
+                        ->join('master_units as mu', 'so.id_master_units', '=', 'mu.id')
+                        ->where('so.id', $soId)
+                        ->value('mu.unit_code');
 
-                DB::table('sales_orders')
-                    ->where('id', $soId)
-                    ->increment('outstanding_delivery_qty', $stockUpdateQty);
+                    $incrementValue = ($unitCode === 'KG') ? $weightDetail : $stockUpdateQty;
+
+                    DB::table('sales_orders')
+                        ->where('id', $soId)
+                        ->increment('outstanding_delivery_qty', $incrementValue);
+                }
+
+                // --- Pemakaian ---
+                incrementOutstanding($soId, $stockUpdateQty, $weightDetail);
 
                 if ($barcodeRecord->sales_order_id != $soId) {
-                    DB::table('sales_orders')
-                        ->where('id', $barcodeRecord->sales_order_id)
-                        ->increment('outstanding_delivery_qty', $stockUpdateQty);
+                    incrementOutstanding($barcodeRecord->sales_order_id, $stockUpdateQty, $weightDetail);
                 }
+
+
+                // DB::table('sales_orders')
+                //     ->where('id', $soId)
+                //     ->increment('outstanding_delivery_qty', $stockUpdateQty);
+
+                // if ($barcodeRecord->sales_order_id != $soId) {
+                //     DB::table('sales_orders')
+                //         ->where('id', $barcodeRecord->sales_order_id)
+                //         ->increment('outstanding_delivery_qty', $stockUpdateQty);
+                // }
                 // Tambahan: Proses remove dari history_stocks
                 $packing = DB::table('packing_lists')
                     ->select('packing_number')
