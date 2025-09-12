@@ -750,12 +750,15 @@ class DeliveryNoteController extends Controller
         // ----- 2. Rekap qty per SO -----
         $rekap = DB::table('delivery_note_details as dnd')
             ->join('sales_orders as so', 'dnd.id_sales_orders', '=', 'so.id')
+            ->join('master_units as mu', 'dnd.id_master_units', '=', 'mu.id')
             ->join('packing_list_details as pld', 'dnd.id_packing_lists', '=', 'pld.id_packing_lists')
             ->join('packing_lists as pl', 'pld.id_packing_lists', '=', 'pl.id')
             ->select(
                 'dnd.id_sales_orders as so_id',
                 'so.qty as so_qty',
+                'mu.unit_code as codeUnit',
                 'pl.packing_number as pl_no',
+                'dnd.weight as dnd_weight',
                 DB::raw('SUM(pld.pcs) AS pl_qty')
             )
             ->where('dnd.id_delivery_notes', $dn->id)
@@ -763,10 +766,15 @@ class DeliveryNoteController extends Controller
             ->get();
         // dd($rekap);
 
-        // ----- 3. Pisahkan match & mismatch (abaikan tipe) -----
-        [$match, $mismatch] = $rekap->partition(
-            fn($r) => (int) $r->pl_qty === (int) $r->so_qty
-        );
+        // ----- 3. Pisahkan match & mismatch berdasarkan unit -----
+        [$match, $mismatch] = $rekap->partition(function ($r) {
+            if ($r->codeUnit === 'KG') {
+                return (int) $r->dnd_weight > (int) $r->so_qty;
+            } else {
+                return (int) $r->pl_qty === (int) $r->so_qty;
+            }
+        });
+
 
         // ----- 4. Jika ADA mismatch → alert & tidak ubah status apa pun -----
         if ($mismatch->isNotEmpty()) {
