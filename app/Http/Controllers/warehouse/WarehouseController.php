@@ -976,6 +976,7 @@ class WarehouseController extends Controller
         DB::transaction(function () use ($id) {
             // Ambil semua detail packing list
             $details = DB::table('packing_list_details')->where('id_packing_lists', $id)->get();
+
             // Ambil packing number
             $packing = DB::table('packing_lists')
                 ->select('packing_number')
@@ -985,59 +986,49 @@ class WarehouseController extends Controller
             $packingNumber = $packing ? $packing->packing_number : null;
 
             foreach ($details as $detail) {
-                // Ambil informasi barcode
+                // Ambil informasi barcode + unit
                 $barcodeRecord = DB::table('barcodes')
                     ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
                     ->join('packing_list_details', 'barcode_detail.barcode_number', '=', 'packing_list_details.barcode')
                     ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
-
+                    ->join('master_units', 'sales_orders.id_master_units', '=', 'master_units.id')
                     ->where('barcode_detail.barcode_number', $detail->barcode)
                     ->select(
                         'barcodes.type_product',
                         'packing_list_details.pcs',
+                        'packing_list_details.weight',
                         'packing_list_details.sts_start',
                         'sales_orders.id as sales_order_id',
-                        'barcodes.id_master_products as product_id'
+                        'barcodes.id_master_products as product_id',
+                        'master_units.unit_code'
                     )
                     ->first();
 
-
-                // dd($barcodeRecord);
-
-
                 if ($barcodeRecord) {
-                    // Kembalikan stok sesuai jenis produk
-                    $pcs = $barcodeRecord->pcs;
+                    // Tentukan nilai increment outstanding (weight kalau KG, pcs kalau bukan)
+                    $incrementValue = ($barcodeRecord->unit_code === 'KG')
+                        ? $barcodeRecord->weight
+                        : $barcodeRecord->pcs;
 
-                    if ($barcodeRecord->type_product === 'FG') {
-                        DB::table('master_product_fgs')
+                    // Mapping type_product ke tabel master
+                    $productTables = [
+                        'FG'  => 'master_product_fgs',
+                        'WIP' => 'master_wips',
+                        'AUX' => 'master_tool_auxiliaries',
+                        'RAW' => 'master_raw_materials',
+                    ];
+
+                    // Jika type_product ada di mapping, update stok
+                    if (isset($productTables[$barcodeRecord->type_product])) {
+                        DB::table($productTables[$barcodeRecord->type_product])
                             ->where('id', $barcodeRecord->product_id)
-                            ->increment('stock', $pcs);
-                        DB::table('sales_orders')
-                            ->where('id', $barcodeRecord->sales_order_id)
-                            ->increment('outstanding_delivery_qty', $pcs);
-                    } elseif ($barcodeRecord->type_product === 'WIP') {
-                        DB::table('master_wips')
-                            ->where('id', $barcodeRecord->product_id)
-                            ->increment('stock', $pcs);
-                        DB::table('sales_orders')
-                            ->where('id', $barcodeRecord->sales_order_id)
-                            ->increment('outstanding_delivery_qty', $pcs);
-                    } elseif ($barcodeRecord->type_product === 'AUX') {
-                        DB::table('master_tool_auxiliaries')
-                            ->where('id', $barcodeRecord->product_id)
-                            ->increment('stock', $pcs);
-                        DB::table('sales_orders')
-                            ->where('id', $barcodeRecord->sales_order_id)
-                            ->increment('outstanding_delivery_qty', $pcs);
-                    } elseif ($barcodeRecord->type_product === 'RAW') {
-                        DB::table('master_raw_materials')
-                            ->where('id', $barcodeRecord->product_id)
-                            ->increment('stock', $pcs);
-                        DB::table('sales_orders')
-                            ->where('id', $barcodeRecord->sales_order_id)
-                            ->increment('outstanding_delivery_qty', $pcs);
+                            ->increment('stock', $barcodeRecord->pcs);
                     }
+
+                    // Increment outstanding_delivery_qty
+                    DB::table('sales_orders')
+                        ->where('id', $barcodeRecord->sales_order_id)
+                        ->increment('outstanding_delivery_qty', $incrementValue);
 
                     // Update status barcode di tabel barcode_detail
                     DB::table('barcode_detail')
@@ -1048,12 +1039,14 @@ class WarehouseController extends Controller
 
             // Hapus detail packing list
             DB::table('packing_list_details')->where('id_packing_lists', $id)->delete();
+
             // Hapus entri history_stocks berdasarkan packing_number
             if ($packingNumber) {
                 DB::table('history_stocks')
                     ->where('id_good_receipt_notes_details', $packingNumber)
                     ->delete();
             }
+
             // Hapus packing list
             DB::table('packing_lists')->where('id', $id)->delete();
         });
