@@ -257,7 +257,7 @@
             <div class="header-center">
                 <div class="cont-title">
                     <p class="title">SURAT PENGANTAR</p>
-                    <p class="no-dn">{{ $prefix }}{{ str_replace('DN', '', $deliveryNote->dn_number) }}</p>
+                    <p class="no-dn">{{ $deliveryNote->dn_number }}</p>
                 </div>
             </div>
             <div class="header-right">
