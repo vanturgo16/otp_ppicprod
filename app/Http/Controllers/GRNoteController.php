@@ -647,6 +647,7 @@ class GRNoteController extends Controller
     //ITEM GRN
     public function updateItem(Request $request, $id)
     {
+        // dd($request->all());
         $id = decrypt($id);
         $request->validate([
             'receipt_qty' => 'required',
@@ -655,33 +656,24 @@ class GRNoteController extends Controller
             'receipt_qty.required' => 'Receipt Qty harus diisi.',
             'outstanding_qty.required' => 'Outstanding Qty harus diisi.',
         ]);
-        if($request->outstanding_qty == '0,'){
-            $outstanding_qty = 0;
-        } else {
-            $outstanding_qty = $request->outstanding_qty;
-        }
+
+        $receiptQty = (float) (str_replace(['.', ','], ['', '.'], $request->receipt_qty));
+        $osQty      = (float) (str_replace(['.', ','], ['', '.'], $request->outstanding_qty));
+        $newStatus  = $receiptQty == 0.0 ? null : ($osQty == 0.0 ? 'Close' : 'Open');
 
         $dataBefore = GoodReceiptNoteDetail::where('id', $id)->first();
-        $dataBefore->receipt_qty = str_replace(['.', ','], ['', '.'], $request->receipt_qty);
-        $dataBefore->outstanding_qty = str_replace(['.', ','], ['', '.'], $outstanding_qty);
-        $dataBefore->note = $request->note;
+        $dataBefore->receipt_qty        = $receiptQty;
+        $dataBefore->outstanding_qty    = $osQty;
+        $dataBefore->note               = $request->note;
 
         if($dataBefore->isDirty()){
             DB::beginTransaction();
             try{
-                if($outstanding_qty == 0){
-                    $status = 'Close';
-                } else {
-                    $status = 'Open';
-                }
-                if($request->receipt_qty == 0){
-                    $status = null;
-                }
                 GoodReceiptNoteDetail::where('id', $id)->update([
-                    'receipt_qty' => str_replace(['.', ','], ['', '.'], $request->receipt_qty),
-                    'outstanding_qty' => str_replace(['.', ','], ['', '.'], $outstanding_qty),
-                    'status' => $status,
-                    'note' => $request->note,
+                    'receipt_qty'     => $receiptQty,
+                    'outstanding_qty' => $osQty,
+                    'status'          => $newStatus,
+                    'note'            => $request->note,
                 ]);
 
                 // Audit Log
