@@ -32,6 +32,7 @@
 
                             <div>
                                 <a href="{{url('/dashboard') }}" class="btn btn-primary waves-effect waves-light"> Back to dashboard</a>
+                                <a href="{{url('/user-create') }}" class="btn btn-info waves-effect waves-light"> Create User</a>
                                 
                                 <!-- Include modal content -->
                                

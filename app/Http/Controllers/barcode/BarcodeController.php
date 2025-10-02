@@ -64,8 +64,6 @@ public function index(Request $request)
 }
 
     
-    
-
     public function create()
     {
         $wo = DB::table('work_orders as a')

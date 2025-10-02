@@ -165,6 +165,8 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
 
     Route::controller(UserController::class)->middleware('permission:PPIC_user.index')->group(function () {
         Route::get('/user', 'index')->name('user.index');
+        Route::get('/user-create', 'create')->name('user.create');
+        Route::post('/user', 'store')->name('user.store');
         Route::get('/user/edit/{user}', 'edit')->name('user.edit');
         Route::patch('/user/update/{user}', 'update');
         Route::delete('/hapus-user/{user}', 'destroy');
