@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Yajra\Datatables\Datatables;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+
 class UserController extends Controller
 {
     // public function __construct()
@@ -74,6 +76,53 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
+
+
+public function store(Request $request)
+{
+    // Validasi input
+    $validated = $request->validate([
+        'name'                  => ['required', 'string', 'max:150'],
+        'email'                 => ['required', 'email', 'max:150', 'unique:users,email'],
+        'password'              => ['required', 'string', 'min:8', 'confirmed'],
+        'role'                  => ['nullable', 'array'],
+        'role.*'                => ['string'] // nama role (Spatie)
+    ]);
+
+    DB::beginTransaction();
+    try {
+        // Create user
+        $user = User::create([
+            'name'      => $validated['name'],
+            'email'     => $validated['email'],
+            'password'  => Hash::make($validated['password']),
+        ]);
+
+        // Assign roles (jika ada)
+        if (!empty($validated['role'])) {
+            $user->syncRoles($validated['role']);
+        } else {
+            // kosongkan role jika tidak dipilih apa pun
+            $user->syncRoles([]);
+        }
+
+        DB::commit();
+
+        // redirect sukses (samakan dengan yang dipakai di view: session('pesan'))
+        return redirect('/user')->with('pesan', 'Data berhasil ditambahkan.');
+        // Jika ingin konsisten dengan update() milikmu: ->with('status','Data Berhasil Ditambah')
+    } catch (\Throwable $e) {
+        DB::rollBack();
+
+        // Optional: log error untuk debugging
+        // \Log::error('Gagal tambah user: '.$e->getMessage());
+
+        return back()
+            ->withInput()
+            ->with('error', 'Gagal menambahkan data. '.$e->getMessage());
+    }
+}
+
     public function show($id)
     {
         //
