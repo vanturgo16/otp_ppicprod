@@ -31,6 +31,7 @@ use App\Models\MstProductFG;
 use App\Models\MstToolAux;
 use App\Models\MstWip;
 use App\Models\HistoryStocks;
+use App\Models\TransPurchase;
 
 class GRNoteController extends Controller
 {
@@ -330,8 +331,12 @@ class GRNoteController extends Controller
 
             // Update Recent GRN Before This GRN With Same Reference Number to Posted
             if(GoodReceiptNote::where('reference_number', $data->reference_number)->where('id', '!=', $id)->exists()){
-                GoodReceiptNote::where('reference_number', $data->reference_number)
-                    ->where('status', 'Closed')->latest('id')->limit(1)->update(['status' => 'Posted']);
+                // Get grn before this
+                $lastGRN = GoodReceiptNote::where('reference_number', $data->reference_number)->where('status', 'Closed')->latest('id')->limit(1)->first();
+                // Check if has created invoice or not
+                if ($lastGRN && !TransPurchase::where('id_good_receipt_notes', $lastGRN->id)->exists()) {
+                    $lastGRN->update(['status' => 'Posted']);
+                }
             }
 
             // Audit Log
@@ -647,6 +652,7 @@ class GRNoteController extends Controller
     //ITEM GRN
     public function updateItem(Request $request, $id)
     {
+        // dd($request->all());
         $id = decrypt($id);
         $request->validate([
             'receipt_qty' => 'required',
@@ -655,33 +661,24 @@ class GRNoteController extends Controller
             'receipt_qty.required' => 'Receipt Qty harus diisi.',
             'outstanding_qty.required' => 'Outstanding Qty harus diisi.',
         ]);
-        if($request->outstanding_qty == '0,'){
-            $outstanding_qty = 0;
-        } else {
-            $outstanding_qty = $request->outstanding_qty;
-        }
+
+        $receiptQty = (float) (str_replace(['.', ','], ['', '.'], $request->receipt_qty));
+        $osQty      = (float) (str_replace(['.', ','], ['', '.'], $request->outstanding_qty));
+        $newStatus  = $receiptQty == 0.0 ? null : ($osQty == 0.0 ? 'Close' : 'Open');
 
         $dataBefore = GoodReceiptNoteDetail::where('id', $id)->first();
-        $dataBefore->receipt_qty = str_replace(['.', ','], ['', '.'], $request->receipt_qty);
-        $dataBefore->outstanding_qty = str_replace(['.', ','], ['', '.'], $outstanding_qty);
-        $dataBefore->note = $request->note;
+        $dataBefore->receipt_qty        = $receiptQty;
+        $dataBefore->outstanding_qty    = $osQty;
+        $dataBefore->note               = $request->note;
 
         if($dataBefore->isDirty()){
             DB::beginTransaction();
             try{
-                if($outstanding_qty == 0){
-                    $status = 'Close';
-                } else {
-                    $status = 'Open';
-                }
-                if($request->receipt_qty == 0){
-                    $status = null;
-                }
                 GoodReceiptNoteDetail::where('id', $id)->update([
-                    'receipt_qty' => str_replace(['.', ','], ['', '.'], $request->receipt_qty),
-                    'outstanding_qty' => str_replace(['.', ','], ['', '.'], $outstanding_qty),
-                    'status' => $status,
-                    'note' => $request->note,
+                    'receipt_qty'     => $receiptQty,
+                    'outstanding_qty' => $osQty,
+                    'status'          => $newStatus,
+                    'note'            => $request->note,
                 ]);
 
                 // Audit Log
