@@ -31,6 +31,7 @@ use App\Models\MstProductFG;
 use App\Models\MstToolAux;
 use App\Models\MstWip;
 use App\Models\HistoryStocks;
+use App\Models\TransPurchase;
 
 class GRNoteController extends Controller
 {
@@ -330,8 +331,12 @@ class GRNoteController extends Controller
 
             // Update Recent GRN Before This GRN With Same Reference Number to Posted
             if(GoodReceiptNote::where('reference_number', $data->reference_number)->where('id', '!=', $id)->exists()){
-                GoodReceiptNote::where('reference_number', $data->reference_number)
-                    ->where('status', 'Closed')->latest('id')->limit(1)->update(['status' => 'Posted']);
+                // Get grn before this
+                $lastGRN = GoodReceiptNote::where('reference_number', $data->reference_number)->where('status', 'Closed')->latest('id')->limit(1)->first();
+                // Check if has created invoice or not
+                if ($lastGRN && !TransPurchase::where('id_good_receipt_notes', $lastGRN->id)->exists()) {
+                    $lastGRN->update(['status' => 'Posted']);
+                }
             }
 
             // Audit Log
