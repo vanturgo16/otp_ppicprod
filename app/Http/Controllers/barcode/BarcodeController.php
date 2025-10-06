@@ -58,7 +58,7 @@ public function index(Request $request)
             'a.staff',
         ]);
 
-    $results = $q->paginate(10);
+    $results = $q->paginate(20);
 
     return view('barcode.index', compact('results'));
 }
