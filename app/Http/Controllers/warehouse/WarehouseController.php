@@ -255,7 +255,12 @@ class WarehouseController extends Controller
             } elseif (stripos($barcodeRecord->status, 'AUX') !== false) {
                 $finalWeight = 0;
             }
-
+          
+            //alert non numeric weight
+            if (!is_numeric($finalWeight)) {
+                $message = "(Weight :$finalWeight) A non-numeric value encountered";
+                return response()->json(['weight' => false, 'status' => false, 'message' => $message]);
+            }
             $insertedId = DB::table('packing_list_details')->insertGetId([
                 'barcode' => $barcode,
                 'change_so' => $changeSo === null ? null : $barcodeRecord->soNo,

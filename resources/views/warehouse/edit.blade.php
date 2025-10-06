@@ -110,7 +110,9 @@
                                                                 value="{{ $detail->pcs }}"></td>
                                                     @else
                                                         <td></td>
-                                                        <td></td>
+                                                        <td>
+                                                            {{ $detail->weight }}
+                                                        </td>
                                                         <td></td>
                                                     @endif
                                                     <td><button type="button"
@@ -190,12 +192,9 @@
                             _token: '{{ csrf_token() }}'
                         },
                         success: function(response) {
-                            // console.log("Response:", response.exists);
-
-
                             if (response.exists) {
-                                var newRow = 
-                                '<tr data-id="' + response.id + '">' +
+                                var newRow =
+                                    '<tr data-id="' + response.id + '">' +
                                     '<td class="row-number">' + ($('#barcode-table tbody tr')
                                         .length + 1) + '</td>' +
                                     '<td>' + ($('#change_so').val() || '') + '</td>' +
@@ -212,7 +211,9 @@
                                         '<td><input type="number" class="form-control pcs" data-id="' +
                                         response.id + '" name="pcs" value="' + response.pcs +
                                         '" readonly></td>' :
-                                        '<td></td>' +
+                                        '<td><input type="number" class="form-control weight" data-id="' +
+                                        response.id + '" name="weight" value="' + response
+                                        .weight + '" readonly></td>' +
                                         '<td></td>' +
                                         '<td></td>') +
                                     '<td><button type="button" class="btn btn-danger btn-sm remove-barcode">Remove</button></td>' +
@@ -242,6 +243,12 @@
                                         $('#barcode').val('').focus();
                                     }
                                 });
+                            } else if (!response.weight && response.status === false) {
+                                Swal.fire({
+                                    icon: 'error ',
+                                    title: 'Error',
+                                    text: response.message
+                                })
                             } else {
                                 $('#barcode-error').show();
                                 setTimeout(function() {
