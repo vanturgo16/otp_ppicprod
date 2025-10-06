@@ -120,7 +120,14 @@
             font-size: 12px;
         }
 
+        .no-border {
+            border-top: none !important;
+            border-bottom: none !important;
+
+        }
+
         @media print {
+
             .main-table th,
             .main-table td {
                 border: 1px solid black;
@@ -159,6 +166,10 @@
                         <td>: {{ $packingList->packing_number }}</td>
                     </tr>
                     <tr>
+                        <td>SO Nomor</td>
+                        <td>: {{ $packingList->so_number }}</td>
+                    </tr>
+                    <tr>
                         <td>Tanggal</td>
                         <td>: {{ \Carbon\Carbon::parse($packingList->date)->format('d/m/Y') }}</td>
                     </tr>
@@ -179,10 +190,12 @@
                                 <th>Description</th>
                                 <th>Barcode</th>
                                 <th>No. SO</th>
+                                <th>Perforasi</th>
                                 <th>Isi Dus</th>
                                 <th>Berat</th>
                                 @if (collect($details)->contains(fn($d) => stripos($d->sts_start, 'bag') !== false))
                                     <th>Wrap</th>
+                                    <th>PCS/Wrap</th>
                                 @endif
                             </tr>
                         </thead>
@@ -199,11 +212,14 @@
                                     <td>{{ $detail->product_code }}</td>
                                     <td>{{ $detail->description }}</td>
                                     <td>{{ $detail->barcode_number }}</td>
-                                    <td>{{ $detail->so_number }}</td>
+                                    <td>{{ $detail->so_number }}
+                                    <td>{{ $detail->perforasi }}
                                     <td>{{ $detail->pcs . ' ' . $detail->unit }}</td>
-                                    <td>{{ stripos($detail->sts_start, 'bag') ? $detail->weight : $detail->production_weight }} KG</td>
+                                    <td>{{ $detail->weight }} KG</td>
+                                    {{-- <td>{{ stripos($detail->sts_start, 'bag') ? $detail->weight : $detail->production_weight }} KG</td> --}}
                                     @if (stripos($detail->sts_start, 'bag') !== false)
                                         <td>{{ $detail->total_wrap }}</td>
+                                        <td>{{ $detail->pcs / $detail->total_wrap}}</td>
                                     @endif
 
                                     @php
@@ -214,9 +230,10 @@
                                         $subtotals[$detail->unit] += $detail->pcs;
 
                                         // Total berat dan wrap
-                                        $totalWeight += stripos($detail->sts_start, 'bag')
-                                            ? $detail->weight
-                                            : $detail->production_weight;
+                                        // $totalWeight += stripos($detail->sts_start, 'bag')
+                                        //     ? $detail->weight
+                                        //     : $detail->production_weight;
+                                        $totalWeight += $detail->weight;
 
                                         if (stripos($detail->sts_start, 'bag') !== false) {
                                             $totalWrap += $detail->total_wrap;
@@ -232,7 +249,8 @@
             <div class="row mt-4">
                 <div class="col-12" style="float: right; text-align: right;">
                     @foreach ($subtotals as $unit => $subtotal)
-                        <p><strong>Subtotal ({{ $unit }}):</strong> {{ number_format($subtotal) }} {{ $unit }}</p>
+                        <p><strong>Subtotal ({{ $unit }}):</strong> {{ number_format($subtotal) }}
+                            {{ $unit }}</p>
                     @endforeach
                     <p><strong>Total Berat:</strong> {{ number_format($totalWeight, 2) }} KG</p>
                     @if ($totalWrap > 0)

@@ -54,8 +54,10 @@
                                     <tr>
                                         <th>No</th>
                                         <th>Packing Number</th>
+                                        <th>Sales order Number</th>
                                         <th>Date</th>
                                         <th>Customer</th>
+                                        <th>shipping</th>
                                         <th>Status</th>
                                         <th>Action</th>
                                     </tr>
@@ -81,6 +83,7 @@
         initialPage = parseInt(initialPage) - 1; // Karena DataTables menghitung halaman dari 0
 
         let dataTable = $('#packing_list_table').DataTable({
+             stateSave: true,
             dom: '<"row"<"col-sm-12 col-md-6"B><"col-sm-12 col-md-6"f>>' +
                 '<"row"<"col-sm-12"l>>' +
                 'rt' +
@@ -141,6 +144,11 @@
                     orderable: true
                 },
                 {
+                    data: 'so_number',
+                    name: 'so_number',
+                    orderable: true
+                },
+                {
                     data: 'date',
                     name: 'date',
                     orderable: true
@@ -148,6 +156,11 @@
                 {
                     data: 'customer',
                     name: 'customer',
+                    orderable: true
+                },
+                {
+                    data: 'address',
+                    name: 'address',
                     orderable: true
                 },
                 {

@@ -4,13 +4,15 @@
 
 <div class="page-content">
     <div class="container-fluid">
-        <button onclick="window.print()" class="btn btn-primary no-print">Print</button>
+        <p></p>
+        {{-- <button onclick="window.print()" class="btn btn-primary no-print">Print</button> --}}
         <div class="barcode-print">
           
             <div class="barcode-item">
               
 <table class="barcode-table">
-    <tr><b>
+    <p></p>
+ 
         <td><strong>SO No.</strong></td>
         <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
         <td class="value">{{ $barcode->so_number }}
@@ -29,16 +31,34 @@
         <td class="value">{{ $barcode->nm_cust ?? '-' }}</td>
     </tr>
     <tr>
-        <td><strong>Artikel</strong></td>
+        <td><strong>Description</strong></td>
         <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
        
             <td  class="description">
             <b>{{ $barcode->description ?? '-' }}</b></td>
     </tr>
     <tr>
+        <td><strong>No KO/PO</strong></td>
+        <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
+       
+            <td  class="value">
+            <b>
+            @if(is_null($barcode->id_order_confirmations))
+                {{ $barcode->reference_number ?? '-' }}
+            @else
+                {{ '-' }}
+            @endif
+            </b></td>
+    </tr>
+    <tr>
         <td><strong>Size</strong></td>
         <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
-        <td class="value">{{ $barcode->width ?? '-' }} MM  &nbsp; X &nbsp;{{ $barcode->height ?? ($barcode->length ?? '') }}M
+        <td class="value">{{ $barcode->width ?? '-' }} MM  &nbsp; X &nbsp;{{ $barcode->height ?? ($barcode->length ?? '') }}
+            @if(substr($barcode->work_center_code, 0, 3) === 'BAG')
+            MM
+        @else
+            M
+        @endif
             
             &nbsp;&nbsp;&nbsp;&nbsp; <strong>P:</strong>{{ $barcode->perforasi ?? '-' }}</td>
     </tr>

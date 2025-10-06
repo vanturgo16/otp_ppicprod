@@ -72,7 +72,7 @@
                                         @foreach ($soNo as $noSo)
                                             <option
                                                 value="{{ $noSo->id }}"{{ old('id_sales_orders', $deliveryNote->so_id) == $noSo->id ? 'selected' : '' }}>
-                                                {{ $noSo->so_number }}</option>
+                                                {{ $noSo->so_number }} ({{$noSo->ko_po_no}})</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -186,7 +186,7 @@
                                         @foreach ($deliveryNoteDetails as $detail)
                                             <tr data-id="{{ $detail->id_packing_lists }}">
                                                 <td>{{ $detail->packing_number }}</td>
-                                                <td>{{ $detail->po_number }}</td>
+                                                <td>{{ $detail->ko_po_no }}</td>
                                                 <td>{{ $detail->dn_type }}</td>
                                                 <td>{{ $detail->transaction_type }}</td>
                                                 <td>{{ $detail->salesman_name }}</td>
@@ -322,20 +322,25 @@
                     var customerId = $(this).val();
                     if (customerId) {
                         loadSoNumbers(customerId);
+                        loadPackingLists(customerId);
                     }
                 });
 
 
-                function loadPackingLists(packingListId) {
+                function loadPackingLists(customerId) {
                     $.ajax({
-                        url: '{{ url('getPackingListDetails') }}/' + packingListId,
+                        url: '{{ url('getPackingListsByCustomer') }}/' + customerId,
                         method: 'GET',
                         success: function(response) {
                             $('#packing_list').empty().append(
                                 '<option value="" selected disabled>** Pilih Packing List</option>');
                             $.each(response, function(key, value) {
+                                let ko = value.id_order_confirmations
+                                if (ko == null) {
+                                    ko = value.reference_number
+                                }
                                 $('#packing_list').append('<option value="' + value.id + '">' +
-                                    value.packing_number + '</option>');
+                                    value.packing_number + ' (' + ko + ')' + '</option>');
                             });
                         },
                         error: function(xhr) {
@@ -353,32 +358,32 @@
                     // console.log(soNo);
                     if (soNo) {
                         loadCustomerAddresses(soNo);
-                        loadPackingLists(soNo);
+                       
                     }
                 });
 
-                function loadPackingLists(soId) {
-                    $.ajax({
-                        url: '{{ url('getPackingListsBySo') }}/' + soId,
-                        method: 'GET',
-                        success: function(response) {
-                            $('#packing_list').empty().append(
-                                '<option value="" selected disabled>** Pilih Packing List</option>');
-                            $.each(response, function(key, value) {
-                                $('#packing_list').append('<option value="' + value.id + '">' +
-                                    value.packing_number + '</option>');
-                            });
-                        },
-                        error: function(xhr) {
-                            console.error(xhr.responseText);
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: 'Gagal memuat daftar Packing List',
-                            });
-                        }
-                    });
-                }
+                // function loadPackingLists(soId) {
+                //     $.ajax({
+                //         url: '{{ url('getPackingListsBySo') }}/' + soId,
+                //         method: 'GET',
+                //         success: function(response) {
+                //             $('#packing_list').empty().append(
+                //                 '<option value="" selected disabled>** Pilih Packing List</option>');
+                //             $.each(response, function(key, value) {
+                //                 $('#packing_list').append('<option value="' + value.id + '">' +
+                //                     value.packing_number + '</option>');
+                //             });
+                //         },
+                //         error: function(xhr) {
+                //             console.error(xhr.responseText);
+                //             Swal.fire({
+                //                 icon: 'error',
+                //                 title: 'Error',
+                //                 text: 'Gagal memuat daftar Packing List',
+                //             });
+                //         }
+                //     });
+                // }
 
 
                  //  SO Number
@@ -392,12 +397,19 @@
                                 .append('<option value="">Loading...</option>');
                         },
                         success: function(response) {
+                            console.log(response)
                             $('#soNo').empty().append(
                                 '<option value="" disabled selected>** Pilih No. SO</option>');
-                            $.each(response, function(index, so) {
-                                $('#soNo').append('<option value="' + so.id + '">' + so.so_number +
-                                    '</option>');
-                            });
+                                $.each(response, function (index, so) {
+                                    let labelSuffix = so.id_order_confirmations 
+                                        ? so.id_order_confirmations 
+                                        : so.reference_number;
+                                        console.log(labelSuffix);
+
+                                    let label = so.so_number + ' (' + labelSuffix + ')';
+
+                                    $('#soNo').append('<option value="' + so.id + '">' + label + '</option>');
+                                });
                         },
                         error: function() {
                             Swal.fire({

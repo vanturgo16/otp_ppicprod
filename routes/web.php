@@ -116,9 +116,10 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
                 Route::get('/barcode/{lot_number}', 'generateBarcode')->name('grn_gln.generateBarcode');
             });
         });
-    }); 
+    });
 
     include __DIR__ . '/ppic/workOrder.php';
+    include __DIR__ . '/ppic/sampleRekap.php';
 
 
     Route::controller(BarcodeController::class)->middleware('permission:PPIC_Barcode')->group(function () {
@@ -164,6 +165,8 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
 
     Route::controller(UserController::class)->middleware('permission:PPIC_user.index')->group(function () {
         Route::get('/user', 'index')->name('user.index');
+        Route::get('/user-create', 'create')->name('user.create');
+        Route::post('/user', 'store')->name('user.store');
         Route::get('/user/edit/{user}', 'edit')->name('user.edit');
         Route::patch('/user/update/{user}', 'update');
         Route::delete('/hapus-user/{user}', 'destroy');
@@ -189,7 +192,7 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
         // Route::post('/adjust-stock', 'adjustStock')->name('adjust-stock');
     });
 
-   
+
     Route::controller(DeliveryNoteController::class)->group(function () {
         Route::get('delivery_notes', 'list')->name('delivery_notes.list');
         Route::get('delivery_notes/create', 'create')->name('delivery_notes.create');
@@ -211,4 +214,4 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
         Route::get('get-so-number-by-customer/{customerId}', 'getSoNumberByCustomer')->name('get-so-number-by-customer');
         Route::get('get-customer-addresses-by-so/{soNo}', 'getCustomerAddressesBySo')->name('get-customer-addresses-by-so');
     });
-}); 
+});

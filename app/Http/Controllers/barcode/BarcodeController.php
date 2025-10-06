@@ -12,68 +12,58 @@ use Carbon\Carbon;
 class BarcodeController extends Controller
 {
 
-    public function index(Request $request)
-    {
-        // Ambil input dari request dan bersihkan dengan trim()
-        $start_date = trim($request->input('start_date'));
-        $end_date = trim($request->input('end_date'));
-        $work_center = trim($request->input('work_center'));
-        $so_number = trim($request->input('so_number'));
-        $wo_number = trim($request->input('wo_number'));
-    
-        // Query data
-        $results = DB::table('barcodes as a')
-            ->leftJoin('sales_orders as b', 'a.id_sales_orders', '=', 'b.id')
-            ->join('work_orders as c', 'a.id_work_orders', '=', 'c.id')
-            ->join('master_process_productions as d', 'a.id_master_process_productions', '=', 'd.id')
-            ->join('master_work_centers as e', 'a.id_work_centers', '=', 'e.id')
-            ->leftJoin('master_customers as f', 'a.id_master_customers', '=', 'f.id')
-            ->leftJoin('barcode_detail as g', 'a.id', '=', 'g.id_barcode')
-            ->select(
-                'a.id', 
-                'b.so_number',
-                'c.wo_number',
-                'e.work_center_code',
-                DB::raw("SUBSTRING_INDEX(e.work_center, ' ', 2) as work_center"),
-                'f.name as name_cust',
-                DB::raw("COUNT(g.id) as barcode_count"),
-                'a.created_at',
-                'a.shift',
-                'a.staff'
-            )
-            ->when($start_date, function ($query, $start_date) {
-                return $query->whereDate('a.created_at', '>=', $start_date);
-            })
-            ->when($end_date, function ($query, $end_date) {
-                return $query->whereDate('a.created_at', '<=', $end_date);
-            })
-            ->when($so_number, function ($query, $so_number) {
-                return $query->where('b.so_number', 'like', "%{$so_number}%");
-            })
-            ->when($wo_number, function ($query, $wo_number) {
-                return $query->where('c.wo_number', 'like', "%{$wo_number}%");
-            })
-            ->when($work_center, function ($query, $work_center) {
-                return $query->where('e.work_center', 'like', "%{$work_center}%");
-            })
-            ->groupBy(
-                'a.id',
-                'b.so_number',
-                'c.wo_number',
-                'e.work_center_code',
-                'f.name',
-                'a.created_at',
-                'a.shift',
-                'a.staff'
-            )
-            ->orderBy('a.created_at', 'desc')
-            ->paginate(10);
-    
-        return view('barcode.index', compact('results'));
-    }
-    
-    
+public function index(Request $request)
+{
+    $start_date  = trim($request->input('start_date'));
+    $end_date    = trim($request->input('end_date'));
+    $work_center = trim($request->input('work_center'));
+    $so_number   = trim($request->input('so_number'));
+    $wo_number   = trim($request->input('wo_number'));
 
+    // subquery jumlah detail per barcode
+    $detailSub = DB::table('barcode_detail')
+        ->select('id_barcode', DB::raw('COUNT(*) as barcode_count'))
+        ->groupBy('id_barcode');
+
+    $q = DB::table('barcodes as a')
+        ->leftJoin('sales_orders as b', 'a.id_sales_orders', '=', 'b.id')
+        ->join('work_orders as c', 'a.id_work_orders', '=', 'c.id')
+        ->join('master_work_centers as e', 'a.id_work_centers', '=', 'e.id')
+        ->leftJoin('master_customers as f', 'a.id_master_customers', '=', 'f.id')
+        ->leftJoinSub($detailSub, 'g', function ($join) {
+            $join->on('a.id', '=', 'g.id_barcode');
+        })
+        ->when($start_date, fn($q) => $q->whereDate('a.created_at', '>=', $start_date))
+        ->when($end_date,   fn($q) => $q->whereDate('a.created_at', '<=', $end_date))
+        ->when($so_number,  fn($q) => $q->where('b.so_number', 'like', "%{$so_number}%"))
+        ->when($wo_number,  fn($q) => $q->where('c.wo_number', 'like', "%{$wo_number}%"))
+        ->when($work_center,function($q) use ($work_center){
+            $q->where(function($qq) use ($work_center){
+                $qq->where('e.work_center', 'like', "%{$work_center}%")
+                   ->orWhere('e.work_center_code', 'like', "%{$work_center}%");
+            });
+        })
+        ->orderByDesc('a.created_at')
+        // pilih kolom tanpa GROUP BY besar, karena count sudah di subquery
+        ->select([
+            'a.id',
+            'b.so_number',
+            'c.wo_number',
+            'e.work_center_code',
+            DB::raw("SUBSTRING_INDEX(e.work_center, ' ', 2) as work_center"),
+            'f.name as name_cust',
+            DB::raw('COALESCE(g.barcode_count, 0) as barcode_count'),
+            'a.created_at',
+            'a.shift',
+            'a.staff',
+        ]);
+
+    $results = $q->paginate(10);
+
+    return view('barcode.index', compact('results'));
+}
+
+    
     public function create()
     {
         $wo = DB::table('work_orders as a')
@@ -312,6 +302,8 @@ class BarcodeController extends Controller
             'b.shift',
             'b.id_master_products',
             'so.so_number',
+            'so.reference_number',
+            'so.id_order_confirmations',
             'wo.wo_number',
             'mwc.work_center_code',
             'mwc.work_center',
@@ -367,6 +359,8 @@ class BarcodeController extends Controller
             'bd.created_at as tgl_buat',
             'b.shift',
             'so.so_number',
+             'so.reference_number',
+            'so.id_order_confirmations',
             'wo.wo_number',
             'mwc.work_center_code',
             'mwc.work_center',
@@ -375,11 +369,13 @@ class BarcodeController extends Controller
             'mp.thickness',
             'mp.perforasi',
             'mp.width',
+            'mp.id as id_master_products',
             DB::raw('IF(mp.type_product = "FG", mp.height, NULL) AS height')
         )
         ->where('bd.id_barcode', $id)
           
             ->get();
+            // dd($barcodeDetails);
         return view('barcode.print', compact('barcodeDetails'));
     }
 
@@ -418,6 +414,8 @@ class BarcodeController extends Controller
             'bd.created_at as tgl_buat',
             'b.shift',
             'so.so_number',
+              'so.reference_number',
+            'so.id_order_confirmations',
             'wo.wo_number',
             'mwc.work_center_code',
             'mwc.work_center',
@@ -426,9 +424,11 @@ class BarcodeController extends Controller
             'mp.thickness',
             'mp.perforasi',
             'mp.width',
+            'mp.id as id_master_products',
             DB::raw('IF(mp.type_product = "FG", mp.height, NULL) AS height')
         )
         ->where('bd.id_barcode', $id)
+          
             ->get();
         return view('barcode.print_broker', compact('barcodeDetails'));
     }
@@ -476,10 +476,11 @@ class BarcodeController extends Controller
             'mp.thickness',
             'mp.perforasi',
             'mp.width',
+            'mp.id as id_master_products',
             DB::raw('IF(mp.type_product = "FG", mp.height, NULL) AS height')
         )
         ->where('bd.id_barcode', $id)
-        
+          
             ->get();
         return view('barcode.print_cbc', compact('barcodeDetails'));
     }

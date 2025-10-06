@@ -11,6 +11,8 @@ use App\Models\Marketing\salesOrder;
 use App\Models\Warehouse\DeliveryNote;
 use DataTables;
 
+use function Laravel\Prompts\select;
+
 class DeliveryNoteController extends Controller
 {
 
@@ -22,17 +24,21 @@ class DeliveryNoteController extends Controller
             $transaction_type = $request->input('transaction_type');
 
             $query = DB::table('delivery_notes')
+                ->join('master_customers', 'delivery_notes.id_master_customers', '=', 'master_customers.id')
                 ->leftJoin('delivery_note_details', 'delivery_notes.id', '=', 'delivery_note_details.id_delivery_notes')
                 ->leftJoin('packing_lists', 'delivery_note_details.id_packing_lists', '=', 'packing_lists.id')
                 ->join('master_vehicles', 'delivery_notes.id_master_vehicles', '=', 'master_vehicles.id')
                 ->leftJoin('sales_orders', 'delivery_note_details.id_sales_orders', '=', 'sales_orders.id')
                 ->select(
                     'delivery_notes.*',
-                    'delivery_note_details.dn_type', // Pastikan kolom ini disertakan
-                    'delivery_note_details.transaction_type', // Pastikan kolom ini disertakan
+                    'master_customers.name as customer',
+                    'delivery_note_details.dn_type',
+                    'delivery_note_details.transaction_type',
                     DB::raw('GROUP_CONCAT(DISTINCT packing_lists.packing_number SEPARATOR ", ") as packing_numbers'),
+                    DB::raw("IF(sales_orders.id_order_confirmations IS NULL OR sales_orders.id_order_confirmations = '-', sales_orders.reference_number, sales_orders.id_order_confirmations) as ko_po_no"),
                     'master_vehicles.vehicle_number as vehicle',
-                    'sales_orders.reference_number as po_number'
+                    'sales_orders.reference_number as po_number',
+                    'sales_orders.reference_number as id_order_confirmation'
                 )
                 ->groupBy('delivery_notes.id')
                 ->orderBy('delivery_notes.created_at', 'desc');
@@ -44,8 +50,9 @@ class DeliveryNoteController extends Controller
             if ($start_date && $end_date) {
                 $query->whereBetween('delivery_notes.date', [$start_date, $end_date]);
             }
-
             $data = $query->get();
+
+            // dd($data);
 
             return datatables()->of($data)
                 ->addIndexColumn()
@@ -89,6 +96,7 @@ class DeliveryNoteController extends Controller
         // Ambil jenis DN dari request
         $jenisDn = $request->input('jenis_dn', 'Regular'); // Default ke Regular jika belum dipilih
 
+
         // Tentukan prefix sesuai jenis DN
         $prefix = match ($jenisDn) {
             'Export' => 'DE',
@@ -111,7 +119,6 @@ class DeliveryNoteController extends Controller
         }
 
         $dnNumber = $prefix . $currentDate . str_pad($nextSequence, 6, '0', STR_PAD_LEFT);
-        // Insert data ke dalam tabel delivery_notes
 
 
         $packingLists = DB::table('packing_lists')->select('id', 'packing_number')->get();
@@ -133,6 +140,7 @@ class DeliveryNoteController extends Controller
             $validatedData = $request->validate([
                 'dn_number' => 'required|unique:delivery_notes,dn_number',
                 'jenis_dn' => 'required',
+                'so_number' => 'required',
                 'date' => 'required|date',
                 'id_master_customer' => 'required',
                 'id_master_vehicle' => 'required',
@@ -148,6 +156,7 @@ class DeliveryNoteController extends Controller
             $deliveryNoteId = DB::table('delivery_notes')->insertGetId([
                 'dn_number' => $validatedData['dn_number'],
                 'jenis_dn' => $validatedData['jenis_dn'],
+                'id_sales_orders' => $validatedData['so_number'],
                 'date' => $validatedData['date'],
                 'id_master_customers' => $validatedData['id_master_customer'],
                 'id_master_vehicles' => $validatedData['id_master_vehicle'],
@@ -195,7 +204,8 @@ class DeliveryNoteController extends Controller
             $packingListDetails = DB::table('packing_list_details')
                 ->join('barcode_detail', 'packing_list_details.barcode', '=', 'barcode_detail.barcode_number')
                 ->join('barcodes', 'barcode_detail.id_barcode', '=', 'barcodes.id')
-                ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
+                ->join('packing_lists', 'packing_list_details.id_packing_lists', '=', 'packing_lists.id')
+                ->join('sales_orders', 'packing_lists.id_sales_orders', '=', 'sales_orders.id')
 
                 // Left join berdasarkan type_product
                 ->leftJoin('master_product_fgs', function ($join) {
@@ -233,13 +243,14 @@ class DeliveryNoteController extends Controller
                     DB::raw('COUNT(packing_list_details.barcode) as total_qty'),
                     DB::raw('SUM(packing_list_details.weight) as total_weight'),
                     'master_units.id as id_master_unit',
+                    'packing_lists.id_sales_orders as soId',
                     'sales_orders.id_master_salesmen as id_master_salesman',
-                    'sales_orders.id as soId'
+                    DB::raw("IF(sales_orders.id_order_confirmations IS NULL OR sales_orders.id_order_confirmations = '-', sales_orders.reference_number, sales_orders.id_order_confirmations) as po_number")
                 )
                 ->where('packing_list_details.id_packing_lists', $validatedData['packing_list_id'])
                 ->groupBy('master_units.id', 'sales_orders.id', 'sales_orders.id_master_salesmen')
                 ->first();
-
+            // dd($packingListDetails);
 
 
 
@@ -250,7 +261,7 @@ class DeliveryNoteController extends Controller
             // Simpan ke dalam tabel delivery_note_details
             DB::table('delivery_note_details')->insert([
                 'id_delivery_notes' => $id,
-                'id_sales_orders' => $packingListDetails->soId,
+                'id_sales_orders' =>  $packingListDetails->soId,
                 'id_packing_lists' => $validatedData['packing_list_id'],
                 'qty' => $packingListDetails->total_qty,
                 'id_master_units' => $packingListDetails->id_master_unit,
@@ -268,10 +279,11 @@ class DeliveryNoteController extends Controller
 
             return response()->json([
                 'success' => true,
-                'po_number' => $request->po_number,
+                'po_number' => $packingListDetails->po_number,
                 'dn_type' => $request->dn_type,
                 'transaction_type' => $request->transaction_type,
                 'salesman_name' => $request->salesman_name,
+                'id_sales_orders' =>  $packingListDetails->soId,
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -313,17 +325,13 @@ class DeliveryNoteController extends Controller
 
         if (!$sameAs) {
             return response()->json([
-                'shipping' => null,
                 'invoice' => null
             ]);
         }
 
+
         if (stripos($sameAs->type_address, 'same as') !== false) {
             // Jika alamat "same as"
-            $shipping = [
-                'id' => $sameAs->id,
-                'address' => $sameAs->address
-            ];
             $invoice = [
                 'id' => $sameAs->id,
                 'address' => $sameAs->address
@@ -340,12 +348,11 @@ class DeliveryNoteController extends Controller
                 ->whereIn('type_address', ['Shipping', 'Invoice'])
                 ->get(['id', 'type_address', 'address']);
 
-            $shipping = $addresses->firstWhere('type_address', 'Shipping');
             $invoice = $addresses->firstWhere('type_address', 'Invoice');
-
-            $shipping = $shipping ? ['id' => $shipping->id, 'address' => $shipping->address] : null;
             $invoice = $invoice ? ['id' => $invoice->id, 'address' => $invoice->address] : null;
         }
+        $shipping = $sameAs->address;
+        $shipping = $shipping ? ['id' => $sameAs->id, 'address' => $sameAs->address] : null;
 
         return response()->json([
             'shipping' => $shipping,
@@ -381,10 +388,10 @@ class DeliveryNoteController extends Controller
     {
         // Ambil data delivery note berdasarkan ID yang diberikan
         $deliveryNote = DB::table('delivery_notes')
-            ->join('delivery_note_details', 'delivery_notes.id', '=', 'delivery_note_details.id_delivery_notes')
+            ->leftJoin('delivery_note_details', 'delivery_notes.id', '=', 'delivery_note_details.id_delivery_notes')
             ->join('master_customers', 'delivery_notes.id_master_customers', '=', 'master_customers.id')
             ->join('master_vehicles', 'delivery_notes.id_master_vehicles', '=', 'master_vehicles.id')
-            ->join('sales_orders as so', 'delivery_note_details.id_sales_orders', '=', 'so.id')
+            ->leftJoin('sales_orders as so', 'delivery_note_details.id_sales_orders', '=', 'so.id')
             ->select(
                 'delivery_notes.id as id',
                 'delivery_notes.dn_number',
@@ -411,7 +418,7 @@ class DeliveryNoteController extends Controller
         $soNo = DB::table('sales_orders')
             ->where('sales_orders.id_master_customers', $deliveryNote->id_customers)
             ->where('status', 'Posted')
-            ->select('id', 'so_number')
+            ->select('id', 'so_number', DB::raw("IF(sales_orders.id_order_confirmations IS NULL OR sales_orders.id_order_confirmations = '-', sales_orders.reference_number, sales_orders.id_order_confirmations) as ko_po_no"))
             ->get();
         //address
         $shipAddress = DB::table('master_customer_addresses')
@@ -439,10 +446,10 @@ class DeliveryNoteController extends Controller
             ->select(
                 'delivery_note_details.id_packing_lists',
                 'packing_lists.packing_number',
-                'sales_orders.reference_number as po_number',
                 'delivery_note_details.dn_type',
                 'delivery_note_details.remark',
                 'delivery_note_details.transaction_type',
+                DB::raw("IF(sales_orders.id_order_confirmations IS NULL OR sales_orders.id_order_confirmations = '-', sales_orders.reference_number, sales_orders.id_order_confirmations) as ko_po_no"),
                 'master_salesmen.name as salesman_name'
             )
             ->where('delivery_note_details.id_delivery_notes', $id)
@@ -510,7 +517,7 @@ class DeliveryNoteController extends Controller
         // Mengambil data delivery note
         $deliveryNote = DB::table('delivery_notes')
             ->join('delivery_note_details', 'delivery_notes.id', '=', 'delivery_note_details.id_delivery_notes')
-            ->join('sales_orders', 'delivery_note_details.id_sales_orders', '=', 'sales_orders.id')
+            ->join('sales_orders', 'delivery_notes.id_sales_orders', '=', 'sales_orders.id')
             ->join('master_customers', 'delivery_notes.id_master_customers', '=', 'master_customers.id')
             ->join('master_vehicles', 'delivery_notes.id_master_vehicles', '=', 'master_vehicles.id')
             ->join('master_salesmen', 'delivery_note_details.id_master_salesman', '=', 'master_salesmen.id')
@@ -518,14 +525,14 @@ class DeliveryNoteController extends Controller
             ->select(
                 'delivery_notes.*',
                 'delivery_note_details.type_product',
-                'sales_orders.reference_number as sales_order_po_number',
-                'sales_orders.so_category as dn_type',
-                'sales_orders.id_master_products',
+                DB::raw("IF(sales_orders.id_order_confirmations IS NULL OR sales_orders.id_order_confirmations = '-', sales_orders.reference_number, sales_orders.id_order_confirmations) as ko_po_no"),
+                // 'sales_orders.so_category as dn_type',
                 'master_customers.name as customer_name',
                 'master_vehicles.vehicle_number as vehicle_number',
                 'master_salesmen.name as salesman_name'
             )
             ->first();
+        // dd($deliveryNote);
         if (!$deliveryNote) {
             // ID tidak ditemukan
             abort(404, 'Delivery note tidak ditemukan.');
@@ -566,43 +573,36 @@ class DeliveryNoteController extends Controller
                 DB::raw('SUM(packing_list_details.weight) as weight'),
                 DB::raw('SUM(packing_list_details.pcs) as qty'),
                 DB::raw('COALESCE(master_product_fgs.description, master_wips.description, master_tool_auxiliaries.description, master_raw_materials.description) as description'),
-                DB::raw('COALESCE(master_product_fgs.product_code, master_wips.wip_code, master_tool_auxiliaries.description, master_raw_materials.description) as code'),
+                DB::raw("COALESCE(master_product_fgs.perforasi, master_wips.perforasi, master_tool_auxiliaries.weight_stock, master_raw_materials.weight_stock,'p-') as perforasi"),
+                DB::raw('COALESCE(master_product_fgs.product_code, master_wips.wip_code, master_tool_auxiliaries.description, master_raw_materials.description) as p_code'),
+                DB::raw("IFNULL(sales_orders.cust_product_code,'-') as code"),
                 'master_units.unit as unit',
+                'sales_orders.id as soId',
+                'sales_orders.so_category as dn_type',
+                'sales_orders.id_master_products',
                 'delivery_note_details.remark as remark'
             )
             ->where('delivery_note_details.id_delivery_notes', $id)
             ->groupBy('description', 'code', 'unit')
-
             ->get();
 
-
-
+        //dd($packingListDetails);
         // dd($deliveryNote);
-
-
-        // Mengambil data quantity dan weight dari delivery_note_details dengan left join berdasarkan type_product
-
-
         // Menghitung total weight
         $totalWeight = $packingListDetails->sum('weight');
         //total qty
         $totalQty = $packingListDetails->sum('qty');
-
         // Mengambil alamat shipping dan invoice dari master_customer_addresses
         $idMs = DB::table('delivery_notes')
             ->where('delivery_notes.id', $id)
             ->select('id_master_customers')
             ->first();
-        // dd($idMs);
-
-
+        // $idMs);
         $Address = DB::table('master_customer_addresses')
             ->where('id_master_customers', $idMs->id_master_customers)
             ->select('type_address', 'address', 'postal_code')
             ->first();
-
         $sameAs = stripos($Address->type_address, 'Same As') !== false;
-
         if ($sameAs) {
             $invoiceAddress = $Address;
             $shippingAddress = $Address;
@@ -616,8 +616,6 @@ class DeliveryNoteController extends Controller
                 ->select('address', 'postal_code')
                 ->first();
         }
-
-
         // Data untuk dicetak
         $data = [
             'deliveryNote' => $deliveryNote,
@@ -632,8 +630,6 @@ class DeliveryNoteController extends Controller
         // Menampilkan view cetak dengan data
         return view('delivery_notes.print', $data);
     }
-
-
 
     public function updateRemark(Request $request, $id)
     {
@@ -747,31 +743,95 @@ class DeliveryNoteController extends Controller
     }
     public function post($id)
     {
-        $packingList = DeliveryNote::find($id);
-        $packingList->status = 'Posted';
-        $packingList->save();
+        // ----- 1. Ambil DN; 404 kalau tak ada -----
+        $dn = DeliveryNote::findOrFail($id);
 
-        // Update sales_orders jadi Closed
-        if ($packingList->id_sales_orders) {
-            salesOrder::where('id', $packingList->id_sales_orders)
-                ->update(['status' => 'Closed']);
+
+        // ----- 2. Rekap qty per SO -----
+        $rekap = DB::table('delivery_note_details as dnd')
+            ->join('sales_orders as so', 'dnd.id_sales_orders', '=', 'so.id')
+            ->join('master_units as mu', 'dnd.id_master_units', '=', 'mu.id')
+            ->join('packing_list_details as pld', 'dnd.id_packing_lists', '=', 'pld.id_packing_lists')
+            ->join('packing_lists as pl', 'pld.id_packing_lists', '=', 'pl.id')
+            ->select(
+                'dnd.id_sales_orders as so_id',
+                'so.qty as so_qty',
+                'mu.unit_code as codeUnit',
+                'pl.packing_number as pl_no',
+                'dnd.weight as dnd_weight',
+                DB::raw('SUM(pld.pcs) AS pl_qty')
+            )
+            ->where('dnd.id_delivery_notes', $dn->id)
+            ->groupBy('so_id', 'so_qty')
+            ->get();
+        // dd($rekap);
+
+        // ----- 3. Pisahkan match & mismatch berdasarkan unit -----
+        [$match, $mismatch] = $rekap->partition(function ($r) {
+            if ($r->codeUnit === 'KG') {
+                return (int) $r->dnd_weight > (int) $r->so_qty;
+            } else {
+                return (int) $r->pl_qty === (int) $r->so_qty;
+            }
+        });
+
+
+        // ----- 4. Jika ADA mismatch → alert & tidak ubah status apa pun -----
+        if ($mismatch->isNotEmpty()) {
+            $plNo = $mismatch->pluck('pl_no')->implode(', ');
+
+            return back()->with([
+                'alert' => "packing list dengan no : {$plNo} memiliki selisih qty sales_orders",
+            ]);
         }
 
-        return redirect()->route('delivery_notes.list')->with('pesan', 'Status berhasil diubah menjadi Posted.');
+
+        // ----- 5. Semua match → jalankan perubahan di satu transaction -----
+        DB::transaction(function () use ($dn, $match) {
+
+            // 5a. Update status SO menjadi Closed
+            SalesOrder::whereIn('id', $match->pluck('so_id'))
+                ->update(['status' => 'Closed']);
+
+            // 5b. Update status DN menjadi Posted
+            $dn->status = 'Posted';
+            $dn->save();
+        });
+
+        // ----- 6. Redirect dengan pesan sukses -----
+        return redirect()
+            ->route('delivery_notes.list')
+            ->with('pesan', "Delivery Note #{$dn->id} berhasil di‑POST dan semua SO ditutup.");
     }
 
     public function unpost($id)
     {
-        $packingList = DeliveryNote::find($id);
-        $packingList->status = 'Request';
-        $packingList->save();
+        /* 1. Pastikan DN memang sudah Posted */
+        $dn = DeliveryNote::where('status', 'Posted')->findOrFail($id);
 
-        // Kembalikan sales_orders ke status Posted
-        if ($packingList->id_sales_orders) {
-            salesOrder::where('id', $packingList->id_sales_orders)
-                ->update(['status' => 'Posted']);
-        }
+        /* 2. Dapatkan semua SO yang terkait DN ini */
+        $soIds = DB::table('delivery_note_details')
+            ->where('id_delivery_notes', $dn->id)
+            ->pluck('id_sales_orders')
+            ->unique();               // contoh: [12, 15]
 
-        return redirect()->route('delivery_notes.list')->with('pesan', 'Status berhasil diubah menjadi Request.');
+        /* 3. Jalankan perubahan dalam satu transaksi */
+        DB::transaction(function () use ($dn, $soIds) {
+
+            /* 3a. Turunkan status DN kembali ke “Request” */
+            $dn->status = 'Request';          // atau label lain jika ingin
+            $dn->save();
+
+            /* 3b. “Buka” kembali semua SO tersebut */
+            if ($soIds->isNotEmpty()) {
+                SalesOrder::whereIn('id', $soIds)
+                    ->update(['status' => 'Posted']);   // ← status setelah di‑un‑post
+            }
+        });
+
+        /* 4. Redirect dengan pesan sukses */
+        return redirect()
+            ->route('delivery_notes.list')
+            ->with('pesan', "Delivery Note #{$dn->id} berhasil di‑UN‑POST dan status SO dibuka kembali.");
     }
 }
