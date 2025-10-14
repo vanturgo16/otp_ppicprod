@@ -35,7 +35,7 @@
             <h4>No. {{ $data->receipt_number }}</h4>
         </div>
 
-        <table class="mb-3" style="font-size: 1.1rem;">
+        <table class="mb-3" style="font-size: 1rem;">
             <tbody>
                 <tr>
                     <td class="align-top">Receipt Date</td>
@@ -62,7 +62,7 @@
         
         <div class="row">
             <div class="table-responsive">
-                <table class="table table-bordered table-sm mb-10" style="font-size: 1.1rem;">
+                <table class="table table-bordered table-sm mb-10" style="font-size: 1rem;">
                     <thead class="table-light">
                         <tr>
                             <td class="align-top fw-bold text-center p-2">#</td>
@@ -96,13 +96,13 @@
             </div>
         </div>
 
-        <div class="row" style="font-size: 1.1rem;">
+        <div class="row" style="font-size: 1rem;">
             <ul style="list-style-type: '- ';">
                 Note : {{ $data->remarks; }}
             </ul>
         </div>
         <hr>
-        <div class="row" style="font-size: 1.1rem;">
+        <div class="row" style="font-size: 1rem;">
             <div class="col-4 text-center">
                 <p class="mb-5">Diterima Oleh,</p>
                 <br><br>
