@@ -243,8 +243,7 @@
                                         response.wrap +
                                         '" readonly></td>' +
                                         '<td><input type="number" class="form-control weight" data-id="' +
-                                        response.id + '" name="weight" value="' + response
-                                        .weight + '" readonly></td>' +
+                                        response.id + '" name="weight" value="' + response.weight + '" readonly></td>' +
                                         '<td><input type="number" class="form-control pcs" data-id="' +
                                         response.id + '" name="pcs" value="' + response.pcs +
                                         '" readonly></td>' :

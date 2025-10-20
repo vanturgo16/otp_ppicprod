@@ -192,6 +192,7 @@
                             _token: '{{ csrf_token() }}'
                         },
                         success: function(response) {
+                            console.log(response.weight);
                             if (response.exists) {
                                 var newRow =
                                     '<tr data-id="' + response.id + '">' +
@@ -210,11 +211,8 @@
                                         .weight + '" readonly></td>' +
                                         '<td><input type="number" class="form-control pcs" data-id="' +
                                         response.id + '" name="pcs" value="' + response.pcs +
-                                        '" readonly></td>' :
-                                        '<td><input type="number" class="form-control weight" data-id="' +
-                                        response.id + '" name="weight" value="' + response
-                                        .weight + '" readonly></td>' +
-                                        '<td></td>' +
+                                        '" readonly></td>' :'<td></td>' +
+                                        '<td>'+response.weight+'</td>' +
                                         '<td></td>') +
                                     '<td><button type="button" class="btn btn-danger btn-sm remove-barcode">Remove</button></td>' +
                                     '</tr>';
