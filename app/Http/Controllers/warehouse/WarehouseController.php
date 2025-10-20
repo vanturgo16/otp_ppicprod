@@ -230,7 +230,7 @@ class WarehouseController extends Controller
             })
             ->leftJoin(DB::raw('(SELECT barcode, SUM(amount_result) as total_amount_result, SUM(weight_starting) as total_weight_starting, SUM(wrap) as total_wrap FROM report_bag_production_results GROUP BY barcode) as rbp'), 'barcode_detail.barcode_number', '=', 'rbp.barcode')
             ->first();
-        // dd($barcodeRecord->sales_order_id, $soId);
+        // dd($barcodeRecord);
 
 
         if ($barcodeRecord && strpos($barcodeRecord->status, 'In Stock') !== false) {
@@ -240,12 +240,13 @@ class WarehouseController extends Controller
             $pcs = $barcodeRecord->total_amount_result;
 
             $newStock = $barcodeRecord->stock - ($isBag ? $pcs : 1);
+            // dd($newStock);
             if ($newStock < 0) {
                 return response()->json(['exists' => false, 'status' => false, 'message' => 'Stok tidak mencukupi']);
             }
 
             // Tentukan weight berdasarkan status
-            $finalWeight = 0;
+            $finalWeight = 0 ;
             if (stripos($barcodeRecord->status, 'SLT') !== false || stripos($barcodeRecord->status, 'FLD') !== false) {
                 $finalWeight = $barcodeRecord->sf_weight;
             } elseif (stripos($barcodeRecord->status, 'BLW') !== false) {
