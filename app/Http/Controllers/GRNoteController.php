@@ -3,34 +3,28 @@
 namespace App\Http\Controllers;
 
 use DataTables;
-use App\Traits\AuditLogsTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Redirect;
-use RealRashid\SweetAlert\Facades\Alert;
-use Browser;
-use Illuminate\Support\Facades\Crypt;
-use Picqer\Barcode\BarcodeGeneratorHTML;
 use App\Exports\GRNExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
 
+use App\Traits\AuditLogsTrait;
+
 use App\Models\GoodReceiptNote;
 use App\Models\GoodReceiptNoteDetail;
-use App\Models\GoodReceiptNoteDetailSmt;
 use App\Models\MstSupplier;
 use App\Models\PurchaseOrders;
 use App\Models\PurchaseOrderDetails;
 use App\Models\PurchaseRequisitions;
-use App\Models\MstUnits;
 use App\Models\PurchaseRequisitionsDetail;
 use App\Models\DetailGoodReceiptNoteDetail;
-
 use App\Models\MstRawMaterial;
 use App\Models\MstProductFG;
 use App\Models\MstToolAux;
 use App\Models\MstWip;
 use App\Models\HistoryStocks;
+use App\Models\MstCompanies;
 use App\Models\TransPurchase;
 
 class GRNoteController extends Controller
@@ -314,15 +308,28 @@ class GRNoteController extends Controller
         $data = GoodReceiptNote::where('id', $id)->first();
         DB::beginTransaction();
         try{
+            $idPRDetails = GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)->pluck('id_purchase_requisition_details');
             // Rollback Status PR / PO
             if($data->id_purchase_orders){
                 if(!GoodReceiptNote::where('id_purchase_orders', $data->id_purchase_orders)->where('id', '!=', $id)->exists()){
                     PurchaseOrders::where('id', $data->id_purchase_orders)->update(['status' => 'Posted']);
+                    // Update To Open IF has been Close
+                    if ($idPRDetails->isNotEmpty()) {
+                        PurchaseOrderDetails::whereIn('id_purchase_requisition_details', $idPRDetails)->where('status', 'Close')->update([
+                            'status' => 'Open'
+                        ]);
+                    }
                 }
             } else {
                 if(!GoodReceiptNote::where('reference_number', $data->reference_number)->where('id', '!=', $id)->exists()){
                     PurchaseRequisitions::where('id', $data->reference_number)->update(['status' => 'Posted']);
                 }
+            }
+            // Update To Open IF has been Close
+            if ($idPRDetails->isNotEmpty()) {
+                PurchaseRequisitionsDetail::whereIn('id', $idPRDetails)->where('status', 'Close')->update([
+                    'status' => 'Open'
+                ]);
             }
             // Delete
             GoodReceiptNote::where('id', $id)->delete();
@@ -534,6 +541,15 @@ class GRNoteController extends Controller
     public function print($lang, $id)
     {
         $id = decrypt($id);
+
+        $dataCompany = MstCompanies::select('master_companies.company_name', 'master_companies.address', 
+                'master_provinces.province', 'master_companies.city','master_companies.postal_code', 'master_countries.country', 
+                'master_companies.telephone', 'master_companies.fax')
+            ->leftjoin('master_provinces', 'master_companies.id_master_provinces', '=', 'master_provinces.id')
+            ->leftjoin('master_countries', 'master_companies.id_master_countries', '=', 'master_countries.id')
+            ->where('master_companies.is_active', 1)
+            ->first();
+
         $data = GoodReceiptNote::select('good_receipt_notes.*', 
                 'purchase_orders.po_number',
                 'master_suppliers.name')
@@ -588,7 +604,7 @@ class GRNoteController extends Controller
             ->get();
 
         $view = ($lang === 'en') ? 'gr_note.print' : 'gr_note.printIDN';
-        return view($view, compact('data', 'itemDatas'));
+        return view($view, compact('dataCompany', 'data', 'itemDatas'));
     }
     public function export(Request $request)
     {
