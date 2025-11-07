@@ -19,10 +19,10 @@
             <div class="col-8 d-flex align-items-center gap-10">
                 <img src="{{ asset('assets/images/icon-otp.png') }}" width="80" height="80">
                 <small style="padding-left: 10px">
-                    <b>PT OLEFINA TIFAPLAS POLIKEMINDO</b><br />
-                    Jl. Raya Serang KM 16.8 Desa Telaga, Kec. Cikupa<br />
-                    Tangerang-Banten 15710<br />
-                    Tlp. +62 21 595663567, Fax. +62 21 5960776<br />
+                    <b>{{ $dataCompany->company_name }}</b><br />
+                    {{ $dataCompany->address }}<br />
+                    {{ $dataCompany->city }}, {{ $dataCompany->province }} – {{ $dataCompany->postal_code }}.<br/>
+                    Tlp. {{ $dataCompany->telephone ?? '-' }}, Fax. {{ $dataCompany->fax ?? '-' }}<br />
                 </small>
             </div>
             <div class="col-4 d-flex justify-content-end">
