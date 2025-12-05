@@ -122,9 +122,22 @@ class workOrderController extends Controller
                     return $data->pc_needed . ' - ' . $data->dsc . $perforasi_needed;
                 })
                 ->addColumn('status', function ($data) {
-                    $badgeColor = $data->status == 'Request' ? 'secondary' : ($data->status == 'Un Posted' ? 'warning' : ($data->status == 'Closed' ? 'info' : ($data->status == 'Finish' ? 'primary' : 'success')));
+                    $user = auth()->user();
+
+                    // Jika status Un Posted dan user tidak punya izin, sembunyikan
+                    if ($data->status == 'Un Posted' && !$user->can('PPIC_unposted')) {
+                        return ''; // kosong = tidak ditampilkan
+                    }
+
+                    // Warna badge
+                    $badgeColor = $data->status == 'Request' ? 'secondary'
+                        : ($data->status == 'Un Posted' ? 'warning'
+                        : ($data->status == 'Closed' ? 'info'
+                        : ($data->status == 'Finish' ? 'primary' : 'success')));
+
                     return '<span class="badge bg-' . $badgeColor . '" style="font-size: smaller;width: 100%">' . $data->status . '</span>';
                 })
+
                 ->addColumn('statusLabel', function ($data) {
                     return $data->status;
                 })

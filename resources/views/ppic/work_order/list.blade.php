@@ -120,41 +120,7 @@
                                                     <th>Action</th>
                                                 </tr>
                                             </thead>
-                                            {{-- <tbody>
-                                                @foreach ($list_wo as $item)
-                                                    <tr>
-                                                        <td>{{ $loop->iteration }}</td>
-                                                        <td>{{ $item->wo_number }}</td>
-                                                        <td>{{ $item->product_code . ' - ' . $item->description }}</td>
-                                                        <td>{{ $item->masterProcessProduction->process }}</td>
-                                                        <td>{{ $item->masterWorkCenter == null ? '' : $item->masterWorkCenter->work_center }}
-                                                        </td>
-                                                        <td>{{ $item->qty }}</td>
-                                                        <td>{{ $item->masterUnit->unit_code }}</td>
-                                                        <td>{{ $item->pc_needed . ' - ' . $item->desc_needed }}</td>
-                                                        <td>{{ $item->qty_needed }}</td>
-                                                        <td>{{ $item->masterUnitNeeded == null ? '' : $item->masterUnitNeeded->unit_code }}
-                                                        </td>
-                                                        <td>{{ $item->note }}</td>
-                                                        <td>
-                                                            @php
-                                                                $badgeColor =
-                                                                    $item->status == 'Request'
-                                                                        ? 'info'
-                                                                        : ($item->status == 'Un Posted'
-                                                                            ? 'warning'
-                                                                            : 'success');
-                                                                echo '<span class="badge bg-' .
-                                                                    $badgeColor .
-                                                                    '" style="font-size: smaller;width: 100%">' .
-                                                                    $item->status .
-                                                                    '</span>';
-                                                            @endphp
-                                                        </td>
-                                                        <td>@include('ppic.work_order.action_list_wo')</td>
-                                                    </tr>
-                                                @endforeach
-                                            </tbody> --}}
+
                                         </table>
                                     </div>
                                 </div>
