@@ -4,6 +4,78 @@
         Action <i class="mdi mdi-chevron-down"></i>
     </button>
     <ul class="dropdown-menu" aria-labelledby="btnGroupDrop">
+
+        {{-- POSTED / UNPOSTED BUTTON --}}
+        <li>
+            @if ($data->status == 'Request' || $data->status == 'Un Posted')
+                {{-- STATUS REQUEST atau UN POSTED → tampilkan tombol POSTED --}}
+                <button class="dropdown-item drpdwn-scs"
+                    data-wo-number="{{ $data->wo_number }}"
+                    data-status="{{ $data->status }}"
+                    onclick="showModal(this);">
+                    <span class="mdi mdi-check-bold"></span> | Posted
+                </button>
+
+            @else
+                {{-- STATUS Posted / Closed / Finish → tampilkan tombol UN POSTED khusus user yg punya izin --}}
+                @can('PPIC_unposted')
+                    <button class="dropdown-item drpdwn-wrn"
+                        data-wo-number="{{ $data->wo_number }}"
+                        data-status="{{ $data->status }}"
+                        onclick="showModal(this);">
+                        <span class="mdi mdi-arrow-left-top-bold"></span> | Un Posted
+                    </button>
+                @endcan
+            @endif
+        </li>
+
+        {{-- WO DETAILS (khusus process production id = 2) --}}
+        @if ($data->id_master_process_productions == '2')
+            <li>
+                <a class="dropdown-item drpdwn"
+                    href="{{ route('ppic.workOrder.woDetails', encrypt($data->wo_number)) }}">
+                    <span class="mdi mdi-eye"></span> | WO Details
+                </a>
+            </li>
+        @endif
+
+        {{-- DELETE dan EDIT hanya untuk Request & Un Posted --}}
+        @if ($data->status == 'Request' || $data->status == 'Un Posted')
+            <li>
+                <button class="dropdown-item drpdwn-dgr"
+                    data-wo-number="{{ $data->wo_number }}"
+                    data-status="{{ $data->status }}"
+                    onclick="showModal(this, 'Delete');">
+                    <span class="mdi mdi-trash-can"></span> | Delete
+                </button>
+            </li>
+
+            <li>
+                <a class="dropdown-item drpdwn-pri"
+                    href="{{ route('ppic.workOrder.editFromList', encrypt($data->wo_number)) }}">
+                    <span class="mdi mdi-circle-edit-outline"></span> | Edit Data
+                </a>
+            </li>
+        @endif
+
+        {{-- VIEW always available --}}
+        <li>
+            <a class="dropdown-item drpdwn"
+                href="{{ route('ppic.workOrder.view', encrypt($data->wo_number)) }}">
+                <span class="mdi mdi-eye"></span> | View Data
+            </a>
+        </li>
+
+    </ul>
+</div>
+
+
+{{-- <div class="btn-group" role="group">
+    <button id="btnGroupDrop" type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown"
+        aria-expanded="false">
+        Action <i class="mdi mdi-chevron-down"></i>
+    </button>
+    <ul class="dropdown-menu" aria-labelledby="btnGroupDrop">
         <li>
             <button
                 class="dropdown-item drpdwn-{{ $data->status == 'Request' || $data->status == 'Un Posted' ? 'scs' : 'wrn' }}"
@@ -39,4 +111,4 @@
                     class="mdi mdi-eye"></span> | View Data</a>
         </li>
     </ul>
-</div>
+</div> --}}
