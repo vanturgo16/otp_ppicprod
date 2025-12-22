@@ -27,14 +27,14 @@ class WarehouseController extends Controller
                     'pl.id',
                     'pl.packing_number',
                     'pl.date',
-                    'mc.name as customer', 
+                    'mc.name as customer',
                     'pl.status',
                     'so.so_number',
                     'shipping.address as address',
                     DB::raw('"" as action') // Menambahkan kolom action sebagai kolom kosong
                 )
                 ->orderBy($columns[$orderColumn], $orderDirection);
-                
+
 
             // Handle search
             if ($request->has('search') && $request->input('search')) {
@@ -246,7 +246,7 @@ class WarehouseController extends Controller
             }
 
             // Tentukan weight berdasarkan status
-            $finalWeight = 0 ;
+            $finalWeight = 0;
             if (stripos($barcodeRecord->status, 'SLT') !== false || stripos($barcodeRecord->status, 'FLD') !== false) {
                 $finalWeight = $barcodeRecord->sf_weight;
             } elseif (stripos($barcodeRecord->status, 'BLW') !== false) {
@@ -256,7 +256,7 @@ class WarehouseController extends Controller
             } elseif (stripos($barcodeRecord->status, 'AUX') !== false) {
                 $finalWeight = 0;
             }
-          
+
             //alert non numeric weight
             if (!is_numeric($finalWeight)) {
                 $message = "(Weight :$finalWeight) A non-numeric value encountered";
@@ -317,7 +317,7 @@ class WarehouseController extends Controller
 
             // ambil data weight dari tabel packing_list_details
             $weightDetail = DB::table('packing_list_details')
-                ->where('barcode', $barcodeRecord->barcode_number) 
+                ->where('barcode', $barcodeRecord->barcode_number)
                 ->value('weight');
 
             $stockUpdateQty = ($barcodeRecord->type_product === 'AUX' || $barcodeRecord->type_product === 'RAW')
@@ -362,24 +362,21 @@ class WarehouseController extends Controller
                     break;
             }
 
-            function decrementOutstanding($soId, $stockUpdateQty, $weightDetail)
-            {
+            // Jika ada change_so, kurangi outstanding_delivery_qty dari SO yang dituju (soId), bukan dari SO asal
+            if ($changeSo) {
                 $unitCode = DB::table('sales_orders as so')
                     ->join('master_units as mu', 'so.id_master_units', '=', 'mu.id')
                     ->where('so.id', $soId)
                     ->value('mu.unit_code');
-
                 $decrementValue = ($unitCode === 'KG') ? $weightDetail : $stockUpdateQty;
-
-                DB::table('sales_orders')
-                    ->where('id', $soId)
-                    ->decrement('outstanding_delivery_qty', $decrementValue);
-            }
-
-            decrementOutstanding($soId, $stockUpdateQty, $weightDetail);
-
-            if ($barcodeRecord->sales_order_id != $soId) {
-                decrementOutstanding($barcodeRecord->sales_order_id, $stockUpdateQty, $weightDetail);
+                DB::table('sales_orders')->where('id', $soId)->decrement('outstanding_delivery_qty', $decrementValue);
+            } else {
+                $unitCode = DB::table('sales_orders as so')
+                    ->join('master_units as mu', 'so.id_master_units', '=', 'mu.id')
+                    ->where('so.id', $barcodeRecord->sales_order_id)
+                    ->value('mu.unit_code');
+                $decrementValue = ($unitCode === 'KG') ? $weightDetail : $stockUpdateQty;
+                DB::table('sales_orders')->where('id', $barcodeRecord->sales_order_id)->decrement('outstanding_delivery_qty', $decrementValue);
             }
 
             DB::table('barcode_detail')->where('barcode_number', $barcode)->update(['status' => 'Packing List']);
@@ -499,9 +496,20 @@ class WarehouseController extends Controller
                 $barcode = $barcodeDetail->barcode;
                 $isBag = stripos($barcodeDetail->sts_start, 'bag') !== false;
 
+                // Ambil SO yang dituju dari packing_lists jika ada change_so
+                $targetSoId = $barcodeRecord->sales_order_id;
+                if ($barcodeDetail->change_so) {
+                    $packingList = DB::table('packing_lists')
+                        ->where('id', $barcodeDetail->id_packing_lists)
+                        ->first();
+                    if ($packingList) {
+                        $targetSoId = $packingList->id_sales_orders;
+                    }
+                }
+
                 // ambil data weight dari tabel packing_list_details
                 $weightDetail = DB::table('packing_list_details')
-                    ->where('barcode', $barcode) // asumsi ada relasi id detail
+                    ->where('barcode', $barcode)
                     ->value('weight');
 
                 $stockUpdateQty = ($barcodeRecord->type_product === 'AUX' || $barcodeRecord->type_product === 'RAW')
@@ -546,38 +554,17 @@ class WarehouseController extends Controller
                         break;
                 }
 
-                // Buat helper function
-                function incrementOutstanding($soId, $stockUpdateQty, $weightDetail)
-                {
-                    $unitCode = DB::table('sales_orders as so')
-                        ->join('master_units as mu', 'so.id_master_units', '=', 'mu.id')
-                        ->where('so.id', $soId)
-                        ->value('mu.unit_code');
+                // Kembalikan outstanding_delivery_qty ke SO yang dituju
+                $unitCode = DB::table('sales_orders as so')
+                    ->join('master_units as mu', 'so.id_master_units', '=', 'mu.id')
+                    ->where('so.id', $targetSoId)
+                    ->value('mu.unit_code');
 
-                    $incrementValue = ($unitCode === 'KG') ? $weightDetail : $stockUpdateQty;
+                $incrementValue = ($unitCode === 'KG') ? $weightDetail : $stockUpdateQty;
 
-                    DB::table('sales_orders')
-                        ->where('id', $soId)
-                        ->increment('outstanding_delivery_qty', $incrementValue);
-                }
-
-                // --- Pemakaian ---
-                incrementOutstanding($soId, $stockUpdateQty, $weightDetail);
-
-                if ($barcodeRecord->sales_order_id != $soId) {
-                    incrementOutstanding($barcodeRecord->sales_order_id, $stockUpdateQty, $weightDetail);
-                }
-
-
-                // DB::table('sales_orders')
-                //     ->where('id', $soId)
-                //     ->increment('outstanding_delivery_qty', $stockUpdateQty);
-
-                // if ($barcodeRecord->sales_order_id != $soId) {
-                //     DB::table('sales_orders')
-                //         ->where('id', $barcodeRecord->sales_order_id)
-                //         ->increment('outstanding_delivery_qty', $stockUpdateQty);
-                // }
+                DB::table('sales_orders')
+                    ->where('id', $targetSoId)
+                    ->increment('outstanding_delivery_qty', $incrementValue);
                 // Tambahan: Proses remove dari history_stocks
                 $packing = DB::table('packing_lists')
                     ->select('packing_number')
@@ -1011,6 +998,17 @@ class WarehouseController extends Controller
                     ->first();
 
                 if ($barcodeRecord) {
+                    // Ambil SO yang dituju dari packing_lists jika ada change_so
+                    $targetSoId = $barcodeRecord->sales_order_id;
+                    if ($detail->change_so) {
+                        $packingList = DB::table('packing_lists')
+                            ->where('id', $id)
+                            ->first();
+                        if ($packingList) {
+                            $targetSoId = $packingList->id_sales_orders;
+                        }
+                    }
+
                     // Tentukan nilai increment outstanding (weight kalau KG, pcs kalau bukan)
                     $incrementValue = ($barcodeRecord->unit_code === 'KG')
                         ? $barcodeRecord->weight
@@ -1024,16 +1022,19 @@ class WarehouseController extends Controller
                         'RAW' => 'master_raw_materials',
                     ];
 
-                    // Jika type_product ada di mapping, update stok
+                    // Jika type_product ada di mapping, update stok dan weight_stock
                     if (isset($productTables[$barcodeRecord->type_product])) {
                         DB::table($productTables[$barcodeRecord->type_product])
                             ->where('id', $barcodeRecord->product_id)
-                            ->increment('stock', $barcodeRecord->pcs);
+                            ->update([
+                                'stock' => DB::raw("stock + {$barcodeRecord->pcs}"),
+                                'weight_stock' => DB::raw("weight_stock + {$barcodeRecord->weight}")
+                            ]);
                     }
 
-                    // Increment outstanding_delivery_qty
+                    // Increment outstanding_delivery_qty dari SO yang dituju
                     DB::table('sales_orders')
-                        ->where('id', $barcodeRecord->sales_order_id)
+                        ->where('id', $targetSoId)
                         ->increment('outstanding_delivery_qty', $incrementValue);
 
                     // Update status barcode di tabel barcode_detail
