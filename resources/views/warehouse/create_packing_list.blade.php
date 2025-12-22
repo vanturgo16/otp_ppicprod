@@ -114,8 +114,7 @@
         $('#customer').select2({
             placeholder: 'Pilih Customer',
             ajax: {
-                url: '{{ route('
-                get - customers ') }}',
+                url: "{{ route('get-customers') }}",
                 dataType: 'json',
                 delay: 250,
                 data: function(params) {
@@ -140,9 +139,7 @@
             $('#soNo').select2({
                 placeholder: 'Pilih SO',
                 ajax: {
-                    url: '{{ url('
-                    get - so - number - by - customer ') }}/' + $('#customer')
-                    .val(), // Ambil customer_id yang dipilih
+                    url: '{{ url("get-so-number-by-customer") }}/' + $('#customer').val(), // Ambil customer_id yang dipilih
                     dataType: 'json',
                     delay: 250,
                     data: function(params) {
@@ -218,8 +215,7 @@
         $('#barcode').on('input', function() {
             if ($(this).val().length === 11) {
                 $.ajax({
-                    url: '{{ route('
-                    check - barcode ') }}',
+                    url: '{{ route("check-barcode") }}',
                     method: 'POST',
                     data: {
                         barcode: $(this).val(),
@@ -301,8 +297,7 @@
             var inputElement = $(this);
 
             $.ajax({
-                url: '{{ route('
-                update - barcode - detail ') }}',
+                url: '{{ route("update-barcode-detail") }}',
                 method: 'POST',
                 data: {
                     id: id,
@@ -338,8 +333,7 @@
             var pcs = row.find('.pcs').val(); // Ambil nilai pcs sebelum menghapus
 
             $.ajax({
-                url: '{{ route('
-                packing_list.remove_barcode ') }}',
+                url: '{{ route("packing_list.remove_barcode") }}',
                 method: 'POST',
                 data: {
                     id: id,
@@ -359,8 +353,7 @@
         //  SO Number
         function loadSoNumbers(customerId) {
             $.ajax({
-                url: '{{ url('
-                get - so - number - by - customer ') }}/' + customerId,
+                url: '{{ url("get-so-number-by-customer") }}/' + customerId,
                 method: 'GET',
                 beforeSend: function() {
                     $('#soNo')
