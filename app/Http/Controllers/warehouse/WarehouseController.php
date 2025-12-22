@@ -262,12 +262,14 @@ class WarehouseController extends Controller
                 $message = "(Weight :$finalWeight) A non-numeric value encountered";
                 return response()->json(['weight' => false, 'status' => false, 'message' => $message]);
             }
+            $weightValue = $isBag ? $barcodeRecord->total_weight_starting : $finalWeight;
+
             $insertedId = DB::table('packing_list_details')->insertGetId([
                 'barcode' => $barcode,
                 'change_so' => $changeSo === null ? null : $barcodeRecord->soNo,
                 'total_wrap' => $barcodeRecord->total_wrap,
                 'id_packing_lists' => $packingListId,
-                'weight' => $isBag ? $barcodeRecord->total_weight_starting : $finalWeight,
+                'weight' => $weightValue,
                 'pcs' => ($barcodeRecord->type_product === 'AUX' || $barcodeRecord->type_product === 'RAW') ? $barcodeRecord->qty : ($isBag ? $pcs : 1),
                 'sts_start' => $barcodeRecord->status,
                 'created_at' => now(),
@@ -287,6 +289,7 @@ class WarehouseController extends Controller
                     ->first();
 
                 $qtyToInsert = ($barcodeRecord->type_product === 'AUX' || $barcodeRecord->type_product === 'RAW') ? $barcodeRecord->qty : ($isBag ? $pcs : 1);
+                $weightToInsert = $weightValue;
 
                 if ($existingHistory) {
                     $newQty = $existingHistory->qty + $qtyToInsert;
@@ -296,6 +299,7 @@ class WarehouseController extends Controller
                         ->where('id', $existingHistory->id)
                         ->update([
                             'qty' => $newQty,
+                            'weight' => ($existingHistory->weight ?? 0) + $weightToInsert,
                             'barcode' => $newBarcodes,
                             'updated_at' => now()
                         ]);
@@ -305,6 +309,7 @@ class WarehouseController extends Controller
                         'type_product' => $barcodeRecord->type_product,
                         'id_master_products' => $barcodeRecord->product_id,
                         'qty' => $qtyToInsert,
+                        'weight' => $weightToInsert,
                         'type_stock' => 'OUT',
                         'barcode' => $barcode,
                         'date' => now(),
@@ -316,9 +321,7 @@ class WarehouseController extends Controller
             }
 
             // ambil data weight dari tabel packing_list_details
-            $weightDetail = DB::table('packing_list_details')
-                ->where('barcode', $barcodeRecord->barcode_number)
-                ->value('weight');
+            $weightDetail = $weightValue;
 
             $stockUpdateQty = ($barcodeRecord->type_product === 'AUX' || $barcodeRecord->type_product === 'RAW')
                 ? $barcodeRecord->qty
@@ -392,7 +395,7 @@ class WarehouseController extends Controller
             'product_name' => $productName,
             'is_bag' => $isBag,
             'sales_order_id' => $barcodeRecord->sales_order_id,
-            'pcs' => $pcs,
+            'pcs' => $isBag ? $pcs : 1,
             'changeSo' => $changeSo,
             'soId' => $soId,
             'wrap' =>  $barcodeRecord->total_wrap,
@@ -511,6 +514,7 @@ class WarehouseController extends Controller
                 $weightDetail = DB::table('packing_list_details')
                     ->where('barcode', $barcode)
                     ->value('weight');
+                $weightToRemove = $weightDetail;
 
                 $stockUpdateQty = ($barcodeRecord->type_product === 'AUX' || $barcodeRecord->type_product === 'RAW')
                     ? $barcodeRecord->qty
@@ -582,18 +586,21 @@ class WarehouseController extends Controller
 
                     if ($history) {
                         $qtyToRemove = $barcodeDetail->pcs;
+                        $weightFromHistory = $history->weight ?? 0;
 
                         // Hapus barcode dari string
                         $barcodeList = explode(', ', $history->barcode);
                         $barcodeList = array_filter($barcodeList, fn($b) => $b !== $barcode);
                         $newBarcodeString = implode(', ', $barcodeList);
                         $newQty = $history->qty - $qtyToRemove;
+                        $newWeight = $weightFromHistory - $weightToRemove;
 
                         if ($newQty > 0) {
                             DB::table('history_stocks')
                                 ->where('id', $history->id)
                                 ->update([
                                     'qty' => $newQty,
+                                    'weight' => max(0, $newWeight),
                                     'barcode' => $newBarcodeString,
                                     'updated_at' => now()
                                 ]);
