@@ -181,8 +181,7 @@
             }
             if ($(this).val().length === 11) {
                 $.ajax({
-                    url: '{{ route('
-                    check - barcode ') }}',
+                    url: '{{ route("check-barcode") }}',
                     method: 'POST',
                     data: {
                         barcode: $(this).val(),
@@ -269,8 +268,7 @@
             var inputElement = $(this);
 
             $.ajax({
-                url: '{{ route('
-                update - barcode - detail ') }}',
+                url: '{{ route("update-barcode-detail") }}',
                 method: 'POST',
                 data: {
                     id: id,
@@ -306,8 +304,7 @@
             // console.log(id);
 
             $.ajax({
-                url: '{{ route('
-                packing_list.remove_barcode ') }}',
+                url: '{{ route("packing_list.remove_barcode") }}',
                 method: 'POST',
                 data: {
                     id: id,
