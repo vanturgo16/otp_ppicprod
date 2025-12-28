@@ -253,6 +253,29 @@
                                                                     required>
                                                             </div>
                                                         </div>
+                                                        @php
+                                                            $qty = (float) $item->qty;
+                                                            $maxReceipt = $qty * 1.1;
+                                                            // format
+                                                            $maxReceiptFormatted = rtrim(
+                                                                rtrim(number_format($maxReceipt, 6, ',', '.'), '0'),
+                                                                ','
+                                                            );
+                                                        @endphp
+
+                                                        <div class="row mb-2">
+                                                            <div class="col-sm-3"></div>
+                                                            <div class="col-sm-9">
+                                                                <div class="alert alert-info py-2 mb-0 small">
+                                                                    <i class="mdi mdi-information-outline me-1"></i>
+                                                                    Receipt quantity may exceed the ordered quantity by up to <b>10%</b>.
+                                                                    <br>
+                                                                    Max receipt allowed: <b>{{ $maxReceiptFormatted }}</b>.
+                                                                    Outstanding quantity will remain <b>0</b>.
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
                                                         <div class="row mb-2 field-wrapper required-field">
                                                             <label class="col-sm-3 col-form-label">Outstanding Qty</label>
                                                             <div class="col-sm-9">
@@ -314,17 +337,42 @@
                                     return parts.join(",");
                                 }
 
+                                // $('input[name="receipt_qty"]').on('input', function () {
+                                //     let receiptInput = $(this);
+                                //     let modal = receiptInput.closest('.modal');
+                                //     let qty = formatPrice(modal.find('input[name="qty"]').val()) || 0;
+                                //     let receiptQty = formatPrice(receiptInput.val()) || 0;
+                                //     if (receiptQty > qty) {
+                                //         receiptInput.val(formatPriceDisplay(qty));
+                                //         receiptQty = qty;
+                                //     }
+                                //     let outstandingQty = qty - receiptQty;
+                                //     modal.find('input[name="outstanding_qty"]').val(formatPriceDisplay(outstandingQty));
+                                // });
                                 $('input[name="receipt_qty"]').on('input', function () {
                                     let receiptInput = $(this);
                                     let modal = receiptInput.closest('.modal');
-                                    let qty = formatPrice(modal.find('input[name="qty"]').val()) || 0;
-                                    let receiptQty = formatPrice(receiptInput.val()) || 0;
-                                    if (receiptQty > qty) {
-                                        receiptInput.val(formatPriceDisplay(qty));
-                                        receiptQty = qty;
+
+                                    let qty = formatPrice(modal.find('input[name="qty"]').val());
+                                    let receiptQty = formatPrice(receiptInput.val());
+
+                                    // 🔹 10% tolerance
+                                    let maxReceipt = qty * 1.1;
+
+                                    // 🔹 Limit receipt to tolerance
+                                    if (receiptQty > maxReceipt) {
+                                        receiptQty = maxReceipt;
+                                        receiptInput.val(formatPriceDisplay(maxReceipt));
                                     }
+
+                                    // 🔹 Outstanding should never be negative
                                     let outstandingQty = qty - receiptQty;
-                                    modal.find('input[name="outstanding_qty"]').val(formatPriceDisplay(outstandingQty));
+                                    if (outstandingQty < 0) {
+                                        outstandingQty = 0;
+                                    }
+
+                                    modal.find('input[name="outstanding_qty"]')
+                                        .val(formatPriceDisplay(outstandingQty));
                                 });
                             });
 

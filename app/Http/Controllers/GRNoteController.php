@@ -401,8 +401,18 @@ class GRNoteController extends Controller
             $itemGRNs = GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)->whereIn('status', ['Open', 'Close'])->get();
             foreach($itemGRNs as $item){
                 $detailPR = PurchaseRequisitionsDetail::where('id', $item->id_purchase_requisition_details)->first();
-                $outstanding = (float) $detailPR->outstanding_qty - (float) $item->receipt_qty;
-                $outstanding = rtrim(rtrim(sprintf("%.6f", $outstanding), '0'), '.');
+                // $outstanding = (float) $detailPR->outstanding_qty - (float) $item->receipt_qty;
+                // $outstanding = rtrim(rtrim(sprintf("%.6f", $outstanding), '0'), '.');
+                
+                $qty = (float) $item->qty;
+                $receiptQty = (float) $item->receipt_qty;
+                // 🔹 Decrease source outstanding only up to ordered qty
+                $decreaseQty = min($receiptQty, $qty);
+                $outstanding = (float) $detailPR->outstanding_qty - $decreaseQty;
+                // Safety: never negative
+                $outstanding = max($outstanding, 0);
+                // Format to 6 decimals
+                $outstanding = rtrim(rtrim(sprintf('%.6f', $outstanding), '0'), '.');
 
                 if ($data->id_purchase_orders){
                     // IF Source PO Update Item Product PO Also
@@ -481,8 +491,20 @@ class GRNoteController extends Controller
             $itemGRNs = GoodReceiptNoteDetail::where('id_good_receipt_notes', $id)->whereIn('status', ['Open', 'Close'])->get();
             foreach($itemGRNs as $item){
                 $detailPR = PurchaseRequisitionsDetail::where('id', $item->id_purchase_requisition_details)->first();
-                $outstanding = (float) $detailPR->outstanding_qty + (float) $detailPR->cancel_qty + (float) $item->receipt_qty;
-                $outstanding = rtrim(rtrim(sprintf("%.6f", $outstanding), '0'), '.');
+                // $outstanding = (float) $detailPR->outstanding_qty + (float) $detailPR->cancel_qty + (float) $item->receipt_qty;
+                // $outstanding = rtrim(rtrim(sprintf("%.6f", $outstanding), '0'), '.');
+
+                $qty = (float) $item->qty;
+                $receiptQty = (float) $item->receipt_qty;
+                // 🔹 Same cap logic as POST
+                $increaseQty = min($receiptQty, $qty);
+                // 🔹 Rollback outstanding
+                $outstanding = (float) $detailPR->outstanding_qty + $increaseQty;
+                // 🔹 Safety: never exceed original qty
+                $outstanding = max($outstanding, 0);
+                // 🔹 Format
+                $outstanding = rtrim(rtrim(sprintf('%.6f', $outstanding), '0'), '.');
+
 
                 if ($data->id_purchase_orders){
                     // IF Source PO Update Item Product PO Also
