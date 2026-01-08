@@ -747,53 +747,53 @@ class DeliveryNoteController extends Controller
         $dn = DeliveryNote::findOrFail($id);
 
 
-        // ----- 2. Rekap qty per SO -----
-        $rekap = DB::table('delivery_note_details as dnd')
-            ->join('sales_orders as so', 'dnd.id_sales_orders', '=', 'so.id')
-            ->join('master_units as mu', 'dnd.id_master_units', '=', 'mu.id')
-            ->join('packing_list_details as pld', 'dnd.id_packing_lists', '=', 'pld.id_packing_lists')
-            ->join('packing_lists as pl', 'pld.id_packing_lists', '=', 'pl.id')
-            ->select(
-                'dnd.id_sales_orders as so_id',
-                'so.qty as so_qty',
-                'mu.unit_code as codeUnit',
-                'pl.packing_number as pl_no',
-                'dnd.weight as dnd_weight',
-                DB::raw('SUM(pld.pcs) AS pl_qty')
-            )
-            ->where('dnd.id_delivery_notes', $dn->id)
-            ->groupBy('so_id', 'so_qty')
-            ->get();
-        // dd($rekap);
+        // // ----- 2. Rekap qty per SO -----
+        // $rekap = DB::table('delivery_note_details as dnd')
+        //     ->join('sales_orders as so', 'dnd.id_sales_orders', '=', 'so.id')
+        //     ->join('master_units as mu', 'dnd.id_master_units', '=', 'mu.id')
+        //     ->join('packing_list_details as pld', 'dnd.id_packing_lists', '=', 'pld.id_packing_lists')
+        //     ->join('packing_lists as pl', 'pld.id_packing_lists', '=', 'pl.id')
+        //     ->select(
+        //         'dnd.id_sales_orders as so_id',
+        //         'so.qty as so_qty',
+        //         'mu.unit_code as codeUnit',
+        //         'pl.packing_number as pl_no',
+        //         'dnd.weight as dnd_weight',
+        //         DB::raw('SUM(pld.pcs) AS pl_qty')
+        //     )
+        //     ->where('dnd.id_delivery_notes', $dn->id)
+        //     ->groupBy('so_id', 'so_qty')
+        //     ->get();
+        // // dd($rekap);
 
-        // ----- 3. Pisahkan match & mismatch berdasarkan unit -----
-        [$match, $mismatch] = $rekap->partition(function ($r) {
-            if ($r->codeUnit === 'KG') {
-                return (int) $r->dnd_weight > (int) $r->so_qty;
-            } else {
-                return (int) $r->pl_qty === (int) $r->so_qty;
-            }
-        });
+        // // ----- 3. Pisahkan match & mismatch berdasarkan unit -----
+        // [$match, $mismatch] = $rekap->partition(function ($r) {
+        //     if ($r->codeUnit === 'KG') {
+        //         return (int) $r->dnd_weight > (int) $r->so_qty;
+        //     } else {
+        //         return (int) $r->pl_qty === (int) $r->so_qty;
+        //     }
+        // });
 
 
-        // ----- 4. Jika ADA mismatch → alert & tidak ubah status apa pun -----
-        if ($mismatch->isNotEmpty()) {
-            $plNo = $mismatch->pluck('pl_no')->implode(', ');
+        // // ----- 4. Jika ADA mismatch → alert & tidak ubah status apa pun -----
+        // if ($mismatch->isNotEmpty()) {
+        //     $plNo = $mismatch->pluck('pl_no')->implode(', ');
 
-            return back()->with([
-                'alert' => "packing list dengan no : {$plNo} memiliki selisih qty sales_orders",
-            ]);
-        }
+        //     return back()->with([
+        //         'alert' => "packing list dengan no : {$plNo} memiliki selisih qty sales_orders",
+        //     ]);
+        // }
 
 
         // ----- 5. Semua match → jalankan perubahan di satu transaction -----
-        DB::transaction(function () use ($dn, $match) {
+        DB::transaction(function () use ($dn) {
 
-            // 5a. Update status SO menjadi Closed
-            SalesOrder::whereIn('id', $match->pluck('so_id'))
-                ->update(['status' => 'Closed']);
+            // // 5a. Update status SO menjadi Closed
+            // SalesOrder::whereIn('id', $match->pluck('so_id'))
+            //     ->update(['status' => 'Closed']);
 
-            // 5b. Update status DN menjadi Posted
+            // 5b. Update status DN menjadi Posted (SO tetap dibiarkan)
             $dn->status = 'Posted';
             $dn->save();
         });
