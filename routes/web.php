@@ -139,6 +139,7 @@ Route::middleware(['auth', 'clear.permission.cache', 'permission:PPIC'])->group(
         // Route::get('/barcode', 'index')->name('barcode');
         Route::get('/create-barcode-mesin', 'create')->name('barcode.create.mesin');
         Route::post('/store-barcode-mesin', 'store')->name('post.create.mesin');
+        Route::get('/show-barcodemesin/{id_barcode}', 'show')->name('show_barcodemesin');
     });
 
     Route::controller(TracabelityController::class)->middleware('permission:PPIC_Barcode')->group(function () {
