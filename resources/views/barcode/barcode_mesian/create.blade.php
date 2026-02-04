@@ -87,6 +87,9 @@
                             <th>Product </th>
                            
                             <th>Creted_at</th>
+                            <th>Jml</th>
+                            <th>Aksi</th>
+                            <th>Aksi</th>
                            
                            
                         </tr>
@@ -94,17 +97,25 @@
             
             
                         <tbody>
-                            @foreach ($wo as $data)
+                            @foreach ($woHasBarcode as $data)
                                 
                             
                         <tr>
                             <td>{{ $loop->iteration }}</td>
                             <td>{{ $data->so_number }}</td>
                             <td>{{ $data->customer_name ?? 'N/A'}}</td>
-                            <td>{{ $data->type_product ?? 'N/A'}}</td>
+                            <td>{{ $data->type_product_barcode ?? 'N/A'}}</td>
                             <td>{{ $data->product_name_aux}} {{ $data->product_name_rm}}</td>
 
                             <td>{{ $data->created_at }}</td>
+                            <td>{{ $data->qty }}</td>
+                            <td>{{ $data->id_barcode }}</td>
+                         
+                            <td>
+                                <a href="{{ route('show_barcodemesin', $data->id_barcode) }}" class="btn btn-primary btn-sm">Detail Barcode</a>
+                              
+
+                            </td>
                         
                             
                         </tr>

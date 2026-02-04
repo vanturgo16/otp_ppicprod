@@ -15,35 +15,61 @@ class BarcodeMesinController extends Controller
 {
     use AuditLogsTrait;
 
-    public function create()
-    {
-        $wo = DB::table('sales_orders as a')
+public function create()
+{
+    $detailSub = DB::table('barcode_detail')
+        ->select('id_barcode', DB::raw('COUNT(*) as barcode_count'))
+        ->groupBy('id_barcode');
+
+    // Base query (dipakai 2x)
+    $baseQuery = DB::table('sales_orders as a')
+        ->leftJoin('barcodes as b', 'a.id', '=', 'b.id_sales_orders')
         ->leftJoin('master_customers as f', 'a.id_master_customers', '=', 'f.id')
-            ->leftJoin(
-                DB::raw("
-                    (SELECT id, rm_code as product_code, description, id_master_units, 'RM' as type_product, 'NULL' as perforasi, weight 
-                    FROM master_raw_materials WHERE status = 'Active' 
-                    UNION ALL 
-                    SELECT id, code as product_code, description, id_master_units, 'AUX' as type_product, 'NULL' as perforasi, '' as weight 
-                    FROM master_tool_auxiliaries) as c"
-                ), 
-                function ($join) {
-                    $join->on('a.id_master_products', '=', 'c.id')
-                        ->on('a.type_product', '=', 'c.type_product');
-                }
-            )
-            ->where('a.status', 'Posted')
-            ->whereNotIn('a.type_product', ['FG', 'WIP'])
-            ->select('a.*','c.description as product_name_aux','c.description as product_name_rm','f.name as customer_name')
-            ->get();
+        ->leftJoin(
+            DB::raw("
+                (SELECT id, rm_code as product_code, description, id_master_units, 'RM' as type_product, 'NULL' as perforasi, weight
+                 FROM master_raw_materials WHERE status = 'Active'
+                 UNION ALL
+                 SELECT id, code as product_code, description, id_master_units, 'AUX' as type_product, 'NULL' as perforasi, '' as weight
+                 FROM master_tool_auxiliaries) as c
+            "),
+            function ($join) {
+                $join->on('a.id_master_products', '=', 'c.id')
+                     ->on('a.type_product', '=', 'c.type_product');
+            }
+        )
+        ->leftJoinSub($detailSub, 'g', function ($join) {
+            $join->on('b.id', '=', 'g.id_barcode');
+        })
+        ->where('a.status', 'Posted')
+        ->whereNotIn('a.type_product', ['FG', 'WIP'])
+        ->select(
+            'a.*',
+            'b.*',
+            'b.type_product as type_product_barcode',
+            'b.id as id_barcode',
+            'c.product_code',
+            'c.description as product_name_aux',
+            'c.description as product_name_rm',
+            'f.name as customer_name',
+            'g.barcode_count'
+        );
 
-        // debugging purposes
-        // dd($wo);
+    // 1) Semua data (barcode ada / belum ada)
+    $wo = (clone $baseQuery)->get();
 
-        $wc = DB::table('master_work_centers')->where('status', 'Active')->get();
+    // 2) Hanya yang barcode-nya SUDAH ADA
+    // Pilihan paling aman: pastikan b.id tidak null
+    $woHasBarcode = (clone $baseQuery)
+        ->whereNotNull('b.id')
+        ->get();
 
-        return view('barcode.barcode_mesian.create', compact('wo', 'wc'));
-    }
+    $wc = DB::table('master_work_centers')->where('status', 'Active')->get();
+
+    // Kirim dua variabel ke view
+    return view('barcode.barcode_mesian.create', compact('wo', 'woHasBarcode', 'wc'));
+}
+
 
     public function store(Request $request)
     {
@@ -109,4 +135,68 @@ class BarcodeMesinController extends Controller
         }
     }
     
+public function show($id)
+{
+    $barcode = DB::table('barcode_detail as bd')
+        ->join('barcodes as b', 'bd.id_barcode', '=', 'b.id')
+        ->leftJoin('sales_orders as so', 'b.id_sales_orders', '=', 'so.id')
+        ->leftJoin(DB::raw("
+            (
+                SELECT 
+                    id, 
+                    rm_code as product_code, 
+                    description, 
+                    id_master_units, 
+                    'RM' as type_product, 
+                    'NULL' as perforasi, 
+                    weight 
+                FROM master_raw_materials 
+                WHERE status = 'Active'
+                
+                UNION ALL 
+                
+                SELECT 
+                    id, 
+                    code as product_code, 
+                    description, 
+                    id_master_units, 
+                    'AUX' as type_product, 
+                    'NULL' as perforasi, 
+                    '' as weight 
+                FROM master_tool_auxiliaries
+            ) as mp
+        "), function ($join) {
+            $join->on('b.id_master_products', '=', 'mp.id');
+        })
+        ->leftJoin('master_units as mu', 'mp.id_master_units', '=', 'mu.id')
+        ->leftJoin('master_customers as mc', 'b.id_master_customers', '=', 'mc.id')
+        ->select(
+            'bd.barcode_number',
+            'bd.created_at as tgl_buat',
+            'b.shift',
+
+            'so.so_number',
+            'so.so_type',
+            'so.type_product',
+            'so.qty as so_qty',
+            'so.id_order_confirmations',
+
+            'mc.name as nm_cust',
+
+            'mp.product_code',
+            'mp.description',
+            'mp.perforasi',
+            'mp.weight',
+
+            'mu.unit_code as unit_code',
+            
+        )
+        ->where('bd.id_barcode', $id)
+        ->first();
+
+
+    return view('barcode.print_barcodemesin', compact('barcode'));
+}
+
+
 }
