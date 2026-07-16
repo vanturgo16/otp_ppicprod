@@ -12,6 +12,48 @@ use DataTables;
 
 class WarehouseController extends Controller
 {
+
+    private function isRawMaterialType(?string $typeProduct): bool
+    {
+        return in_array($typeProduct, ['RM', 'RAW'], true);
+    }
+
+    private function hasRawMaterialStatus(?string $status): bool
+    {
+        $status = (string) $status;
+
+        return stripos($status, 'RM') !== false || stripos($status, 'RAW') !== false;
+    }
+
+    private function syncRmReportPackingListStatus(string $barcode, string $status): void
+    {
+        if (!DB::getSchemaBuilder()->hasTable('report_rm_aux_other_production_results')) {
+            return;
+        }
+
+        $table = DB::table('report_rm_aux_other_production_results');
+
+        if (!$this->tableHasColumn($table, 'status')) {
+            return;
+        }
+
+        $table
+            ->where('barcode_end', $barcode)
+            ->update([
+                'status' => $status,
+                'updated_at' => now(),
+            ]);
+    }
+
+    private function tableHasColumn($table, string $column): bool
+    {
+        try {
+            return DB::getSchemaBuilder()->hasColumn($table->from, $column);
+        } catch (\Throwable $exception) {
+            return false;
+        }
+    }
+
     public function index(Request $request)
     {
         if ($request->ajax()) {
@@ -179,8 +221,9 @@ class WarehouseController extends Controller
         $insertedId = null;
         $productName = null;
         $isBag = false;
+        $hasRmReportTable = DB::getSchemaBuilder()->hasTable('report_rm_aux_other_production_results');
 
-        $barcodeRecord = DB::table('barcodes')
+        $barcodeQuery = DB::table('barcodes')
             ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
             ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
             ->when($changeSo, function ($query) use ($barcode, $changeSo) {
@@ -206,6 +249,7 @@ class WarehouseController extends Controller
                 DB::raw('report_sf_production_results.weight as sf_weight'),
                 DB::raw('report_blow_production_results.weight as blow_weight'),
                 DB::raw('master_raw_materials.weight as raw_weight'),
+                DB::raw($hasRmReportTable ? 'COALESCE(rrm.total_qty_use, 0) as rm_qty_use' : '0 as rm_qty_use'),
                 DB::raw('COALESCE(rbp.total_amount_result, 1) as total_amount_result'),
                 DB::raw('COALESCE(rbp.total_wrap, 0) as total_wrap'),
                 DB::raw('COALESCE(rbp.total_weight_starting, 0) as total_weight_starting')
@@ -226,10 +270,20 @@ class WarehouseController extends Controller
             })
             ->leftJoin('master_raw_materials', function ($join) {
                 $join->on('sales_orders.id_master_products', '=', 'master_raw_materials.id')
-                    ->where('barcodes.type_product', 'RAW');
+                    ->whereIn('barcodes.type_product', ['RM', 'RAW']);
             })
-            ->leftJoin(DB::raw('(SELECT barcode, SUM(amount_result) as total_amount_result, SUM(weight_starting) as total_weight_starting, SUM(wrap) as total_wrap FROM report_bag_production_results GROUP BY barcode) as rbp'), 'barcode_detail.barcode_number', '=', 'rbp.barcode')
-            ->first();
+            ->leftJoin(DB::raw('(SELECT barcode, SUM(amount_result) as total_amount_result, SUM(weight_starting) as total_weight_starting, SUM(wrap) as total_wrap FROM report_bag_production_results GROUP BY barcode) as rbp'), 'barcode_detail.barcode_number', '=', 'rbp.barcode');
+
+        if ($hasRmReportTable) {
+            $barcodeQuery->leftJoin(
+                DB::raw('(SELECT barcode_end, SUM(qty_use) as total_qty_use FROM report_rm_aux_other_production_results GROUP BY barcode_end) as rrm'),
+                'barcode_detail.barcode_number',
+                '=',
+                'rrm.barcode_end'
+            );
+        }
+
+        $barcodeRecord = $barcodeQuery->first();
         // dd($barcodeRecord);
 
 
@@ -239,7 +293,15 @@ class WarehouseController extends Controller
             $isBag = stripos($barcodeRecord->status, 'bag') !== false;
             $pcs = $barcodeRecord->total_amount_result;
 
-            $newStock = $barcodeRecord->stock - ($isBag ? $pcs : 1);
+            $isRawMaterial = $this->isRawMaterialType($barcodeRecord->type_product);
+
+            $stockRequirement = $barcodeRecord->type_product === 'AUX'
+                ? $barcodeRecord->qty
+                : ($isRawMaterial
+                    ? ($barcodeRecord->rm_qty_use > 0 ? $barcodeRecord->rm_qty_use : $barcodeRecord->qty)
+                    : ($isBag ? $pcs : 1));
+
+            $newStock = $barcodeRecord->stock - $stockRequirement;
             // dd($newStock);
             if ($newStock < 0) {
                 return response()->json(['exists' => false, 'status' => false, 'message' => 'Stok tidak mencukupi']);
@@ -251,8 +313,8 @@ class WarehouseController extends Controller
                 $finalWeight = $barcodeRecord->sf_weight;
             } elseif (stripos($barcodeRecord->status, 'BLW') !== false) {
                 $finalWeight = $barcodeRecord->blow_weight;
-            } elseif (stripos($barcodeRecord->status, 'RAW') !== false) {
-                $finalWeight = $barcodeRecord->raw_weight;
+            } elseif ($this->hasRawMaterialStatus($barcodeRecord->status)) {
+                $finalWeight = $barcodeRecord->rm_qty_use > 0 ? $barcodeRecord->rm_qty_use : $barcodeRecord->raw_weight;
             } elseif (stripos($barcodeRecord->status, 'AUX') !== false) {
                 $finalWeight = 0;
             }
@@ -270,7 +332,7 @@ class WarehouseController extends Controller
                 'total_wrap' => $barcodeRecord->total_wrap,
                 'id_packing_lists' => $packingListId,
                 'weight' => $weightValue,
-                'pcs' => ($barcodeRecord->type_product === 'AUX' || $barcodeRecord->type_product === 'RAW') ? $barcodeRecord->qty : ($isBag ? $pcs : 1),
+                'pcs' => ($barcodeRecord->type_product === 'AUX' || $isRawMaterial) ? $stockRequirement : ($isBag ? $pcs : 1),
                 'sts_start' => $barcodeRecord->status,
                 'created_at' => now(),
                 'updated_at' => now()
@@ -288,7 +350,7 @@ class WarehouseController extends Controller
                     ->where('id_master_products', $barcodeRecord->product_id)
                     ->first();
 
-                $qtyToInsert = ($barcodeRecord->type_product === 'AUX' || $barcodeRecord->type_product === 'RAW') ? $barcodeRecord->qty : ($isBag ? $pcs : 1);
+                $qtyToInsert = ($barcodeRecord->type_product === 'AUX' || $isRawMaterial) ? $stockRequirement : ($isBag ? $pcs : 1);
                 $weightToInsert = $weightValue;
 
                 if ($existingHistory) {
@@ -323,8 +385,8 @@ class WarehouseController extends Controller
             // ambil data weight dari tabel packing_list_details
             $weightDetail = $weightValue;
 
-            $stockUpdateQty = ($barcodeRecord->type_product === 'AUX' || $barcodeRecord->type_product === 'RAW')
-                ? $barcodeRecord->qty
+            $stockUpdateQty = ($barcodeRecord->type_product === 'AUX' || $isRawMaterial)
+                ? $stockRequirement
                 : ($isBag ? $pcs : 1);
 
             switch ($barcodeRecord->type_product) {
@@ -355,6 +417,7 @@ class WarehouseController extends Controller
                         ]);
                     break;
 
+                case 'RM':
                 case 'RAW':
                     DB::table('master_raw_materials')
                         ->where('id', $barcodeRecord->product_id)
@@ -383,6 +446,10 @@ class WarehouseController extends Controller
             }
 
             DB::table('barcode_detail')->where('barcode_number', $barcode)->update(['status' => 'Packing List']);
+
+            if ($isRawMaterial) {
+                $this->syncRmReportPackingListStatus($barcode, 'Packing List');
+            }
         } else {
             $message = $changeSo ? 'Barcode tidak sesuai dengan SO yang diberikan' : 'Barcode tidak sesuai dengan customer/SO yang diberikan';
             return response()->json(['exists' => false, 'status' => false, 'message' => $message]);
@@ -478,7 +545,7 @@ class WarehouseController extends Controller
                 })
                 ->leftJoin('master_raw_materials', function ($join) {
                     $join->on('sales_orders.id_master_products', '=', 'master_raw_materials.id')
-                        ->where('barcodes.type_product', 'RAW');
+                        ->whereIn('barcodes.type_product', ['RM', 'RAW']);
                 })
                 ->where('barcode_detail.barcode_number', $barcodeDetail->barcode)
                 ->select(
@@ -516,8 +583,8 @@ class WarehouseController extends Controller
                     ->value('weight');
                 $weightToRemove = $weightDetail;
 
-                $stockUpdateQty = ($barcodeRecord->type_product === 'AUX' || $barcodeRecord->type_product === 'RAW')
-                    ? $barcodeRecord->qty
+                $stockUpdateQty = ($barcodeRecord->type_product === 'AUX' || $this->isRawMaterialType($barcodeRecord->type_product))
+                    ? $barcodeDetail->pcs
                     : ($isBag ? $pcs : 1);
 
                 switch ($barcodeRecord->type_product) {
@@ -548,6 +615,7 @@ class WarehouseController extends Controller
                             ]);
                         break;
 
+                    case 'RM':
                     case 'RAW':
                         DB::table('master_raw_materials')
                             ->where('id', $barcodeRecord->product_id)
@@ -616,6 +684,10 @@ class WarehouseController extends Controller
                     ->where('barcode_number', $barcode)
                     ->update(['status' => $barcodeDetail->sts_start]);
 
+                if ($this->isRawMaterialType($barcodeRecord->type_product)) {
+                    $this->syncRmReportPackingListStatus($barcode, $barcodeDetail->sts_start);
+                }
+
                 // Hapus entri barcode dari tabel packing_list_details
                 DB::table('packing_list_details')->where('id', $id)->delete();
 
@@ -647,7 +719,7 @@ class WarehouseController extends Controller
             })
             ->leftJoin('master_raw_materials', function ($join) {
                 $join->on('barcodes.id_master_products', '=', 'master_raw_materials.id')
-                    ->where('barcodes.type_product', '=', 'RAW');
+                    ->whereIn('barcodes.type_product', ['RM', 'RAW']);
             })
             ->where('packing_list_details.id_packing_lists', $id)
             ->select(
@@ -764,9 +836,27 @@ class WarehouseController extends Controller
                             ->where('barcode_number', $oldDetail->barcode)
                             ->update(['status' => $oldDetail->sts_start]);
 
+                        $oldTypeProduct = DB::table('barcodes')
+                            ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
+                            ->where('barcode_detail.barcode_number', $oldDetail->barcode)
+                            ->value('barcodes.type_product');
+
+                        if ($this->isRawMaterialType($oldTypeProduct)) {
+                            $this->syncRmReportPackingListStatus($oldDetail->barcode, $oldDetail->sts_start);
+                        }
+
                         DB::table('barcode_detail')
                             ->where('barcode_number', $barcode)
                             ->update(['status' => 'Packing List']);
+
+                        $newTypeProduct = DB::table('barcodes')
+                            ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
+                            ->where('barcode_detail.barcode_number', $barcode)
+                            ->value('barcodes.type_product');
+
+                        if ($this->isRawMaterialType($newTypeProduct)) {
+                            $this->syncRmReportPackingListStatus($barcode, 'Packing List');
+                        }
 
                         DB::table('packing_list_details')->where('id', $id)->update([$field => $value]);
 
@@ -883,7 +973,7 @@ class WarehouseController extends Controller
             })
             ->leftJoin('master_raw_materials', function ($join) {
                 $join->on('sales_orders.id_master_products', '=', 'master_raw_materials.id')
-                    ->where('barcodes.type_product', '=', 'RAW');
+                    ->whereIn('barcodes.type_product', ['RM', 'RAW']);
             })
             ->join('master_units', function ($join) {
                 $join->on('master_product_fgs.id_master_units', '=', 'master_units.id')
@@ -1026,6 +1116,7 @@ class WarehouseController extends Controller
                         'FG'  => 'master_product_fgs',
                         'WIP' => 'master_wips',
                         'AUX' => 'master_tool_auxiliaries',
+                        'RM'  => 'master_raw_materials',
                         'RAW' => 'master_raw_materials',
                     ];
 
@@ -1048,6 +1139,10 @@ class WarehouseController extends Controller
                     DB::table('barcode_detail')
                         ->where('barcode_number', $detail->barcode)
                         ->update(['status' => $detail->sts_start]);
+
+                    if ($this->isRawMaterialType($barcodeRecord->type_product)) {
+                        $this->syncRmReportPackingListStatus($detail->barcode, $detail->sts_start);
+                    }
                 }
             }
 
