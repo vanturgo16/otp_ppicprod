@@ -16,6 +16,11 @@ use function Laravel\Prompts\select;
 class DeliveryNoteController extends Controller
 {
 
+    private function rawMaterialTypeAliases(): array
+    {
+        return ['RM', 'RAW'];
+    }
+
     public function list(Request $request)
     {
         if ($request->ajax()) {
@@ -222,7 +227,7 @@ class DeliveryNoteController extends Controller
                 })
                 ->leftJoin('master_raw_materials', function ($join) {
                     $join->on('sales_orders.id_master_products', '=', 'master_raw_materials.id')
-                        ->where('barcodes.type_product', '=', 'RAW');
+                        ->whereIn('barcodes.type_product', $this->rawMaterialTypeAliases());
                 })
 
                 // Menghubungkan unit produk secara dinamis
@@ -240,7 +245,7 @@ class DeliveryNoteController extends Controller
 
                 // Pilih kolom yang diperlukan
                 ->select(
-                    DB::raw('COUNT(packing_list_details.barcode) as total_qty'),
+                    DB::raw('SUM(packing_list_details.pcs) as total_qty'),
                     DB::raw('SUM(packing_list_details.weight) as total_weight'),
                     'master_units.id as id_master_unit',
                     'packing_lists.id_sales_orders as soId',
@@ -558,7 +563,7 @@ class DeliveryNoteController extends Controller
             })
             ->leftJoin('master_raw_materials', function ($join) {
                 $join->on('sales_orders.id_master_products', '=', 'master_raw_materials.id')
-                    ->where('delivery_note_details.type_product', '=', 'RAW');
+                    ->whereIn('delivery_note_details.type_product', $this->rawMaterialTypeAliases());
             })
 
             // Join ke master_units dari masing-masing master table
