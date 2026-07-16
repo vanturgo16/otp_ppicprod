@@ -7,7 +7,7 @@
         <p></p>
         {{-- <button onclick="window.print()" class="btn btn-primary no-print">Print</button> --}}
         <div class="barcode-print">
-          
+            @foreach ($barcodeDetails as $barcode)
             <div class="barcode-item">
               
 <table class="barcode-table">
@@ -133,7 +133,7 @@
 <img class="qr-code" src="data:image/png;base64,{{ DNS2D::getBarcodePNG($barcode->barcode_number, 'QRCODE', 4, 4) }}" alt="QR Code" />
 
             </div>
-           
+            @endforeach
         </div>
     </div>
 </div>
