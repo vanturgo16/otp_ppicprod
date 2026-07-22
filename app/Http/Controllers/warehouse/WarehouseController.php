@@ -266,7 +266,7 @@ class WarehouseController extends Controller
             })
             ->leftJoin('master_tool_auxiliaries', function ($join) {
                 $join->on('sales_orders.id_master_products', '=', 'master_tool_auxiliaries.id')
-                    ->where('barcodes.type_product', 'AUX');
+                    ->whereIn('barcodes.type_product', ['AUX', 'MC']);
             })
             ->leftJoin('master_raw_materials', function ($join) {
                 $join->on('sales_orders.id_master_products', '=', 'master_raw_materials.id')
@@ -295,7 +295,7 @@ class WarehouseController extends Controller
 
             $isRawMaterial = $this->isRawMaterialType($barcodeRecord->type_product);
 
-            $stockRequirement = $barcodeRecord->type_product === 'AUX'
+            $stockRequirement = in_array($barcodeRecord->type_product, ['AUX', 'MC'])
                 ? $barcodeRecord->qty
                 : ($isRawMaterial
                     ? ($barcodeRecord->rm_qty_use > 0 ? $barcodeRecord->rm_qty_use : $barcodeRecord->qty)
@@ -315,7 +315,7 @@ class WarehouseController extends Controller
                 $finalWeight = $barcodeRecord->blow_weight;
             } elseif ($this->hasRawMaterialStatus($barcodeRecord->status)) {
                 $finalWeight = $barcodeRecord->rm_qty_use > 0 ? $barcodeRecord->rm_qty_use : $barcodeRecord->raw_weight;
-            } elseif (stripos($barcodeRecord->status, 'AUX') !== false) {
+            } elseif (stripos($barcodeRecord->status, 'AUX') !== false || stripos($barcodeRecord->status, 'MC') !== false) {
                 $finalWeight = 0;
             }
 
@@ -332,7 +332,7 @@ class WarehouseController extends Controller
                 'total_wrap' => $barcodeRecord->total_wrap,
                 'id_packing_lists' => $packingListId,
                 'weight' => $weightValue,
-                'pcs' => ($barcodeRecord->type_product === 'AUX' || $isRawMaterial) ? $stockRequirement : ($isBag ? $pcs : 1),
+                'pcs' => (in_array($barcodeRecord->type_product, ['AUX', 'MC']) || $isRawMaterial) ? $stockRequirement : ($isBag ? $pcs : 1),
                 'sts_start' => $barcodeRecord->status,
                 'created_at' => now(),
                 'updated_at' => now()
@@ -350,7 +350,7 @@ class WarehouseController extends Controller
                     ->where('id_master_products', $barcodeRecord->product_id)
                     ->first();
 
-                $qtyToInsert = ($barcodeRecord->type_product === 'AUX' || $isRawMaterial) ? $stockRequirement : ($isBag ? $pcs : 1);
+                $qtyToInsert = (in_array($barcodeRecord->type_product, ['AUX', 'MC']) || $isRawMaterial) ? $stockRequirement : ($isBag ? $pcs : 1);
                 $weightToInsert = $weightValue;
 
                 if ($existingHistory) {
@@ -385,7 +385,7 @@ class WarehouseController extends Controller
             // ambil data weight dari tabel packing_list_details
             $weightDetail = $weightValue;
 
-            $stockUpdateQty = ($barcodeRecord->type_product === 'AUX' || $isRawMaterial)
+            $stockUpdateQty = (in_array($barcodeRecord->type_product, ['AUX', 'MC']) || $isRawMaterial)
                 ? $stockRequirement
                 : ($isBag ? $pcs : 1);
 
@@ -409,6 +409,7 @@ class WarehouseController extends Controller
                     break;
 
                 case 'AUX':
+                case 'MC':
                     DB::table('master_tool_auxiliaries')
                         ->where('id', $barcodeRecord->product_id)
                         ->update([
@@ -541,7 +542,7 @@ class WarehouseController extends Controller
                 })
                 ->leftJoin('master_tool_auxiliaries', function ($join) {
                     $join->on('sales_orders.id_master_products', '=', 'master_tool_auxiliaries.id')
-                        ->where('barcodes.type_product', 'AUX');
+                        ->whereIn('barcodes.type_product', ['AUX', 'MC']);
                 })
                 ->leftJoin('master_raw_materials', function ($join) {
                     $join->on('sales_orders.id_master_products', '=', 'master_raw_materials.id')
@@ -583,7 +584,7 @@ class WarehouseController extends Controller
                     ->value('weight');
                 $weightToRemove = $weightDetail;
 
-                $stockUpdateQty = ($barcodeRecord->type_product === 'AUX' || $this->isRawMaterialType($barcodeRecord->type_product))
+                $stockUpdateQty = (in_array($barcodeRecord->type_product, ['AUX', 'MC']) || $this->isRawMaterialType($barcodeRecord->type_product))
                     ? $barcodeDetail->pcs
                     : ($isBag ? $pcs : 1);
 
@@ -607,6 +608,7 @@ class WarehouseController extends Controller
                         break;
 
                     case 'AUX':
+                    case 'MC':
                         DB::table('master_tool_auxiliaries')
                             ->where('id', $barcodeRecord->product_id)
                             ->update([
@@ -715,7 +717,7 @@ class WarehouseController extends Controller
             })
             ->leftJoin('master_tool_auxiliaries', function ($join) {
                 $join->on('barcodes.id_master_products', '=', 'master_tool_auxiliaries.id')
-                    ->where('barcodes.type_product', '=', 'AUX');
+                    ->whereIn('barcodes.type_product', ['AUX', 'MC']);
             })
             ->leftJoin('master_raw_materials', function ($join) {
                 $join->on('barcodes.id_master_products', '=', 'master_raw_materials.id')
@@ -969,7 +971,7 @@ class WarehouseController extends Controller
             })
             ->leftJoin('master_tool_auxiliaries', function ($join) {
                 $join->on('sales_orders.id_master_products', '=', 'master_tool_auxiliaries.id')
-                    ->where('barcodes.type_product', '=', 'AUX');
+                    ->whereIn('barcodes.type_product', ['AUX', 'MC']);
             })
             ->leftJoin('master_raw_materials', function ($join) {
                 $join->on('sales_orders.id_master_products', '=', 'master_raw_materials.id')
@@ -1004,6 +1006,7 @@ class WarehouseController extends Controller
             'FG' => 'master_product_fgs as fg',
             'WIP' => 'master_wips as wip',
             'AUX' => 'master_tool_auxiliaries as aux',
+            'MC' => 'master_tool_auxiliaries as aux',
             'RAW' => 'master_raw_materials as raw',
         ];
 
@@ -1116,6 +1119,7 @@ class WarehouseController extends Controller
                         'FG'  => 'master_product_fgs',
                         'WIP' => 'master_wips',
                         'AUX' => 'master_tool_auxiliaries',
+                        'MC'  => 'master_tool_auxiliaries',
                         'RM'  => 'master_raw_materials',
                         'RAW' => 'master_raw_materials',
                     ];
