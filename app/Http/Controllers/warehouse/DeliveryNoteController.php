@@ -223,7 +223,7 @@ class DeliveryNoteController extends Controller
                 })
                 ->leftJoin('master_tool_auxiliaries', function ($join) {
                     $join->on('sales_orders.id_master_products', '=', 'master_tool_auxiliaries.id')
-                        ->where('barcodes.type_product', '=', 'AUX');
+                        ->whereIn('barcodes.type_product', ['AUX', 'MC']);
                 })
                 ->leftJoin('master_raw_materials', function ($join) {
                     $join->on('sales_orders.id_master_products', '=', 'master_raw_materials.id')
@@ -559,7 +559,7 @@ class DeliveryNoteController extends Controller
             })
             ->leftJoin('master_tool_auxiliaries', function ($join) {
                 $join->on('sales_orders.id_master_products', '=', 'master_tool_auxiliaries.id')
-                    ->where('delivery_note_details.type_product', '=', 'AUX');
+                    ->whereIn('delivery_note_details.type_product', ['AUX', 'MC']);
             })
             ->leftJoin('master_raw_materials', function ($join) {
                 $join->on('sales_orders.id_master_products', '=', 'master_raw_materials.id')
