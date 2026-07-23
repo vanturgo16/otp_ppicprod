@@ -180,84 +180,146 @@
                 </table>
             </div>
 
-            <div class="row mt-4">
-                <div class="col-12">
-                    <table class="main-table">
-                        <thead>
-                            <tr>
-                                <th>No</th>
-                                <th>Item Code</th>
-                                <th>Description</th>
-                                <th>Barcode</th>
-                                <th>No. SO</th>
-                                <th>Perforasi</th>
-                                <th>Isi Dus</th>
-                                <th>Berat</th>
-                                @if (collect($details)->contains(fn($d) => stripos($d->sts_start, 'bag') !== false))
-                                    <th>Wrap</th>
-                                    <th>PCS/Wrap</th>
-                                @endif
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @php
-                                $subtotals = [];
-                                $totalWeight = 0;
-                                $totalWrap = 0;
-                            @endphp
+            @php
+                $isRmAuxOther = collect($details)->contains(function($d) {
+                    $type = strtoupper($d->type_product ?? '');
+                    return in_array($type, ['RM', 'RAW', 'AUX', 'MC', 'SPAREPART', 'OTHER']);
+                });
+            @endphp
 
-                            @foreach ($details as $index => $detail)
+            @if ($isRmAuxOther)
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <table class="main-table">
+                            <thead>
                                 <tr>
-                                    <td>{{ $index + 1 }}</td>
-                                    <td>{{ $detail->product_code }}</td>
-                                    <td>{{ $detail->description }}</td>
-                                    <td>{{ $detail->barcode_number }}</td>
-                                    <td>{{ $detail->so_number }}
-                                    <td>{{ $detail->perforasi }}
-                                    <td>{{ $detail->pcs . ' ' . $detail->unit }}</td>
-                                    <td>{{ $detail->weight }} KG</td>
-                                    {{-- <td>{{ stripos($detail->sts_start, 'bag') ? $detail->weight : $detail->production_weight }} KG</td> --}}
-                                    @if (stripos($detail->sts_start, 'bag') !== false)
-                                        <td>{{ $detail->total_wrap }}</td>
-                                        <td>{{ $detail->pcs / $detail->total_wrap}}</td>
-                                    @endif
-
-                                    @php
-                                        // Subtotal per unit
-                                        if (!isset($subtotals[$detail->unit])) {
-                                            $subtotals[$detail->unit] = 0;
-                                        }
-                                        $subtotals[$detail->unit] += $detail->pcs;
-
-                                        // Total berat dan wrap
-                                        // $totalWeight += stripos($detail->sts_start, 'bag')
-                                        //     ? $detail->weight
-                                        //     : $detail->production_weight;
-                                        $totalWeight += $detail->weight;
-
-                                        if (stripos($detail->sts_start, 'bag') !== false) {
-                                            $totalWrap += $detail->total_wrap;
-                                        }
-                                    @endphp
+                                    <th style="text-align: center; width: 40px;">No</th>
+                                    <th>Item Code</th>
+                                    <th>Description</th>
+                                    <th>Barcode</th>
+                                    <th>No. SO</th>
+                                    <th>Cust Product Code</th>
+                                    <th style="text-align: right;">Isi</th>
+                                    <th>No Batch</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                            </thead>
+                            <tbody>
+                                @php
+                                    $totalIsi = 0;
+                                    $primaryUnit = '';
+                                @endphp
 
-            <div class="row mt-4">
-                <div class="col-12" style="float: right; text-align: right;">
-                    @foreach ($subtotals as $unit => $subtotal)
-                        <p><strong>Subtotal ({{ $unit }}):</strong> {{ number_format($subtotal) }}
-                            {{ $unit }}</p>
-                    @endforeach
-                    <p><strong>Total Berat:</strong> {{ number_format($totalWeight, 2) }} KG</p>
-                    @if ($totalWrap > 0)
-                        <p><strong>Total Wrap:</strong> {{ number_format($totalWrap) }}</p>
-                    @endif
+                                @foreach ($details as $index => $detail)
+                                    @php
+                                        $unitStr = strtoupper($detail->unit_code ?? $detail->unit ?? 'KG');
+                                        if (!$primaryUnit) {
+                                            $primaryUnit = $unitStr;
+                                        }
+                                        $isiVal = floatval($detail->weight > 0 ? $detail->weight : $detail->pcs);
+                                        $totalIsi += $isiVal;
+                                        
+                                        $formattedIsi = (floor($isiVal) == $isiVal) ? number_format($isiVal, 0, ',', '.') : number_format($isiVal, 2, ',', '.');
+                                    @endphp
+                                    <tr>
+                                        <td style="text-align: center;">{{ $index + 1 }}</td>
+                                        <td>{{ $detail->product_code ?? '-' }}</td>
+                                        <td>{{ $detail->description ?? '-' }}</td>
+                                        <td>{{ $detail->barcode_number }}</td>
+                                        <td>{{ $detail->so_number }}</td>
+                                        <td>{{ $detail->cust_product_code ?? '-' }}</td>
+                                        <td style="text-align: right;">{{ $formattedIsi }} {{ $unitStr }}</td>
+                                        <td>{{ $detail->batch_number ?? '-' }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
+
+                <div class="row mt-4">
+                    <div class="col-12" style="float: right; text-align: right;">
+                        @php
+                            $formattedTotalIsi = (floor($totalIsi) == $totalIsi) ? number_format($totalIsi, 0, ',', '.') : number_format($totalIsi, 2, ',', '.');
+                        @endphp
+                        <p style="font-size: 14px; font-weight: bold; margin-top: 15px;">
+                            Total : {{ $formattedTotalIsi }} {{ $primaryUnit }}
+                        </p>
+                    </div>
+                </div>
+            @else
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <table class="main-table">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Item Code</th>
+                                    <th>Description</th>
+                                    <th>Barcode</th>
+                                    <th>No. SO</th>
+                                    <th>Perforasi</th>
+                                    <th>Isi Dus</th>
+                                    <th>Berat</th>
+                                    @if (collect($details)->contains(fn($d) => stripos($d->sts_start, 'bag') !== false))
+                                        <th>Wrap</th>
+                                        <th>PCS/Wrap</th>
+                                    @endif
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php
+                                    $subtotals = [];
+                                    $totalWeight = 0;
+                                    $totalWrap = 0;
+                                @endphp
+
+                                @foreach ($details as $index => $detail)
+                                    <tr>
+                                        <td>{{ $index + 1 }}</td>
+                                        <td>{{ $detail->product_code }}</td>
+                                        <td>{{ $detail->description }}</td>
+                                        <td>{{ $detail->barcode_number }}</td>
+                                        <td>{{ $detail->so_number }}</td>
+                                        <td>{{ $detail->perforasi }}</td>
+                                        <td>{{ $detail->pcs . ' ' . ($detail->unit_code ?? $detail->unit) }}</td>
+                                        <td>{{ $detail->weight }} KG</td>
+                                        @if (stripos($detail->sts_start, 'bag') !== false)
+                                            <td>{{ $detail->total_wrap }}</td>
+                                            <td>{{ $detail->pcs / $detail->total_wrap}}</td>
+                                        @endif
+
+                                        @php
+                                            $unitKey = $detail->unit_code ?? $detail->unit ?? 'PCS';
+                                            if (!isset($subtotals[$unitKey])) {
+                                                $subtotals[$unitKey] = 0;
+                                            }
+                                            $subtotals[$unitKey] += $detail->pcs;
+                                            $totalWeight += $detail->weight;
+
+                                            if (stripos($detail->sts_start, 'bag') !== false) {
+                                                $totalWrap += $detail->total_wrap;
+                                            }
+                                        @endphp
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-12" style="float: right; text-align: right;">
+                        @foreach ($subtotals as $unit => $subtotal)
+                            <p><strong>Subtotal ({{ $unit }}):</strong> {{ number_format($subtotal) }}
+                                {{ $unit }}</p>
+                        @endforeach
+                        <p><strong>Total Berat:</strong> {{ number_format($totalWeight, 2) }} KG</p>
+                        @if ($totalWrap > 0)
+                            <p><strong>Total Wrap:</strong> {{ number_format($totalWrap) }}</p>
+                        @endif
+                    </div>
+                </div>
+            @endif
 
             <div class="signature-row">
                 <div class="signature">

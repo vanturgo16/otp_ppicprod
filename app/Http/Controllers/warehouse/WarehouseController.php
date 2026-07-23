@@ -922,31 +922,7 @@ class WarehouseController extends Controller
             ->join('barcode_detail', 'packing_list_details.barcode', '=', 'barcode_detail.barcode_number')
             ->join('barcodes', 'barcode_detail.id_barcode', '=', 'barcodes.id')
             ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
-
-            // Subquery untuk mendapatkan berat berdasarkan kondisi
-            // ->leftJoinSub(
-            //     DB::table('report_blow_production_results')
-            //         ->select('barcode', 'weight as blow_weight'),
-            //     'blow_results',
-            //     function ($join) {
-            //         $join->on('barcode_detail.barcode_number', '=', 'blow_results.barcode')
-            //             ->where('packing_list_details.sts_start', 'like', '%BLW');
-            //     }
-            // )
-            // ->leftJoinSub(
-            //     DB::table('report_sf_production_results')
-            //         ->select('barcode', 'weight as sf_weight'),
-            //     'sf_results',
-            //     function ($join) {
-            //         $join->on('barcode_detail.barcode_number', '=', 'sf_results.barcode')
-            //             ->where(function ($query) {
-            //                 $query->where('packing_list_details.sts_start', 'like', '%FLD')
-            //                     ->orWhere('packing_list_details.sts_start', 'like', '%SLT');
-            //             });
-            //     }
-            // )
-
-            // Select kolom yang diambil
+            ->leftJoin('report_rm_aux_other_production_results as rrm', 'packing_list_details.barcode', '=', 'rrm.barcode_end')
             ->select(
                 'barcodes.type_product',
                 DB::raw('COALESCE(master_product_fgs.product_code, master_wips.wip_code, master_tool_auxiliaries.code, master_raw_materials.rm_code) as product_code'),
@@ -955,11 +931,13 @@ class WarehouseController extends Controller
                 DB::raw('COALESCE(master_product_fgs.description, master_wips.description, master_tool_auxiliaries.description, master_raw_materials.description) as description'),
                 'barcode_detail.barcode_number',
                 'sales_orders.so_number',
+                'sales_orders.cust_product_code',
                 'master_units.unit',
+                'master_units.unit_code',
                 'packing_list_details.pcs',
                 'packing_list_details.weight',
-                'packing_list_details.total_wrap'
-                // DB::raw('COALESCE(blow_results.blow_weight, sf_results.sf_weight, master_raw_materials.weight ) as production_weight')
+                'packing_list_details.total_wrap',
+                DB::raw("COALESCE(rrm.product, rrm.lot_number, packing_list_details.sts_start, '-') as batch_number")
             )
             ->leftJoin('master_product_fgs', function ($join) {
                 $join->on('sales_orders.id_master_products', '=', 'master_product_fgs.id')
@@ -977,15 +955,15 @@ class WarehouseController extends Controller
                 $join->on('sales_orders.id_master_products', '=', 'master_raw_materials.id')
                     ->whereIn('barcodes.type_product', ['RM', 'RAW']);
             })
-            ->join('master_units', function ($join) {
-                $join->on('master_product_fgs.id_master_units', '=', 'master_units.id')
+            ->leftJoin('master_units', function ($join) {
+                $join->on('sales_orders.id_master_units', '=', 'master_units.id')
+                    ->orOn('master_product_fgs.id_master_units', '=', 'master_units.id')
                     ->orOn('master_wips.id_master_units', '=', 'master_units.id')
                     ->orOn('master_raw_materials.id_master_units', '=', 'master_units.id')
                     ->orOn('master_tool_auxiliaries.id_master_units', '=', 'master_units.id');
             })
             ->where('packing_list_details.id_packing_lists', $id)
             ->get();
-        // dd($packingList, $details);
 
         return view('warehouse.print_packing_list', compact('packingList', 'details'));
     }
