@@ -52,22 +52,27 @@ public function create()
             'c.description as product_name_aux',
             'c.description as product_name_rm',
             'f.name as customer_name',
-            'g.barcode_count'
+            'g.barcode_count',
+            'a.id as id',
+            'a.id_master_customers as id_master_customers',
+            'a.id_master_products as id_master_products',
+            'a.type_product as type_product'
         );
 
     // 1) Semua data (barcode ada / belum ada)
     $wo = (clone $baseQuery)->get();
 
-    // 2) Hanya yang barcode-nya SUDAH ADA
-    // Pilihan paling aman: pastikan b.id tidak null
+    // 2) Hanya yang barcode-nya SUDAH ADA, diurutkan dari yang terbaru (descending)
     $woHasBarcode = (clone $baseQuery)
         ->whereNotNull('b.id')
+        ->orderByDesc('b.id')
         ->get();
 
     $wc = DB::table('master_work_centers')->where('status', 'Active')->get();
+    $warehouses = DB::table('master_warehouses')->where('is_active', '1')->get();
 
     // Kirim dua variabel ke view
-    return view('barcode.barcode_mesian.create', compact('wo', 'woHasBarcode', 'wc'));
+    return view('barcode.barcode_mesian.create', compact('wo', 'woHasBarcode', 'wc', 'warehouses'));
 }
 
 
@@ -76,10 +81,12 @@ public function create()
         // Validate the request data
         $validatedData = $request->validate([
             'id_sales_orders' => 'required',
-            'qty' => 'required|numeric',
+            'qty' => 'required|integer|min:1',
             'id_master_customers' => 'required',
             'id_master_products' => 'required',
-            'type_product' => 'required'
+            'type_product' => 'required',
+            'id_master_warehouses' => 'required',
+            'shift' => 'required'
         ]);
     
         try {
@@ -93,30 +100,32 @@ public function create()
                 'id_master_customers' => $validatedData['id_master_customers'],
                 'id_master_products' => $validatedData['id_master_products'],
                 'staff' => Auth::user()->name,
-                'type_product' => $validatedData['type_product']
+                'type_product' => $validatedData['type_product'],
+                'id_master_warehouses' => $validatedData['id_master_warehouses'],
+                'shift' => $validatedData['shift']
             ]);
     
             // Generate barcode numbers and save them
             if ($detailsoal) {
                 $qty = $validatedData['qty'];
-                $yearMonth = Carbon::now()->format('ym');
+                $todayPrefix = Carbon::now()->format('ymd');
                 $lastBarcode = DB::table('barcode_detail')
-                    ->where('barcode_number', 'like', $yearMonth . '%')
+                    ->where('barcode_number', 'like', $todayPrefix . '%')
                      ->orderBy('barcode_number', 'desc')
                      ->first();
     
-                $lastNumber = $lastBarcode ? intval(substr($lastBarcode->barcode_number, 4, 5)) : 0;
+                $lastNumber = $lastBarcode ? intval(substr($lastBarcode->barcode_number, 6, 3)) : 0;
     
-                $typeSuffix = $validatedData['type_product'] === 'AUX' ? 'MC' : 'RM';
-                $status = $validatedData['type_product'] === 'AUX' ? 'In Stock AUX' : 'In Stock RM';
+                $typeSuffix = $validatedData['type_product'] === 'RM' ? 'RM' : 'MC';
+                $status = 'In Stock ' . $validatedData['type_product'];
                 $barcodeDetails = [];
                 for ($i = 1; $i <= $qty; $i++) {
                     $lastNumber++;
-                    $barcodeNumber = $yearMonth . str_pad($lastNumber, 5, '0', STR_PAD_LEFT) . $typeSuffix;
+                    $barcodeNumber = $todayPrefix . str_pad($lastNumber, 3, '0', STR_PAD_LEFT) . $typeSuffix;
                     $barcodeDetails[] = [
                         'id_barcode' => $detailsoal->id,
                         'barcode_number' => $barcodeNumber,
-                        'status' => $status, // Add status here
+                        'status' => $status,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];
@@ -127,17 +136,19 @@ public function create()
     
             // Commit the transaction
             DB::commit();
-            return redirect('/barcode')->with('status', 'Data Ditambah');
+            return redirect('/create-barcode-mesin')
+                ->with('status', 'Data Ditambah')
+                ->with('new_barcode_id', $detailsoal->id);
         } catch (\Exception $e) {
             // Rollback the transaction
             DB::rollback();
-            return redirect('/barcode')->with('error', 'Error: ' . $e->getMessage());
+            return redirect('/create-barcode-mesin')->with('error', 'Error: ' . $e->getMessage());
         }
     }
     
 public function show($id)
 {
-    $barcode = DB::table('barcode_detail as bd')
+    $barcodeDetails = DB::table('barcode_detail as bd')
         ->join('barcodes as b', 'bd.id_barcode', '=', 'b.id')
         ->leftJoin('sales_orders as so', 'b.id_sales_orders', '=', 'so.id')
         ->leftJoin(DB::raw("
@@ -166,7 +177,8 @@ public function show($id)
                 FROM master_tool_auxiliaries
             ) as mp
         "), function ($join) {
-            $join->on('b.id_master_products', '=', 'mp.id');
+            $join->on('b.id_master_products', '=', 'mp.id')
+                 ->on('b.type_product', '=', 'mp.type_product');
         })
         ->leftJoin('master_units as mu', 'mp.id_master_units', '=', 'mu.id')
         ->leftJoin('master_customers as mc', 'b.id_master_customers', '=', 'mc.id')
@@ -180,6 +192,7 @@ public function show($id)
             'so.type_product',
             'so.qty as so_qty',
             'so.id_order_confirmations',
+            'so.reference_number',
 
             'mc.name as nm_cust',
 
@@ -192,10 +205,11 @@ public function show($id)
             
         )
         ->where('bd.id_barcode', $id)
-        ->first();
+        ->orderBy('bd.id')
+        ->get();
 
 
-    return view('barcode.print_barcodemesin', compact('barcode'));
+    return view('barcode.print_barcodemesin', compact('barcodeDetails'));
 }
 
 
