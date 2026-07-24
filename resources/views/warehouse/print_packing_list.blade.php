@@ -215,10 +215,15 @@
                                         if (!$primaryUnit) {
                                             $primaryUnit = $unitStr;
                                         }
-                                        $isiVal = floatval($detail->weight > 0 ? $detail->weight : $detail->pcs);
+                                        $isiVal = floatval((isset($detail->qty_use) && floatval($detail->qty_use) > 0) ? $detail->qty_use : ($detail->weight > 0 ? $detail->weight : $detail->pcs));
                                         $totalIsi += $isiVal;
                                         
                                         $formattedIsi = (floor($isiVal) == $isiVal) ? number_format($isiVal, 0, ',', '.') : number_format($isiVal, 2, ',', '.');
+
+                                        $batchDisp = $detail->batch_number ?? '-';
+                                        if ($batchDisp === 'null' || $batchDisp === 'NULL' || trim($batchDisp) === '') {
+                                            $batchDisp = '-';
+                                        }
                                     @endphp
                                     <tr>
                                         <td style="text-align: center;">{{ $index + 1 }}</td>
@@ -228,7 +233,7 @@
                                         <td>{{ $detail->so_number }}</td>
                                         <td>{{ $detail->cust_product_code ?? '-' }}</td>
                                         <td style="text-align: right;">{{ $formattedIsi }} {{ $unitStr }}</td>
-                                        <td>{{ $detail->batch_number ?? '-' }}</td>
+                                        <td>{{ $batchDisp }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>

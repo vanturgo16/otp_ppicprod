@@ -301,46 +301,94 @@
             <p>{{ $invoiceAddress->postal_code }}</p>
         </div>
 
-        <table class="main-table">
-            <thead>
-                <tr>
-                    <th>No.</th>
-                    <th>Description</th>
-                    <th>Cust. Product Code</th>
-                    <th>Perforasi</th>
-                    <th>Qty</th>
-                    <th>Unit</th>
-                    <th>Weight</th>
-                    <th>Remarks</th>
-                </tr>
-            </thead>
-            <tbody>
-                @php
-                    $no = 1;
-                @endphp
-                @foreach ($packingListDetails as $detail)
+        @php
+            $isRmAuxOther = collect($packingListDetails)->contains(function($d) {
+                $type = strtoupper($d->type_product ?? '');
+                return in_array($type, ['RM', 'RAW', 'AUX', 'MC', 'SPAREPART', 'OTHER']);
+            });
+        @endphp
+
+        @if ($isRmAuxOther)
+            <table class="main-table">
+                <thead>
                     <tr>
-                        <td>{{ $no++ }}</td>
-                        <td>{{ $detail->description }}</td>
-                        <td>{{ $detail->code }}</td>
-                        <td>{{ $detail->perforasi }}</td>
-                        <td>{{ $detail->qty }}</td>
-                        <td>{{ $detail->unit }}</td>
-                        <td>{{ $detail->weight }} kg</td>
-                        <td>{{ $detail->remark }}</td>
-
+                        <th style="width: 40px; text-align: center;">No.</th>
+                        <th>Description</th>
+                        <th>Cust. Product Code</th>
+                        <th>No. Batch</th>
+                        <th style="text-align: right;">Qty</th>
+                        <th>Satuan</th>
+                        <th>Remarks</th>
                     </tr>
-                @endforeach
-                <tr>
-                    <td style="text-align: center" colspan="4"><strong>TOTAL</strong></td>
-                    <td>{{ $totalQty }} </td>
-                    <td></td>
-                    <td>{{ $totalWeight }} KG</td>
-                    <td></td>
-                </tr>
-
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @php
+                        $grandTotalQty = 0;
+                    @endphp
+                    @foreach ($packingListDetails as $index => $detail)
+                        @php
+                            $val = floatval($detail->weight > 0 ? $detail->weight : $detail->qty);
+                            $grandTotalQty += $val;
+                            $formattedQty = (floor($val) == $val) ? number_format($val, 0, ',', '.') : number_format($val, 2, ',', '.');
+                        @endphp
+                        <tr>
+                            <td style="text-align: center;">{{ $index + 1 }}</td>
+                            <td>{{ $detail->description }}</td>
+                            <td>{{ $detail->code }}</td>
+                            <td>{{ $detail->batch_number ?? '-' }}</td>
+                            <td style="text-align: right;">{{ $formattedQty }}</td>
+                            <td>{{ $detail->unit }}</td>
+                            <td>{{ $detail->remark }}</td>
+                        </tr>
+                    @endforeach
+                    <tr>
+                        <td style="text-align: center;" colspan="4"><strong>TOTAL</strong></td>
+                        <td style="text-align: right;"><strong>{{ (floor($grandTotalQty) == $grandTotalQty) ? number_format($grandTotalQty, 0, ',', '.') : number_format($grandTotalQty, 2, ',', '.') }}</strong></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        @else
+            <table class="main-table">
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>Description</th>
+                        <th>Cust. Product Code</th>
+                        <th>Perforasi</th>
+                        <th>Qty</th>
+                        <th>Unit</th>
+                        <th>Weight</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @php
+                        $no = 1;
+                    @endphp
+                    @foreach ($packingListDetails as $detail)
+                        <tr>
+                            <td>{{ $no++ }}</td>
+                            <td>{{ $detail->description }}</td>
+                            <td>{{ $detail->code }}</td>
+                            <td>{{ $detail->perforasi }}</td>
+                            <td>{{ $detail->qty }}</td>
+                            <td>{{ $detail->unit }}</td>
+                            <td>{{ $detail->weight }} kg</td>
+                            <td>{{ $detail->remark }}</td>
+                        </tr>
+                    @endforeach
+                    <tr>
+                        <td style="text-align: center" colspan="4"><strong>TOTAL</strong></td>
+                        <td>{{ $totalQty }} </td>
+                        <td></td>
+                        <td>{{ $totalWeight }} KG</td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        @endif
         <p class="note">Note: {{ $deliveryNote->note }}</p>
 
         <table class="signatures">
