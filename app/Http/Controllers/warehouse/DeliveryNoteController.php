@@ -549,6 +549,7 @@ class DeliveryNoteController extends Controller
             ->join('packing_lists', 'delivery_note_details.id_packing_lists', '=', 'packing_lists.id')
             ->join('packing_list_details', 'packing_lists.id', '=', 'packing_list_details.id_packing_lists')
             ->join('sales_orders', 'packing_lists.id_sales_orders', '=', 'sales_orders.id')
+            ->leftJoin('report_rm_aux_other_production_results as rrm', 'packing_list_details.barcode', '=', 'rrm.barcode_end')
             ->leftJoin('master_product_fgs', function ($join) {
                 $join->on('sales_orders.id_master_products', '=', 'master_product_fgs.id')
                     ->where('delivery_note_details.type_product', '=', 'FG');
@@ -568,27 +569,30 @@ class DeliveryNoteController extends Controller
 
             // Join ke master_units dari masing-masing master table
             ->leftJoin('master_units', function ($join) {
-                $join->on('master_product_fgs.id_master_units', '=', 'master_units.id')
+                $join->on('sales_orders.id_master_units', '=', 'master_units.id')
+                    ->orOn('master_product_fgs.id_master_units', '=', 'master_units.id')
                     ->orOn('master_wips.id_master_units', '=', 'master_units.id')
                     ->orOn('master_tool_auxiliaries.id_master_units', '=', 'master_units.id')
                     ->orOn('master_raw_materials.id_master_units', '=', 'master_units.id');
             })
 
             ->select(
+                'delivery_note_details.type_product',
                 DB::raw('SUM(packing_list_details.weight) as weight'),
                 DB::raw('SUM(packing_list_details.pcs) as qty'),
                 DB::raw('COALESCE(master_product_fgs.description, master_wips.description, master_tool_auxiliaries.description, master_raw_materials.description) as description'),
                 DB::raw("COALESCE(master_product_fgs.perforasi, master_wips.perforasi, master_tool_auxiliaries.weight_stock, master_raw_materials.weight_stock,'p-') as perforasi"),
                 DB::raw('COALESCE(master_product_fgs.product_code, master_wips.wip_code, master_tool_auxiliaries.description, master_raw_materials.description) as p_code'),
                 DB::raw("IFNULL(sales_orders.cust_product_code,'-') as code"),
-                'master_units.unit as unit',
+                DB::raw("COALESCE(master_units.unit_code, master_units.unit, 'KG') as unit"),
                 'sales_orders.id as soId',
                 'sales_orders.so_category as dn_type',
                 'sales_orders.id_master_products',
-                'delivery_note_details.remark as remark'
+                'delivery_note_details.remark as remark',
+                DB::raw("COALESCE(rrm.product, rrm.lot_number, packing_list_details.sts_start, '-') as batch_number")
             )
             ->where('delivery_note_details.id_delivery_notes', $id)
-            ->groupBy('description', 'code', 'unit')
+            ->groupBy('delivery_note_details.type_product', 'description', 'code', 'unit', 'batch_number')
             ->get();
 
         //dd($packingListDetails);

@@ -937,7 +937,13 @@ class WarehouseController extends Controller
                 'packing_list_details.pcs',
                 'packing_list_details.weight',
                 'packing_list_details.total_wrap',
-                DB::raw("COALESCE(rrm.product, rrm.lot_number, packing_list_details.sts_start, '-') as batch_number")
+                'rrm.qty_use',
+                DB::raw("CASE 
+                    WHEN rrm.product IS NOT NULL AND rrm.product != '' AND rrm.product != 'null' THEN rrm.product 
+                    WHEN rrm.lot_number IS NOT NULL AND rrm.lot_number != '' AND rrm.lot_number != 'null' THEN rrm.lot_number 
+                    WHEN packing_list_details.sts_start IS NOT NULL AND packing_list_details.sts_start != '' AND packing_list_details.sts_start != 'null' THEN packing_list_details.sts_start 
+                    ELSE '-' 
+                END as batch_number")
             )
             ->leftJoin('master_product_fgs', function ($join) {
                 $join->on('sales_orders.id_master_products', '=', 'master_product_fgs.id')
