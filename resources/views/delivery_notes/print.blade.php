@@ -327,7 +327,7 @@
                     @endphp
                     @foreach ($packingListDetails as $index => $detail)
                         @php
-                            $val = floatval($detail->weight > 0 ? $detail->weight : $detail->qty);
+                            $val = floatval($detail->qty);
                             $grandTotalQty += $val;
                             $formattedQty = (floor($val) == $val) ? number_format($val, 0, ',', '.') : number_format($val, 2, ',', '.');
                         @endphp

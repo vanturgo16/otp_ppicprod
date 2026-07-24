@@ -215,7 +215,7 @@
                                         if (!$primaryUnit) {
                                             $primaryUnit = $unitStr;
                                         }
-                                        $isiVal = floatval((isset($detail->qty_use) && floatval($detail->qty_use) > 0) ? $detail->qty_use : ($detail->weight > 0 ? $detail->weight : $detail->pcs));
+                                        $isiVal = floatval((isset($detail->qty_use) && floatval($detail->qty_use) > 0) ? $detail->qty_use : (floatval($detail->pcs) > 0 ? $detail->pcs : $detail->weight));
                                         $totalIsi += $isiVal;
                                         
                                         $formattedIsi = (floor($isiVal) == $isiVal) ? number_format($isiVal, 0, ',', '.') : number_format($isiVal, 2, ',', '.');

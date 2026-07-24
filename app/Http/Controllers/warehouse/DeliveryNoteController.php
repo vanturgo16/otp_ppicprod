@@ -579,7 +579,7 @@ class DeliveryNoteController extends Controller
             ->select(
                 'delivery_note_details.type_product',
                 DB::raw('SUM(packing_list_details.weight) as weight'),
-                DB::raw('SUM(packing_list_details.pcs) as qty'),
+                DB::raw('SUM(COALESCE(rrm.qty_use, packing_list_details.pcs)) as qty'),
                 DB::raw('COALESCE(master_product_fgs.description, master_wips.description, master_tool_auxiliaries.description, master_raw_materials.description) as description'),
                 DB::raw("COALESCE(master_product_fgs.perforasi, master_wips.perforasi, master_tool_auxiliaries.weight_stock, master_raw_materials.weight_stock,'p-') as perforasi"),
                 DB::raw('COALESCE(master_product_fgs.product_code, master_wips.wip_code, master_tool_auxiliaries.description, master_raw_materials.description) as p_code'),
@@ -589,7 +589,7 @@ class DeliveryNoteController extends Controller
                 'sales_orders.so_category as dn_type',
                 'sales_orders.id_master_products',
                 'delivery_note_details.remark as remark',
-                DB::raw("COALESCE(rrm.product, rrm.lot_number, packing_list_details.sts_start, '-') as batch_number")
+                DB::raw("COALESCE(NULLIF(rrm.product, 'null'), rrm.lot_number, packing_list_details.sts_start, '-') as batch_number")
             )
             ->where('delivery_note_details.id_delivery_notes', $id)
             ->groupBy('delivery_note_details.type_product', 'description', 'code', 'unit', 'batch_number')
