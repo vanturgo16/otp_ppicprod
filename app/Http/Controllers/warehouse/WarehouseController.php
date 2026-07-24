@@ -226,6 +226,7 @@ class WarehouseController extends Controller
         $barcodeQuery = DB::table('barcodes')
             ->join('barcode_detail', 'barcodes.id', '=', 'barcode_detail.id_barcode')
             ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
+            ->leftJoin('master_process_productions as mpp', 'barcodes.id_master_process_productions', '=', 'mpp.id')
             ->when($changeSo, function ($query) use ($barcode, $changeSo) {
                 return $query
                     ->where('barcode_detail.barcode_number', $barcode)
@@ -243,6 +244,8 @@ class WarehouseController extends Controller
                 'barcodes.type_product',
                 'barcodes.id_sales_orders as sales_order_id',
                 'barcodes.qty',
+                'mpp.process_code',
+                'mpp.process',
                 DB::raw('COALESCE(master_product_fgs.description, master_wips.description, master_tool_auxiliaries.description, master_raw_materials.description) as description'),
                 DB::raw('COALESCE(master_product_fgs.id, master_wips.id, master_tool_auxiliaries.id, master_raw_materials.id) as product_id'),
                 DB::raw('COALESCE(master_product_fgs.stock, master_wips.stock, master_tool_auxiliaries.stock, master_raw_materials.stock) as stock'),
@@ -290,16 +293,22 @@ class WarehouseController extends Controller
         if ($barcodeRecord && strpos($barcodeRecord->status, 'In Stock') !== false) {
             $exists = true;
             $productName = $barcodeRecord->description;
-            $isBag = stripos($barcodeRecord->status, 'bag') !== false;
+
+            $processCode = strtoupper($barcodeRecord->process_code ?? '');
+            $statusStr = strtoupper($barcodeRecord->status ?? '');
+
+            $isBlow = ($processCode === 'BLW') || (stripos($statusStr, 'BLW') !== false);
+            $isSf = in_array($processCode, ['SLT', 'FLD'], true) || (stripos($statusStr, 'SLT') !== false || stripos($statusStr, 'FLD') !== false);
+            $isBag = ($processCode === 'BGM') || (stripos($statusStr, 'BAG') !== false || stripos($statusStr, 'BGM') !== false);
+
             $pcs = $barcodeRecord->total_amount_result;
 
             $isRawMaterial = $this->isRawMaterialType($barcodeRecord->type_product);
+            $isRawOrAuxOrOther = !$isBlow && !$isSf && !$isBag;
 
-            $stockRequirement = in_array($barcodeRecord->type_product, ['AUX', 'MC'])
-                ? $barcodeRecord->qty
-                : ($isRawMaterial
-                    ? ($barcodeRecord->rm_qty_use > 0 ? $barcodeRecord->rm_qty_use : $barcodeRecord->qty)
-                    : ($isBag ? $pcs : 1));
+            $stockRequirement = $isRawOrAuxOrOther
+                ? ($barcodeRecord->rm_qty_use > 0 ? $barcodeRecord->rm_qty_use : $barcodeRecord->qty)
+                : ($isBag ? $pcs : 1);
 
             $newStock = $barcodeRecord->stock - $stockRequirement;
             // dd($newStock);
@@ -307,16 +316,14 @@ class WarehouseController extends Controller
                 return response()->json(['exists' => false, 'status' => false, 'message' => 'Stok tidak mencukupi']);
             }
 
-            // Tentukan weight berdasarkan status
+            // Tentukan weight berdasarkan status / proses
             $finalWeight = 0;
-            if (stripos($barcodeRecord->status, 'SLT') !== false || stripos($barcodeRecord->status, 'FLD') !== false) {
+            if ($isSf) {
                 $finalWeight = $barcodeRecord->sf_weight;
-            } elseif (stripos($barcodeRecord->status, 'BLW') !== false) {
+            } elseif ($isBlow) {
                 $finalWeight = $barcodeRecord->blow_weight;
-            } elseif ($this->hasRawMaterialStatus($barcodeRecord->status)) {
+            } elseif ($isRawOrAuxOrOther) {
                 $finalWeight = $barcodeRecord->rm_qty_use > 0 ? $barcodeRecord->rm_qty_use : $barcodeRecord->raw_weight;
-            } elseif (stripos($barcodeRecord->status, 'AUX') !== false || stripos($barcodeRecord->status, 'MC') !== false) {
-                $finalWeight = 0;
             }
 
             //alert non numeric weight
@@ -332,7 +339,7 @@ class WarehouseController extends Controller
                 'total_wrap' => $barcodeRecord->total_wrap,
                 'id_packing_lists' => $packingListId,
                 'weight' => $weightValue,
-                'pcs' => (in_array($barcodeRecord->type_product, ['AUX', 'MC']) || $isRawMaterial) ? $stockRequirement : ($isBag ? $pcs : 1),
+                'pcs' => $isRawOrAuxOrOther ? $stockRequirement : ($isBag ? $pcs : 1),
                 'sts_start' => $barcodeRecord->status,
                 'created_at' => now(),
                 'updated_at' => now()
@@ -350,7 +357,7 @@ class WarehouseController extends Controller
                     ->where('id_master_products', $barcodeRecord->product_id)
                     ->first();
 
-                $qtyToInsert = (in_array($barcodeRecord->type_product, ['AUX', 'MC']) || $isRawMaterial) ? $stockRequirement : ($isBag ? $pcs : 1);
+                $qtyToInsert = $isRawOrAuxOrOther ? $stockRequirement : ($isBag ? $pcs : 1);
                 $weightToInsert = $weightValue;
 
                 if ($existingHistory) {
@@ -361,7 +368,7 @@ class WarehouseController extends Controller
                         ->where('id', $existingHistory->id)
                         ->update([
                             'qty' => $newQty,
-                            'weight' => ($existingHistory->weight ?? 0) + $weightToInsert,
+                            'weight' => DB::raw("weight + $weightToInsert"),
                             'barcode' => $newBarcodes,
                             'updated_at' => now()
                         ]);
@@ -372,12 +379,10 @@ class WarehouseController extends Controller
                         'id_master_products' => $barcodeRecord->product_id,
                         'qty' => $qtyToInsert,
                         'weight' => $weightToInsert,
-                        'type_stock' => 'OUT',
                         'barcode' => $barcode,
-                        'date' => now(),
+                        'status' => 'Out',
                         'created_at' => now(),
-                        'updated_at' => now(),
-                        'remarks' => null
+                        'updated_at' => now()
                     ]);
                 }
             }
@@ -385,7 +390,7 @@ class WarehouseController extends Controller
             // ambil data weight dari tabel packing_list_details
             $weightDetail = $weightValue;
 
-            $stockUpdateQty = (in_array($barcodeRecord->type_product, ['AUX', 'MC']) || $isRawMaterial)
+            $stockUpdateQty = $isRawOrAuxOrOther
                 ? $stockRequirement
                 : ($isBag ? $pcs : 1);
 
