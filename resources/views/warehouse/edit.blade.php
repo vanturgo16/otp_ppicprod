@@ -72,6 +72,7 @@
                             <div class="mb-3">
                                 <label for="barcode" class="form-label">Barcode</label>
                                 <input type="text" class="form-control" id="barcode" name="barcode" required>
+                                <small class="text-muted"><i class="fas fa-info-circle"></i> Barcode &lt; 11 karakter atau tidak ada respon? Tekan <kbd>Enter</kbd></small>
                                 <div id="barcode-error" class="text-danger" style="display: none;">Barcode tidak
                                     ditemukan</div>
                             </div>
@@ -173,6 +174,7 @@
         });
 
         var scanTimer = null;
+        var lastInputTime = 0;
 
         function processBarcodeScan() {
             var barcodeInput = $('#barcode');
@@ -222,8 +224,8 @@
 
                         $('#barcode-table tbody').append(newRow);
                         barcodeInput.val('');
+                        lastInputTime = 0;
                         barcodeInput.focus();
-                        $('#change_so').val('');
                     } else if (response.duplicate) {
                         Swal.fire({
                             icon: 'error',
@@ -266,23 +268,50 @@
             });
         }
 
-        // Auto hit saat scanning selesai (menggunakan debounce 200ms agar support panjang karakter bebas)
+        // Scanner: karakter datang cepat (< 100ms) → min 11 char, debounce 300ms → auto-fire
+        // Manual : karakter datang lambat (>= 100ms) → min 22 char, debounce 400ms → praktisnya Enter
+        // Enter  : selalu proses langsung (0ms)
         $('#barcode').on('input', function() {
+            var now = Date.now();
+            var barcodeVal = $(this).val().trim();
+            var timeDiff = now - lastInputTime;
+            lastInputTime = now;
+
             if (scanTimer) {
                 clearTimeout(scanTimer);
             }
-            scanTimer = setTimeout(function() {
-                processBarcodeScan();
-            }, 200);
+
+            // Char pertama: simpan waktu, belum bisa deteksi
+            if (barcodeVal.length <= 1) {
+                return;
+            }
+
+            // Deteksi scanner berdasarkan kecepatan antar karakter
+            var isScanner = timeDiff < 100;
+
+            if (isScanner && barcodeVal.length >= 11) {
+                // Scanner: auto-fire setelah 300ms
+                scanTimer = setTimeout(function() {
+                    lastInputTime = 0;
+                    processBarcodeScan();
+                }, 300);
+            } else if (!isScanner && barcodeVal.length >= 11) {
+                // Manual: auto-fire setelah 400ms (fallback, barcode normal < 22 char)
+                scanTimer = setTimeout(function() {
+                    lastInputTime = 0;
+                    processBarcodeScan();
+                }, 400);
+            }
         });
 
-        // Handle Enter key untuk input manual barcode
+        // Enter: proses langsung
         $('#barcode').on('keydown', function(e) {
             if (e.which === 13 || e.keyCode === 13) {
                 e.preventDefault();
                 if (scanTimer) {
                     clearTimeout(scanTimer);
                 }
+                lastInputTime = 0;
                 processBarcodeScan();
             }
         });
