@@ -580,11 +580,7 @@ class DeliveryNoteController extends Controller
 
             // Join ke master_units dari masing-masing master table
             ->leftJoin('master_units', function ($join) {
-                $join->on('sales_orders.id_master_units', '=', 'master_units.id')
-                    ->orOn('master_product_fgs.id_master_units', '=', 'master_units.id')
-                    ->orOn('master_wips.id_master_units', '=', 'master_units.id')
-                    ->orOn('master_tool_auxiliaries.id_master_units', '=', 'master_units.id')
-                    ->orOn('master_raw_materials.id_master_units', '=', 'master_units.id');
+                $join->on('master_units.id', '=', DB::raw('COALESCE(sales_orders.id_master_units, master_product_fgs.id_master_units, master_wips.id_master_units, master_tool_auxiliaries.id_master_units, master_raw_materials.id_master_units)'));
             })
 
             ->select(
