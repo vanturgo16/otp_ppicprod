@@ -549,7 +549,18 @@ class DeliveryNoteController extends Controller
             ->join('packing_lists', 'delivery_note_details.id_packing_lists', '=', 'packing_lists.id')
             ->join('packing_list_details', 'packing_lists.id', '=', 'packing_list_details.id_packing_lists')
             ->join('sales_orders', 'packing_lists.id_sales_orders', '=', 'sales_orders.id')
-            ->leftJoin('report_rm_aux_other_production_results as rrm', 'packing_list_details.barcode', '=', 'rrm.barcode_end')
+            ->leftJoin(DB::raw('(
+                SELECT 
+                    barcode_end, 
+                    SUM(qty_use) as qty_use,
+                    GROUP_CONCAT(DISTINCT CASE 
+                        WHEN product IS NOT NULL AND product != \'\' AND product != \'null\' THEN product 
+                        WHEN lot_number IS NOT NULL AND lot_number != \'\' AND lot_number != \'null\' THEN lot_number 
+                        ELSE NULL 
+                    END SEPARATOR \', \') as batch_number
+                FROM report_rm_aux_other_production_results 
+                GROUP BY barcode_end
+            ) as rrm'), 'packing_list_details.barcode', '=', 'rrm.barcode_end')
             ->leftJoin('master_product_fgs', function ($join) {
                 $join->on('sales_orders.id_master_products', '=', 'master_product_fgs.id')
                     ->where('delivery_note_details.type_product', '=', 'FG');
@@ -589,7 +600,7 @@ class DeliveryNoteController extends Controller
                 'sales_orders.so_category as dn_type',
                 'sales_orders.id_master_products',
                 'delivery_note_details.remark as remark',
-                DB::raw("COALESCE(NULLIF(rrm.product, 'null'), rrm.lot_number, packing_list_details.sts_start, '-') as batch_number")
+                DB::raw("COALESCE(NULLIF(rrm.batch_number, 'null'), packing_list_details.sts_start, '-') as batch_number")
             )
             ->where('delivery_note_details.id_delivery_notes', $id)
             ->groupBy('delivery_note_details.type_product', 'description', 'code', 'unit', 'batch_number')

@@ -965,7 +965,18 @@ class WarehouseController extends Controller
             ->join('barcode_detail', 'packing_list_details.barcode', '=', 'barcode_detail.barcode_number')
             ->join('barcodes', 'barcode_detail.id_barcode', '=', 'barcodes.id')
             ->join('sales_orders', 'barcodes.id_sales_orders', '=', 'sales_orders.id')
-            ->leftJoin('report_rm_aux_other_production_results as rrm', 'packing_list_details.barcode', '=', 'rrm.barcode_end')
+            ->leftJoin(DB::raw('(
+                SELECT 
+                    barcode_end, 
+                    SUM(qty_use) as qty_use,
+                    GROUP_CONCAT(DISTINCT CASE 
+                        WHEN product IS NOT NULL AND product != \'\' AND product != \'null\' THEN product 
+                        WHEN lot_number IS NOT NULL AND lot_number != \'\' AND lot_number != \'null\' THEN lot_number 
+                        ELSE NULL 
+                    END SEPARATOR \', \') as batch_number
+                FROM report_rm_aux_other_production_results 
+                GROUP BY barcode_end
+            ) as rrm'), 'packing_list_details.barcode', '=', 'rrm.barcode_end')
             ->select(
                 'barcodes.type_product',
                 DB::raw('COALESCE(master_product_fgs.product_code, master_wips.wip_code, master_tool_auxiliaries.code, master_raw_materials.rm_code) as product_code'),
@@ -982,8 +993,7 @@ class WarehouseController extends Controller
                 'packing_list_details.total_wrap',
                 'rrm.qty_use',
                 DB::raw("CASE 
-                    WHEN rrm.product IS NOT NULL AND rrm.product != '' AND rrm.product != 'null' THEN rrm.product 
-                    WHEN rrm.lot_number IS NOT NULL AND rrm.lot_number != '' AND rrm.lot_number != 'null' THEN rrm.lot_number 
+                    WHEN rrm.batch_number IS NOT NULL AND rrm.batch_number != '' AND rrm.batch_number != 'null' THEN rrm.batch_number 
                     WHEN packing_list_details.sts_start IS NOT NULL AND packing_list_details.sts_start != '' AND packing_list_details.sts_start != 'null' THEN packing_list_details.sts_start 
                     ELSE '-' 
                 END as batch_number")
