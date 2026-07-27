@@ -193,6 +193,7 @@ public function show($id)
             'so.qty as so_qty',
             'so.id_order_confirmations',
             'so.reference_number',
+            'so.cust_product_code',
 
             'mc.name as nm_cust',
 

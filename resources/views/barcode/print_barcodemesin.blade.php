@@ -11,20 +11,19 @@
             <div class="barcode-item">
               
 <table class="barcode-table">
-    <p></p>
- 
-        <td><strong>SO No.</strong></td>
-        <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
-        <td class="value">{{ $barcode->so_number }}
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            {{-- <span style="float: right">{{ \Carbon\Carbon::now()->format('d F Y') }}</span> --}}
-        </td>
-    </b>
-    </tr>
     <tr>
         <td colspan="3" class="company-name">PT Olefina Tifaplas Polikemindo </td>
     </tr>
-    
+    <tr>
+        <td><strong>SO No</strong></td>
+        <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
+        <td class="value">{{ $barcode->so_number ?? '-' }}</td>
+    </tr>
+    <tr>
+        <td><strong>Tanggal</strong></td>
+        <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
+        <td class="value">{{ \Carbon\Carbon::parse($barcode->tgl_buat ?? now())->format('d F Y') }}</td>
+    </tr>
     <tr>
         <td><strong>Customer</strong></td>
         <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
@@ -33,97 +32,34 @@
     <tr>
         <td><strong>Description</strong></td>
         <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
-       
-            <td  class="description">
-            <b>{{ $barcode->description ?? '-' }}</b></td>
+        <td class="description">
+            <b>{{ $barcode->description ?? '-' }}</b>
+        </td>
     </tr>
     <tr>
         <td><strong>No KO/PO</strong></td>
         <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
-       
-            <td  class="value">
+        <td class="value">
             <b>
             @if(is_null($barcode->id_order_confirmations))
                 {{ $barcode->reference_number ?? '-' }}
             @else
                 {{ '-' }}
             @endif
-            </b></td>
-    </tr>
-     <tr>
-        <td><strong>No SO</strong></td>
-        <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
-       
-            <td  class="value">
-            <b>
-         
-                {{ $barcode->so_number ?? '-' }}
-      
-            </b></td>
-    </tr>
-    <tr>
-        <td><strong>Size</strong></td>
-        <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
-        <td class="value">{{ $barcode->width ?? '-' }} MM  &nbsp; X &nbsp;{{ $barcode->height ?? ($barcode->length ?? '') }}
-
-            
-            &nbsp;&nbsp;&nbsp;&nbsp; <strong>P:</strong>{{ $barcode->perforasi ?? '-' }}</td>
-    </tr>
-        <tr>
-        <td><strong>qty</strong></td>
-        <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
-        <td class="value">{{ $barcode->so_qty ?? '-' }}  </td>
-    </tr>
-    <tr>
-        <td><strong>type</strong></td>
-        <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
-        <td class="value">{{ $barcode->so_type ?? '-' }}  </td>
-    </tr>
-        <tr>
-        <td><strong>Unit</strong></td>
-        <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
-        <td class="value">{{ $barcode->unit_code ?? '-' }}  </td>
-    </tr>
-    {{-- <tr>
-        <td><strong>Group</strong></td>
-        <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
-        <td class="value">{{ $barcode->shift }} &nbsp; <strong>Machine: {{ $barcode->work_center_code }}</strong> &nbsp; <strong>Joint:</strong> <span class="joint">1</span> <span class="joint">2</span> <span class="joint">3</span></td>
-    </tr>
-    <tr>
-        <td><strong>Left</strong></td>
-        <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
-        <td class="value">
-            <table class="up-down-table">
-                <tr>
-                    @for ($i = 1; $i <= 10; $i++)
-                    <td>{{ $i % 10 }}</td>
-                    @endfor
-                </tr>
-            </table>
+            </b>
         </td>
     </tr>
     <tr>
-        <td><strong>Right</strong></td>
+        <td><strong>Cust Product Code</strong></td>
         <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
-        <td class="value">
-            <table class="up-down-table">
-                <tr>
-                    @for ($i = 1; $i <= 10; $i++)
-                    <td>{{ $i % 10 }}</td>
-                    @endfor
-                </tr>
-            </table>
-        </td>
-    </tr> --}}
+        <td class="value">{{ $barcode->cust_product_code ?? '-' }}</td>
+    </tr>
     <tr>
         <td><strong>Lot</strong></td>
         <td class="colon">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</td>
         <td class="value">
-            <dev class="barcode-number">{{ $barcode->barcode_number }}</dev>
-            {{-- <img class="barcode-img" src="data:image/png;base64,{{ DNS1D::getBarcodePNG($barcode->barcode_number, 'C128') }}" alt="barcode" /> --}}
-           
+            <div class="barcode-number">{{ $barcode->barcode_number }}</div>
         </td>
-       
     </tr>
 </table>
 <b>Made In Indonesia</b>
