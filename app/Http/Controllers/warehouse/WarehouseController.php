@@ -1015,7 +1015,7 @@ class WarehouseController extends Controller
                     ->whereIn('barcodes.type_product', ['RM', 'RAW']);
             })
             ->leftJoin('master_units', function ($join) {
-                $join->on('master_units.id', '=', DB::raw('COALESCE(sales_orders.id_master_units, master_product_fgs.id_master_units, master_wips.id_master_units, master_raw_materials.id_master_units, master_tool_auxiliaries.id_master_units)'));
+                $join->on('master_units.id', '=', DB::raw('COALESCE(master_product_fgs.id_master_units, master_wips.id_master_units, master_raw_materials.id_master_units, master_tool_auxiliaries.id_master_units, sales_orders.id_master_units)'));
             })
             ->where('packing_list_details.id_packing_lists', $id)
             ->get();
