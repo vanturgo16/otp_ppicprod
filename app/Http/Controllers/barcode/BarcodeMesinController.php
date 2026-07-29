@@ -110,9 +110,12 @@ public function create()
                 $qty = $validatedData['qty'];
                 $todayPrefix = Carbon::now()->format('ymd');
                 $lastBarcode = DB::table('barcode_detail')
-                    ->where('barcode_number', 'like', $todayPrefix . '%')
-                     ->orderBy('barcode_number', 'desc')
-                     ->first();
+                    ->join('barcodes', 'barcode_detail.id_barcode', '=', 'barcodes.id')
+                    ->where('barcode_detail.barcode_number', 'like', $todayPrefix . '%')
+                    ->where('barcodes.id_work_orders', 0)
+                    ->orderBy('barcode_detail.barcode_number', 'desc')
+                    ->select('barcode_detail.*')
+                    ->first();
     
                 $lastNumber = $lastBarcode ? intval(substr($lastBarcode->barcode_number, 6, 3)) : 0;
     
