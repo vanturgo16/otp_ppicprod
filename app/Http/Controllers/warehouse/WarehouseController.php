@@ -269,7 +269,7 @@ class WarehouseController extends Controller
             })
             ->leftJoin('master_tool_auxiliaries', function ($join) {
                 $join->on('sales_orders.id_master_products', '=', 'master_tool_auxiliaries.id')
-                    ->whereIn('barcodes.type_product', ['AUX', 'MC']);
+                    ->whereIn('barcodes.type_product', ['AUX', 'MC', 'TA', 'OTHER', 'OTH', 'SPAREPART', 'SPAREPARTS']);
             })
             ->leftJoin('master_raw_materials', function ($join) {
                 $join->on('sales_orders.id_master_products', '=', 'master_raw_materials.id')
