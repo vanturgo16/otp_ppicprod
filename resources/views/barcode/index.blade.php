@@ -52,7 +52,7 @@
                   <i class="mdi mdi-information-outline"></i>
                 </div>
                 <div class="flex-grow-1">
-                  <h6 class="alert-heading fw-bold mb-1 text-primary">📌 Catatan Perubahan Format Barcode (Update per 28-09-2026):</h6>
+                  <h6 class="alert-heading fw-bold mb-1 text-primary">📌 Catatan Perubahan Format Barcode (Update per 28-09-2026 Jam 16:00 WIB):</h6>
                   <div class="text-dark font-size-13">
                     <span class="badge bg-success-subtle text-success border border-success-subtle me-1">Format Baru</span> <strong>YYMMDD</strong> (6 digit) + <strong>4 Digit No Urut</strong> (reset per hari mulai 0001) + <strong>Kode Produk</strong> &nbsp;•&nbsp; <em>Contoh: <code class="text-primary fw-bold">2609280001FS</code></em>
                     <br>
