@@ -5,9 +5,15 @@
 <div class="page-content">
   <div class="container-fluid">
 
-    @if (session('pesan'))
+    @if (session('pesan') || session('status') || session('success'))
       <div class="alert alert-success alert-dismissible alert-label-icon label-arrow fade show" role="alert">
-        <i class="mdi mdi-check-all label-icon"></i><strong>Success</strong> - {{ session('pesan') }}
+        <i class="mdi mdi-check-all label-icon"></i><strong>Success</strong> - {{ session('pesan') ?? session('status') ?? session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    @endif
+    @if (session('error'))
+      <div class="alert alert-danger alert-dismissible alert-label-icon label-arrow fade show" role="alert">
+        <i class="mdi mdi-alert-outline label-icon"></i><strong>Error</strong> - {{ session('error') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
     @endif
@@ -76,12 +82,32 @@
             {{-- Styles tabel --}}
             <style>
               .table-header th { background-color:#007bff; color:#fff; }
-              .row-new { background-color: rgb(248, 248, 243); }
+              .row-just-added { 
+                background-color: #d1fae5 !important; 
+                box-shadow: inset 4px 0 0 #10b981;
+              }
+              .row-just-added td { 
+                background-color: #d1fae5 !important; 
+              }
+              .row-new { 
+                background-color: #f0fdf4 !important; 
+              }
+              .row-new td { 
+                background-color: #f0fdf4 !important; 
+              }
               .table td, .table th { vertical-align: middle; }
+              .badge-new-pulse {
+                animation: pulseAnimation 1.5s infinite;
+              }
+              @keyframes pulseAnimation {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.08); }
+                100% { transform: scale(1); }
+              }
             </style>
 
             {{-- Tabel Data --}}
-            <table class="table table-bordered w-100">
+            <table class="table table-bordered w-100 table-hover">
               <thead class="table-header">
                 <tr>
                   <th>No</th>
@@ -100,18 +126,33 @@
                 @forelse ($results as $data)
                   @php
                     $createdTime = \Carbon\Carbon::parse($data->created_at);
-                    $isNew = $createdTime->gt(\Carbon\Carbon::now()->subDay());
+                    $isJustAdded = session('new_barcode_id') && session('new_barcode_id') == $data->id;
+                    $isNew = $isJustAdded || $createdTime->gt(\Carbon\Carbon::now()->subHours(24));
                   @endphp
-                  <tr class="{{ $isNew ? 'row-new' : '' }}">
-                    <td>{{ $loop->iteration + ($results->currentPage() - 1) * $results->perPage() }}</td>
-                    <td>{{ $data->so_number ?? '-' }}</td>
+                  <tr class="{{ $isJustAdded ? 'row-just-added' : ($isNew ? 'row-new' : '') }}">
+                    <td>
+                      {{ $loop->iteration + ($results->currentPage() - 1) * $results->perPage() }}
+                      @if ($isJustAdded)
+                        <span class="badge bg-success badge-new-pulse d-block mt-1 font-size-10"><i class="mdi mdi-star"></i> BARU</span>
+                      @elseif ($isNew)
+                        <span class="badge bg-success bg-opacity-25 text-success border border-success d-block mt-1 font-size-10">NEW</span>
+                      @endif
+                    </td>
+                    <td>
+                      <strong>{{ $data->so_number ?? '-' }}</strong>
+                    </td>
                     <td>{{ $data->name_cust ?? '-' }}</td>
-                    <td>{{ $data->wo_number ?? '-' }}</td>
+                    <td><span class="badge bg-light text-dark border">{{ $data->wo_number ?? '-' }}</span></td>
                     <td>{{ $data->work_center ?? '-' }}</td>
                     <td>{{ $data->shift ?? '-' }}</td>
                     <td>{{ $data->staff ?? '-' }}</td>
-                    <td>{{ $createdTime->format('Y-m-d H:i:s') }}</td>
-                    <td><b>{{ $data->barcode_count ?? 0 }}</b></td>
+                    <td>
+                      <div>{{ $createdTime->format('Y-m-d H:i:s') }}</div>
+                      @if ($isNew)
+                        <small class="text-success fw-bold"><i class="mdi mdi-clock-outline"></i> {{ $createdTime->diffForHumans() }}</small>
+                      @endif
+                    </td>
+                    <td><span class="badge bg-primary font-size-12">{{ $data->barcode_count ?? 0 }}</span></td>
                     <td>
                       <div class="btn-group">
                         <button type="button" class="btn btn-success btn-sm">Print</button>
