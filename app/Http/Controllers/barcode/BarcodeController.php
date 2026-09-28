@@ -164,7 +164,7 @@ public function index(Request $request)
             $group_sub_code = $request->input('group_sub_code');
 
             // Gunakan transaksi database untuk memastikan atomisitas
-            DB::transaction(function () use ($request, $id_work_orders, $type_product_code, $group_sub_code) {
+            $detailsoal = DB::transaction(function () use ($request, $id_work_orders, $type_product_code, $group_sub_code) {
                 // Simpan detail soal menggunakan model Barcode
                 $detailsoal = Barcode::create([
                     'id_work_orders'                => $id_work_orders,
@@ -182,18 +182,21 @@ public function index(Request $request)
                 // Generate barcode numbers and save them
                 if ($detailsoal) {
                     $qty = $request->input('qty');
-                    $yearMonth = Carbon::now()->format('ym');
+                    $todayPrefix = Carbon::now()->format('ymd');
                     $lastBarcode = DB::table('barcode_detail')
-                        ->where('barcode_number', 'like', $yearMonth . '%')
-                        ->orderBy('barcode_number', 'desc')
+                        ->join('barcodes', 'barcode_detail.id_barcode', '=', 'barcodes.id')
+                        ->where('barcode_detail.barcode_number', 'like', $todayPrefix . '%')
+                        ->where('barcodes.id_work_orders', '>', 0)
+                        ->orderBy('barcode_detail.barcode_number', 'desc')
+                        ->select('barcode_detail.*')
                         ->first();
 
-                    $lastNumber = $lastBarcode ? intval(substr($lastBarcode->barcode_number, 4, 5)) : 0;
+                    $lastNumber = $lastBarcode ? intval(substr($lastBarcode->barcode_number, 6, 4)) : 0;
 
                     $barcodeDetails = [];
                     for ($i = 1; $i <= $qty; $i++) {
                         $lastNumber++;
-                        $barcodeNumber = $yearMonth . str_pad($lastNumber, 5, '0', STR_PAD_LEFT) . $type_product_code . $group_sub_code;
+                        $barcodeNumber = $todayPrefix . str_pad($lastNumber, 4, '0', STR_PAD_LEFT) . $type_product_code . $group_sub_code;
                         $barcodeDetails[] = [
                             'id_barcode' => $detailsoal->id,
                             'barcode_number' => $barcodeNumber,
@@ -204,9 +207,11 @@ public function index(Request $request)
 
                     DB::table('barcode_detail')->insert($barcodeDetails);
                 }
+
+                return $detailsoal;
             });
 
-            return redirect('/barcode')->with('status', 'Data Ditambah');
+            return redirect('/barcode')->with('status', 'Data Berhasil Ditambahkan')->with('new_barcode_id', $detailsoal ? $detailsoal->id : null);
         } else {
             return redirect('/barcode')->with(['error' => 'Data Work Order tidak ditemukan!']);
         }
