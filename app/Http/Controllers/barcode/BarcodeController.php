@@ -208,7 +208,7 @@ public function index(Request $request)
                     DB::table('barcode_detail')->insert($barcodeDetails);
 
                     /**
-                     * PERUBAHAN FORMAT NOMOR BARCODE (Update per 28-09-2026):
+                     * PERUBAHAN FORMAT NOMOR BARCODE (Update per 28-09-2026 Jam 16:00 WIB):
                      * -------------------------------------------------------------------------
                      * Format Lama : YYMM (4 digit) + 5 digit no urut + Kode Produk (Contoh: 260920401FS)
                      *               Prefix bulanan ($yearMonth = ym), substr($barcode, 4, 5)
