@@ -206,6 +206,18 @@ public function index(Request $request)
                     }
 
                     DB::table('barcode_detail')->insert($barcodeDetails);
+
+                    /**
+                     * PERUBAHAN FORMAT NOMOR BARCODE (Update per 28-09-2026):
+                     * -------------------------------------------------------------------------
+                     * Format Lama : YYMM (4 digit) + 5 digit no urut + Kode Produk (Contoh: 260920401FS)
+                     *               Prefix bulanan ($yearMonth = ym), substr($barcode, 4, 5)
+                     * 
+                     * Format Baru : YYMMDD (6 digit) + 4 digit no urut + Kode Produk (Contoh: 2609280001FS)
+                     *               Prefix harian ($todayPrefix = ymd), substr($barcode, 6, 4)
+                     *               Nomor urut otomatis reset per hari mulai dari 0001.
+                     * -------------------------------------------------------------------------
+                     */
                 }
 
                 return $detailsoal;

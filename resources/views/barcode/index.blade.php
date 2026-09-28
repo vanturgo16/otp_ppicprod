@@ -45,6 +45,23 @@
 
           <div class="card-body">
 
+            {{-- Info Catatan Perubahan Barcode --}}
+            <div class="alert alert-info border-0 shadow-sm mb-4" role="alert" style="background-color: #f0f9ff; border-left: 4px solid #0284c7 !important;">
+              <div class="d-flex align-items-start">
+                <div class="me-3 fs-4 text-info">
+                  <i class="mdi mdi-information-outline"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <h6 class="alert-heading fw-bold mb-1 text-primary">📌 Catatan Perubahan Format Barcode (Update per 28-09-2026):</h6>
+                  <div class="text-dark font-size-13">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle me-1">Format Baru</span> <strong>YYMMDD</strong> (6 digit) + <strong>4 Digit No Urut</strong> (reset per hari mulai 0001) + <strong>Kode Produk</strong> &nbsp;•&nbsp; <em>Contoh: <code class="text-primary fw-bold">2609280001FS</code></em>
+                    <br>
+                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle me-1">Format Lama</span> <strong>YYMM</strong> (4 digit) + <strong>5 Digit No Urut</strong> + <strong>Kode Produk</strong> &nbsp;•&nbsp; <em>Contoh: <code>260920401FS</code></em>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {{-- Form Filter --}}
             <form action="{{ route('barcode') }}" method="GET" class="row g-3 align-items-end">
               <div class="col-md-2">
